@@ -1,6 +1,6 @@
 # Architecture & Directory Structure Guide
 
-This repository follows a **Feature-Based Architecture** (Domain-Driven Design principles applied to React). This structure is designed to promote scalability, high cohesion, low coupling, and clear boundaries between domain logic and shared code.
+This repository follows a **Feature-Based Architecture**. This structure is designed to promote scalability, high cohesion, low coupling, and clear boundaries between domain logic and shared code.
 
 ---
 
