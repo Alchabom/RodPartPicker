@@ -1,0 +1,15 @@
+.subtitle {
+  margin: 0.25rem 0 2rem;
+  color: var(--muted-foreground);
+}
+
+.totalLabel {
+  text-align: right;
+  font-weight: 600;
+}
+
+.totalValue {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

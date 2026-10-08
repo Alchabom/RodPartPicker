@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { getBrandsFor } from '../api/mockParts'
 import type { ComponentInfo } from '../types'
+import styles from '../styles/BrandMenu.module.css'
 
 // "Scientific Anglers" -> "SA", "Sage" -> "S"
 function initials(name: string): string {
@@ -36,13 +37,13 @@ export function BrandMenu({ component, trigger }: BrandMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
+      <DropdownMenuContent className={styles.menu}>
         <DropdownMenuLabel>{component.label} brands</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {brands.map((brand) => (
           <DropdownMenuItem key={brand.id} asChild>
             <Link to={`${basePath}/${brand.id}`}>
-              <Badge variant="secondary" className="w-8 justify-center font-semibold">
+              <Badge variant="secondary" className={styles.initials}>
                 {initials(brand.name)}
               </Badge>
               {brand.name}

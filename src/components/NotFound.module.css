@@ -1,0 +1,28 @@
+.container {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  color: var(--te-papa-green);
+}
+
+.message {
+  margin: 0.5rem 0 0;
+  color: var(--muted-foreground);
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}

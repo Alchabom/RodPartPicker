@@ -1,0 +1,10 @@
+/* Wider than the trigger button so brand names fit */
+.menu {
+  width: 14rem;
+}
+
+.initials {
+  width: 2rem;
+  justify-content: center;
+  font-weight: 600;
+}

@@ -12,15 +12,17 @@ import { getPart } from '../api/mockParts'
 import { useBuild } from '../hooks/useBuild'
 import { formatPrice } from '../utils/formatPrice'
 import { ComponentRow } from './ComponentRow'
+import page from '../styles/page.module.css'
+import styles from '../styles/BuilderPage.module.css'
 
 export function BuilderPage() {
   const { build } = useBuild()
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-(--te-papa-green)">Your Build</h1>
-      <p className="mt-1 mb-8 text-muted-foreground">
+    <main className={page.page}>
+      <h1 className={page.title}>Your Build</h1>
+      <p className={styles.subtitle}>
         Choose a brand for each component to browse its parts.
       </p>
 
@@ -29,7 +31,7 @@ export function BuilderPage() {
           <TableRow>
             <TableHead>Component</TableHead>
             <TableHead>Selection</TableHead>
-            <TableHead className="text-right">Price</TableHead>
+            <TableHead className={page.alignRight}>Price</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -39,8 +41,8 @@ export function BuilderPage() {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={2} className="text-right font-semibold">Total</TableCell>
-            <TableCell className="text-right font-semibold tabular-nums">{formatPrice(total)}</TableCell>
+            <TableCell colSpan={2} className={styles.totalLabel}>Total</TableCell>
+            <TableCell className={styles.totalValue}>{formatPrice(total)}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

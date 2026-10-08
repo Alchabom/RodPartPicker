@@ -7,6 +7,8 @@ import { useBuild } from '../hooks/useBuild'
 import type { ComponentInfo } from '../types'
 import { formatPrice } from '../utils/formatPrice'
 import { BrandMenu } from './BrandMenu'
+import page from '../styles/page.module.css'
+import styles from '../styles/ComponentRow.module.css'
 
 export function ComponentRow({ component }: { component: ComponentInfo }) {
   const { build, removePart } = useBuild()
@@ -15,22 +17,22 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
 
   return (
     <TableRow>
-      <TableCell className="w-44">
+      <TableCell className={styles.componentCell}>
         <Link
           to={`/builder/${component.type}/all`}
-          className="inline-flex items-center gap-2 font-semibold text-primary underline-offset-4 hover:underline"
+          className={styles.componentLink}
         >
-          <Icon className="size-[18px]" aria-hidden />
+          <Icon className={styles.icon} aria-hidden />
           {component.label}
         </Link>
       </TableCell>
 
       <TableCell>
         {part ? (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className={styles.selection}>
             <div>
-              <div className="font-medium">{part.name}</div>
-              <div className="text-xs text-muted-foreground">{getBrand(part.brandId)?.name}</div>
+              <div className={styles.partName}>{part.name}</div>
+              <div className={styles.partBrand}>{getBrand(part.brandId)?.name}</div>
             </div>
             <BrandMenu
               component={component}
@@ -61,8 +63,8 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
         )}
       </TableCell>
 
-      <TableCell className="w-28 text-right tabular-nums">
-        {part ? formatPrice(part.price) : <span className="text-muted-foreground">—</span>}
+      <TableCell className={`${styles.priceCell} ${page.price}`}>
+        {part ? formatPrice(part.price) : <span className={page.muted}>—</span>}
       </TableCell>
     </TableRow>
   )
