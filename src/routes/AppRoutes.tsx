@@ -2,24 +2,24 @@ import { Link, Outlet, Route, Routes } from 'react-router'
 import App from '@/App'
 import { NotFound } from '@components/NotFound'
 import { BrandPartsPage, BuilderPage } from '@features/builder'
-import '@styles/App.css'
+
+const navLinkClass = 'font-semibold text-tasman transition-colors duration-200 hover:text-sulu'
 
 function Layout() {
   return (
-    <div className="app-container">
+    <div className="flex min-h-screen flex-col">
       {/* NavBar */}
-      <nav className="navbar">
-        <Link to="/" className="nav-brand">RodPartPicker</Link>
+      <nav className="flex items-center justify-between bg-cod-gray px-12 py-4 text-linen">
+        <Link to="/" className="text-2xl font-extrabold text-sulu">RodPartPicker</Link>
 
-        <div className="nav-links">
-          <Link to="/builder">Builder</Link>
-          <a href="#products">Products</a>
-          <a href="#completed-builds">Completed Builds</a>
+        <div className="flex gap-8">
+          <Link to="/builder" className={navLinkClass}>Builder</Link>
+          <a href="#products" className={navLinkClass}>Products</a>
+          <a href="#completed-builds" className={navLinkClass}>Completed Builds</a>
         </div>
 
         {/* Mock User Icon Button */}
         <button
-          className="user-icon-btn"
           aria-label="User Profile"
           onClick={() => alert('User profile clicked!')}
         >

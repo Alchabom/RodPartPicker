@@ -52,7 +52,7 @@ export function BrandPartsPage() {
       >
         <ArrowLeft className="size-4" aria-hidden /> Back to your build
       </Link>
-      <h1 className="mt-4 mb-8 text-3xl font-bold text-(--te-papa-green)">{title}</h1>
+      <h1 className="mt-4 mb-8 text-3xl font-bold text-te-papa-green">{title}</h1>
 
       <Table>
         <TableHeader>
