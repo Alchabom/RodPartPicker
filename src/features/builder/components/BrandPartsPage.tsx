@@ -14,8 +14,6 @@ import { getComponentInfo } from '../api/components'
 import { getBrand, getParts } from '../api/mockParts'
 import { useBuild } from '../hooks/useBuild'
 import { formatPrice } from '../utils/formatPrice'
-import page from '../styles/page.module.css'
-import styles from '../styles/BrandPartsPage.module.css'
 
 export function BrandPartsPage() {
   const params = useParams<{ component: string; brand: string }>()
@@ -47,14 +45,14 @@ export function BrandPartsPage() {
   }
 
   return (
-    <main className={page.page}>
+    <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <Link
         to="/builder"
-        className={styles.backLink}
+        className="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline"
       >
-        <ArrowLeft className={styles.backIcon} aria-hidden /> Back to your build
+        <ArrowLeft className="size-4" aria-hidden /> Back to your build
       </Link>
-      <h1 className={`${page.title} ${styles.heading}`}>{title}</h1>
+      <h1 className="mt-4 mb-8 text-3xl font-bold text-(--te-papa-green)">{title}</h1>
 
       <Table>
         <TableHeader>
@@ -64,20 +62,20 @@ export function BrandPartsPage() {
             {component.specColumns.map((col) => (
               <TableHead key={col}>{col}</TableHead>
             ))}
-            <TableHead className={page.alignRight}>Price</TableHead>
-            <TableHead className={styles.actionCol} />
+            <TableHead className="text-right">Price</TableHead>
+            <TableHead className="w-28" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {parts.map((part) => (
             <TableRow key={part.id}>
-              <TableCell className={styles.partName}>{part.name}</TableCell>
+              <TableCell className="font-medium">{part.name}</TableCell>
               {isAll && <TableCell>{getBrand(part.brandId)?.name}</TableCell>}
               {component.specColumns.map((col) => (
                 <TableCell key={col}>{part.specs[col]}</TableCell>
               ))}
-              <TableCell className={page.price}>{formatPrice(part.price)}</TableCell>
-              <TableCell className={styles.actionCol}>
+              <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
+              <TableCell className="text-right">
                 {part.id === selectedId ? (
                   <Button size="sm" variant="secondary" disabled>
                     <Check data-icon="inline-start" /> Selected

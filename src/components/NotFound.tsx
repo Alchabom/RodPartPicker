@@ -1,5 +1,4 @@
 import { Link } from 'react-router'
-import styles from './NotFound.module.css'
 
 interface NotFoundProps {
   message?: string
@@ -13,10 +12,10 @@ export function NotFound({
   backLabel = 'Back to home',
 }: NotFoundProps) {
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Not found</h1>
-      <p className={styles.message}>{message}</p>
-      <Link to={backTo} className={styles.backLink}>
+    <div className="mx-auto max-w-5xl px-4 py-16 text-center">
+      <h1 className="text-2xl font-bold text-(--te-papa-green)">Not found</h1>
+      <p className="mt-2 text-muted-foreground">{message}</p>
+      <Link to={backTo} className="mt-6 inline-block font-semibold text-primary underline underline-offset-4">
         {backLabel}
       </Link>
     </div>
