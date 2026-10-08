@@ -12,24 +12,22 @@ Capstone(rodpartpicker)/
 ├── src/
 │   ├── assets/             # Static assets (images, icons, vectors)
 │   ├── components/         # Shared, domain-agnostic UI components (Button, Modal, Input)
+│   │   └── ui/             # shadcn/ui primitives (generated; edit via the shadcn CLI)
 │   ├── features/           # Feature domain modules
 │   │   └── userProfile/    # User Profile domain module
 │   │       ├── api/        # Data fetching functions & API calls for this feature
 │   │       ├── components/ # Feature-specific React components
 │   │       ├── hooks/      # Custom React hooks specific to this feature
-│   │       ├── styles/     # Styles isolated strictly to this feature
 │   │       ├── types/      # TypeScript types and interfaces for this feature
 │   │       ├── utils/      # Domain-specific pure helper functions
 │   │       └── index.ts    # Public API export (Barrel file)
 │   ├── hooks/              # Reusable, global React hooks (e.g., useDebounce, useAuth)
 │   ├── lib/                # Third-party SDK configurations & client wrappers (Axios, Firebase)
 │   ├── routes/             # Router setup and page route definitions
-│   ├── styles/             # Global styles, variables, typography, and CSS resets
+│   ├── styles/             # index.css: Tailwind entry, palette + theme tokens
 │   ├── types/              # Global TypeScript types and ambient type declarations
 │   ├── utils/              # Global pure helper functions (formatting, calculations)
-│   ├── App.css             # Root application styles
-│   ├── App.tsx             # Root application component
-│   ├── index.css           # Global baseline CSS / CSS reset imports
+│   ├── App.tsx             # Home page
 │   └── main.tsx            # React application entry point
 ├── .gitignore
 ├── .oxlintrc.json
@@ -50,7 +48,7 @@ Capstone(rodpartpicker)/
 | `src/components/` | Shared UI primitives. | Universal components like `<Button>`, `<Modal>`, `<Card>`, `<Spinner>`. | Domain-specific components like `<ProfileAvatar>` or `<RodPartList>`. |
 | `src/hooks/` | Reusable global stateful logic. | Broadly applicable React hooks like `useLocalStorage`, `useMediaQuery`, `useTheme`. | Hooks tied to specific business domains like `useProfileData`. |
 | `src/lib/` | External library abstractions. | Configured instances for third-party libraries (`axios` instance, Supabase client, Analytics initialization). | Business logic or component code. |
-| `src/styles/` | Global design system foundation. | Global CSS variables, color tokens, typography defaults, and browser reset files (`reset.css`, `variables.css`). | Component-specific or domain-specific layout styling. |
+| `src/styles/` | Global design system foundation. | `index.css`: Tailwind imports, palette variables, shadcn theme tokens, `@theme` mappings, and `@layer base` rules. | Component-specific or domain-specific styling (use Tailwind classes in the component). |
 | `src/types/` | Global TypeScript definitions. | Cross-cutting types like `UserSession`, global API response interfaces (`PaginatedResponse<T>`), or ambient declaration files (`env.d.ts`). | Feature-specific payload types or form state types. |
 | `src/utils/` | Global stateless helper functions. | Pure JS/TS functions with zero React dependencies or side effects (e.g., `formatCurrency()`, `calculateTax()`, `slugify()`). | Stateful logic, React components, or domain-specific business rules. |
 
@@ -69,7 +67,6 @@ src/features/userProfile/
 ├── api/        # Endpoint functions (e.g., fetchUserProfile, updateAvatar)
 ├── components/ # UI exclusive to user profile (e.g., ProfileCard, PasswordChangeForm)
 ├── hooks/      # State management hooks (e.g., useUserProfile, useAvatarUpload)
-├── styles/     # CSS/SCSS modules exclusive to profile UI elements
 ├── types/      # Domain interfaces (e.g., UserProfile, ProfileSettings, UserRole)
 ├── utils/      # Domain-specific helpers (e.g., validateProfileBio, formatJoinDate)
 └── index.ts    # Barrel file defining the module's public API
@@ -111,6 +108,15 @@ Keep code as close to where it is used as possible.
 1. If a component/hook/utility is used in only **one file**, keep it in that file.
 2. If it is used across **one feature**, put it in `src/features/<featureName>/`.
 3. Only move it to `src/` (global) when it is required by **two or more distinct features**.
+
+
+### Rule 4: Styling with Tailwind
+- Style components with **Tailwind utility classes** in `className`. Do not add per-component or per-feature CSS files.
+- Use the palette utilities registered in `src/styles/index.css` (`bg-cod-gray`, `text-sulu`, `border-twine`, …) or the shadcn theme tokens (`bg-primary`, `text-muted-foreground`, …) instead of hex values or `var(--…)` in classes.
+- Combine conditional classes with `cn()` from `@/lib/utils`.
+- If a class list repeats within a file, hoist it to a module-level constant; if it repeats across files, make a shared component.
+- Prefer shadcn primitives in `src/components/ui/` for buttons, menus, tables, etc. Add new ones with `pnpm dlx shadcn@latest add <name>`.
+- New design tokens go in `src/styles/index.css` (`:root` variable + `@theme inline` mapping), never inline.
 
 ---
 

@@ -1,56 +1,27 @@
-import '@styles/App.css'
+import { Link } from 'react-router'
 
 function App() {
   return (
-    <div className="app-container">
-      {/* NavBar */}
-      <nav className="navbar">
-        <div className="nav-brand">RodPartPicker</div>
-        
-        <div className="nav-links">
-          <a href="#builder">Builder</a>
-          <a href="#products">Products</a>
-          <a href="#completed-builds">Completed Builds</a>
-        </div>
+    <main className="flex flex-1 flex-col items-center px-8 py-16 text-center">
+      <h1 className="mt-8 mb-2 text-5xl/tight font-bold text-te-papa-green">
+        Pick Parts. Build Your Rod. Catch em all.
+      </h1>
+      <p className="mt-5 mb-10 max-w-[600px] text-xl text-plantation">
+        We provide part selection, pricing, and compatibility guidance for do-it-yourself rod builders.
+      </p>
 
-        {/* Mock User Icon Button */}
-        <button 
-          className="user-icon-btn" 
-          aria-label="User Profile"
-          onClick={() => alert('User profile clicked!')}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </button>
-      </nav>
+      <Link
+        to="/builder"
+        className="inline-block rounded-md bg-spectra px-10 py-4 text-[1.2rem] font-bold text-linen shadow-md transition-colors duration-200 hover:bg-te-papa-green"
+      >
+        Start Your Build
+      </Link>
 
-      {/* Main Content Area */}
-      <main className="hero-section">
-        <h1>Pick Parts. Build Your Rod. Catch em all.</h1>
-        <p>We provide part selection, pricing, and compatibility guidance for do-it-yourself rod builders.</p>
-        
-        <button className="start-build-btn">
-          Start Your Build
-        </button>
-
-        {/* Placeholder for the table / picture */}
-        <div className="hero-image-placeholder">
-          Placeholder image
-        </div>
-      </main>
-    </div>
+      {/* Placeholder for the table / picture */}
+      <div className="mt-16 flex h-[400px] w-full max-w-[900px] items-center justify-center rounded-lg border-2 border-dashed border-twine bg-bone text-2xl font-bold text-spectra">
+        Placeholder image
+      </div>
+    </main>
   )
 }
 
