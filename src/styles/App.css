@@ -50,13 +50,14 @@
 .hero-section h1 {
   color: var(--te-papa-green);
   font-size: 3rem;
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  margin: 2rem 0 0.5rem;
 }
 
 .hero-section p {
   color: var(--plantation);
   font-size: 1.25rem;
-  margin-bottom: 2.5rem;
+  margin: 1.25rem 0 2.5rem;
   max-width: 600px;
 }
 
