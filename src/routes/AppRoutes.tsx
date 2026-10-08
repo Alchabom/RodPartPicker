@@ -1,7 +1,7 @@
 import { Link, Outlet, Route, Routes } from 'react-router'
 import App from '@/App'
 import { NotFound } from '@components/NotFound'
-import { BuilderPage } from '@features/builder'
+import { BrandPartsPage, BuilderPage } from '@features/builder'
 import '@styles/App.css'
 
 function Layout() {
@@ -43,11 +43,6 @@ function Layout() {
       <Outlet />
     </div>
   )
-}
-
-// Placeholder until the brand parts page lands
-function BrandPartsPage() {
-  return <div className="p-8">Brand parts</div>
 }
 
 export function AppRoutes() {
