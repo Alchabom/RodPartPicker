@@ -1,0 +1,21 @@
+[project]
+name = "rodpartpicker-api"
+version = "0.1.0"
+description = "RodPartPicker REST API (FastAPI + SQLAlchemy + MySQL)"
+readme = "README.md"
+authors = [
+    { name = "Omar Alchab", email = "alchabomar@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "cryptography>=50.0.2",
+    "fastapi[standard]>=0.143.0",
+    "pydantic-settings>=2.15.0",
+    "pymysql>=1.2.3",
+    "sqlalchemy>=2.1.4",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.0",
+]
