@@ -50,7 +50,7 @@ server/
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/health` | API and database status |
-| GET | `/api/parts/:category` | `rod`, `reel`, `line`, `leader` or `tippet`; variants joined with model and brand |
+| GET | `/api/parts/:category` | `rod`, `reel`, `line`, `leader` or `tippet`; each part joined with its brand |
 | GET | `/api/builds` | all builds, most recently updated first |
 | GET | `/api/builds/:id` | one build |
 | POST | `/api/builds` | body `{ name, rodId?, reelId?, flyLineId?, leaderId?, tippetId? }` → `{ id }` |
