@@ -62,7 +62,7 @@ The database and API replace it.
    so brand + name doesn't identify one purchasable item.
 5. **Missing attributes needed for compatibility:**
    - leader and tippet **X-size** (how anglers match tippet to leader)
-   - fly line **type** (floating/sinking) and **taper**
+   - fly line **type** (floating/sinking) and **sink rate**
    - rod **line weight** and **pieces**
 6. **Missing entity: builds.** The app has a "Completed Builds" page, but
    nothing stored a build.
@@ -73,28 +73,24 @@ The database and API replace it.
 |---|---|---|---|---|
 | D1 | Which database? | PostgreSQL, MySQL | **MySQL 8.0.16+** | Team choice. 8.0.16 is the first version that enforces `CHECK` constraints |
 | D2 | How are prices stored? | One price per item; a `prices` table per retailer | **One price** (`DECIMAL(8,2)`) | Enough for the capstone; a retailer table can be added later without changing existing tables |
-| D3 | How is a product line with many sizes modeled? | One flat row per size; model table + variant table | **Two tables per category** (`*_models` + variants) | Brand, name and shared specs aren't repeated on every size; builds point at the exact size bought |
+| D3 | How is a product line with many sizes modeled? | One flat row per size; model table + variant table | **One flat table per category**, one row per size (migrations 003, 005; originally model + variant tables) | Each category shares only one or two specs across sizes, so the split cost a join and a second insert per product for little gain. The builder UI lists parts per brand, not model-then-size. Builds still point at the exact size bought |
 | D4 | Users? | Accounts now; later | **Later** | Builds will be shareable, but not in this iteration. Adding `users` later is one table plus a `user_id` column on `builds` |
 | D5 | Backing, flies? | In scope; out of scope | **Out of scope** | Not needed for a core setup |
-| D6 | How is X-size stored? | Integer with a `CHECK`; lookup table | **Lookup table** `x_sizes` | Handles heavy sizes (03X–01X) cleanly, stores diameter, and its id order makes "one size finer" a simple `+1` |
+| D6 | How is X-size stored? | Integer with a `CHECK`; lookup table | **Lookup table** `x_sizes` | Handles heavy sizes (03X–01X) cleanly, and its id order makes "one size finer" a simple `+1` |
 | D7 | Backend? | Supabase (hosted); our own API | **Our own Express + mysql2 API** | Supabase is Postgres-only. A small REST API is within scope and shows our own engineering |
 | D8 | Name of the line tables | `lines`, `fly_lines` | **`fly_lines`** | `LINES` is a MySQL reserved word and would need backticks everywhere |
 | D9 | Where do compatibility rules live? | DB constraints; application code | **Application code** | A builder should *warn* about a mismatch and still let the user save |
+| D10 | Which fly line specs are stored? | Type, taper, sink rate | **Type and sink rate** (migrations 003, 004) | `taper` dropped as not needed for compatibility. `sink_rate_ips` is NULL exactly when `type` is floating |
 
 ## 6. Final schema
 
 ```mermaid
 erDiagram
-  brands ||--o{ rod_models : makes
-  brands ||--o{ reel_models : makes
-  brands ||--o{ fly_line_models : makes
-  brands ||--o{ leader_models : makes
-  brands ||--o{ tippet_models : makes
-  rod_models ||--|{ rods : "sold as"
-  reel_models ||--|{ reels : "sold as"
-  fly_line_models ||--|{ fly_lines : "sold as"
-  leader_models ||--|{ leaders : "sold as"
-  tippet_models ||--|{ tippets : "sold as"
+  brands ||--o{ rods : makes
+  brands ||--o{ reels : makes
+  brands ||--o{ fly_lines : makes
+  brands ||--o{ leaders : makes
+  brands ||--o{ tippets : makes
   line_weights ||--o{ rods : rates
   line_weights ||--o{ reels : "min/max"
   line_weights ||--o{ fly_lines : rates
@@ -109,27 +105,28 @@ erDiagram
 
 **What lives where:**
 
-| Category | Model table holds | Variant table holds |
+Each row is one purchasable size.
+
+| Table | Columns (besides `id`, `brand_id`, `name`, `price`) | Unique per |
 |---|---|---|
-| Rod | brand, name, action, water | line weight, length (in), pieces, price |
-| Reel | brand, name, water | size label, min/max line weight, price |
-| Fly line | brand, name, type, taper, sink rate, water | line weight, head weight (grains), price |
-| Leader | brand, name, material, water | length (ft), tip X-size, strength, pack count, price |
-| Tippet | brand, name, material, water | X-size, strength, spool yards, price |
+| `rods` | action, water, line weight, length (in), pieces | brand, name, line weight, length, pieces |
+| `reels` | water, min/max line weight | brand, name, min/max line weight |
+| `fly_lines` | line weight, type, sink rate, water, head weight (grains) | brand, name, line weight |
+| `leaders` | material, water, length (ft), tip X-size, pack count | brand, name, length, X-size, pack count |
+| `tippets` | material, water, X-size, spool yards | brand, name, X-size, spool yards |
 
 **Lookups:** `brands`, `line_weights` (seeded with the AFTMA table), `x_sizes` (seeded 03X–8X).
 
 **Integrity choices:**
 
 - **Money** is `DECIMAL(8,2)` with `CHECK (price >= 0)`. Floating point would introduce rounding errors.
-- **Natural uniqueness** is enforced with `UNIQUE` keys: `(brand_id, name)` on models, and the identifying spec combination on variants.
+- **Natural uniqueness** is enforced with `UNIQUE` keys: `brand_id`, `name` and the size columns that identify one purchasable item (see the table above).
 - **A floating line has no sink rate.** A `CHECK` ties `sink_rate_ips IS NULL` to `type = 'floating'`.
 - **Delete behavior:**
 
   | When this is deleted | What happens | Rule |
   |---|---|---|
-  | A model | Its variants are deleted too | `CASCADE` |
-  | A variant used in a build | The build stays; that part slot becomes empty | `SET NULL` |
+  | A part used in a build | The build stays; that part slot becomes empty | `SET NULL` |
   | A brand or lookup row still in use | The delete is refused | default (`RESTRICT`) |
 
 - **`min_line_weight <= max_line_weight` on reels is validated in the API.**
