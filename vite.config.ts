@@ -24,4 +24,11 @@ export default defineConfig({
       '@types': path.resolve(__dirname, './src/types'),
     },
   },
+  server: {
+    // Forward API calls to the Express server (npm run dev:server) so the
+    // browser sees one origin and no CORS setup is needed in development
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
+  },
 })
