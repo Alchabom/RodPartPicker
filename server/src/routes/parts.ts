@@ -26,15 +26,15 @@ const PART_QUERIES = {
     ORDER BY b.name, l.name, l.line_weight`,
   leader: `
     SELECT l.id, b.name AS brand, l.name AS model, l.material, l.water,
-           l.length_ft AS lengthFt, x.label AS xSize,
+           l.length_ft AS lengthFt, x.label AS xSize, l.strength_lb AS strengthLb,
            l.pack_count AS packCount, l.price
     FROM leaders l
     JOIN brands b ON b.id = l.brand_id
-    JOIN x_sizes x ON x.id = l.x_size_id
+    LEFT JOIN x_sizes x ON x.id = l.x_size_id
     ORDER BY b.name, l.name, l.length_ft, l.x_size_id`,
   tippet: `
     SELECT t.id, b.name AS brand, t.name AS model, t.material, t.water,
-           x.label AS xSize, t.spool_yards AS spoolYards, t.price
+           x.label AS xSize, t.strength_lb AS strengthLb, t.spool_yards AS spoolYards, t.price
     FROM tippets t
     JOIN brands b ON b.id = t.brand_id
     JOIN x_sizes x ON x.id = t.x_size_id
