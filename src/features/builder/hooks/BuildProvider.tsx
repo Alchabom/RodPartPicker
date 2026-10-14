@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { getComponentInfo } from '../api/components'
-import { getPart } from '../api/mockParts'
 import type { Build, ComponentType } from '../types'
 import { BuildContext } from './buildContext'
 
-const STORAGE_KEY = 'rpp:build:v1'
+// v2: part ids became `${component}-${dbId}` when the catalog moved to the API
+const STORAGE_KEY = 'rpp:build:v2'
 
-// Keep only entries that still resolve to a part of the right component
+// Keep only well-formed entries. Ids that no longer exist in the catalog
+// (which loads later, from the API) simply resolve to no part when read.
 function loadBuild(): Build {
   try {
     const raw: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
@@ -14,7 +15,7 @@ function loadBuild(): Build {
     const build: Build = {}
     for (const [component, partId] of Object.entries(raw)) {
       const info = getComponentInfo(component)
-      if (info && typeof partId === 'string' && getPart(partId)?.component === info.type) {
+      if (info && typeof partId === 'string' && partId.startsWith(`${info.type}-`)) {
         build[info.type] = partId
       }
     }

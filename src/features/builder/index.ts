@@ -1,5 +1,6 @@
 // Public API of the builder feature
 export { BrandPartsPage } from './components/BrandPartsPage'
+export { BuilderLayout } from './components/BuilderLayout'
 export { BuilderPage } from './components/BuilderPage'
 export { BuildProvider } from './hooks/BuildProvider'
 export { useBuild } from './hooks/useBuild'

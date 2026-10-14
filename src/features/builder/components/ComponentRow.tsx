@@ -2,15 +2,21 @@ import { Link } from 'react-router'
 import { ChevronDown, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
-import { getBrand, getPart } from '../api/mockParts'
 import { useBuild } from '../hooks/useBuild'
+import { useCatalog } from '../hooks/useCatalog'
 import type { ComponentInfo } from '../types'
 import { formatPrice } from '../utils/formatPrice'
 import { BrandMenu } from './BrandMenu'
 
 export function ComponentRow({ component }: { component: ComponentInfo }) {
   const { build, removePart } = useBuild()
+  const { getBrand, getPart } = useCatalog()
   const part = getPart(build[component.type])
+  // Model names repeat across sizes ("Guru X"), so show the key specs too
+  const subtitle = part && [
+    getBrand(part.brandId)?.name,
+    ...component.specColumns.slice(0, 2).map((col) => part.specs[col]),
+  ].join(' · ')
   const Icon = component.icon
 
   return (
@@ -30,7 +36,7 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
           <div className="flex flex-wrap items-center gap-3">
             <div>
               <div className="font-medium">{part.name}</div>
-              <div className="text-xs text-muted-foreground">{getBrand(part.brandId)?.name}</div>
+              <div className="text-xs text-muted-foreground">{subtitle}</div>
             </div>
             <BrandMenu
               component={component}
@@ -62,7 +68,7 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
       </TableCell>
 
       <TableCell className="w-28 text-right tabular-nums">
-        {part ? formatPrice(part.price) : <span className="text-muted-foreground">—</span>}
+        {part?.price != null ? formatPrice(part.price) : <span className="text-muted-foreground">—</span>}
       </TableCell>
     </TableRow>
   )

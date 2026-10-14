@@ -1,7 +1,7 @@
 import { Link, Outlet, Route, Routes } from 'react-router'
 import App from '@/App'
 import { NotFound } from '@components/NotFound'
-import { BrandPartsPage, BuilderPage } from '@features/builder'
+import { BrandPartsPage, BuilderLayout, BuilderPage } from '@features/builder'
 
 const navLinkClass = 'font-semibold text-tasman transition-colors duration-200 hover:text-sulu'
 
@@ -50,8 +50,10 @@ export function AppRoutes() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<App />} />
-        <Route path="builder" element={<BuilderPage />} />
-        <Route path="builder/:component/:brand" element={<BrandPartsPage />} />
+        <Route path="builder" element={<BuilderLayout />}>
+          <Route index element={<BuilderPage />} />
+          <Route path=":component/:brand" element={<BrandPartsPage />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
