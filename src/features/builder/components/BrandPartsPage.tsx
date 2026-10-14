@@ -10,15 +10,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { getComponentInfo } from '../api/components'
-import { getBrand, getParts } from '../api/mockParts'
 import { useBuild } from '../hooks/useBuild'
+import { useCatalog } from '../hooks/useCatalog'
+import type { ComponentType } from '../types'
+import { fitsRod } from '../utils/compatibility'
 import { formatPrice } from '../utils/formatPrice'
+
+// Components whose rows get highlighted when they match the selected rod
+const ROD_MATCHED: ReadonlySet<ComponentType> = new Set(['reel', 'line', 'leader'])
 
 export function BrandPartsPage() {
   const params = useParams<{ component: string; brand: string }>()
   const navigate = useNavigate()
   const { build, selectPart } = useBuild()
+  const { getBrand, getPart, getParts } = useCatalog()
 
   const component = getComponentInfo(params.component)
   const isAll = params.brand === 'all'
@@ -38,6 +46,8 @@ export function BrandPartsPage() {
 
   const selectedId = build[component.type]
   const title = `${brand?.name ?? 'All'} ${component.plural}`
+  const rod = ROD_MATCHED.has(component.type) ? getPart(build.rod) : undefined
+  const matchCount = rod ? parts.filter((p) => fitsRod(p, rod)).length : 0
 
   const handleAdd = (partId: string) => {
     selectPart(component.type, partId)
@@ -54,6 +64,13 @@ export function BrandPartsPage() {
       </Link>
       <h1 className="mt-4 mb-8 text-3xl font-bold text-te-papa-green">{title}</h1>
 
+      {rod && (
+        <p className="mb-6 rounded-md border-l-4 border-sulu bg-sulu/20 px-4 py-3 text-sm text-te-papa-green">
+          <strong>{matchCount}</strong> of {parts.length} {component.plural.toLowerCase()} match your{' '}
+          <strong>{rod.specs['Line Wt']} {getBrand(rod.brandId)?.name} {rod.name}</strong> rod and are highlighted below.
+        </p>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -67,27 +84,37 @@ export function BrandPartsPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {parts.map((part) => (
-            <TableRow key={part.id}>
-              <TableCell className="font-medium">{part.name}</TableCell>
-              {isAll && <TableCell>{getBrand(part.brandId)?.name}</TableCell>}
-              {component.specColumns.map((col) => (
-                <TableCell key={col}>{part.specs[col]}</TableCell>
-              ))}
-              <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
-              <TableCell className="text-right">
-                {part.id === selectedId ? (
-                  <Button size="sm" variant="secondary" disabled>
-                    <Check data-icon="inline-start" /> Selected
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={() => handleAdd(part.id)}>
-                    Add
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
+          {parts.map((part) => {
+            const fits = rod !== undefined && fitsRod(part, rod)
+            return (
+              <TableRow key={part.id} className={cn(fits && 'bg-sulu/25 hover:bg-sulu/40')}>
+                <TableCell className="font-medium">
+                  {part.name}
+                  {fits && (
+                    <Badge className="ml-2 bg-te-papa-green text-sulu">
+                      <Check data-icon="inline-start" /> Fits rod
+                    </Badge>
+                  )}
+                </TableCell>
+                {isAll && <TableCell>{getBrand(part.brandId)?.name}</TableCell>}
+                {component.specColumns.map((col) => (
+                  <TableCell key={col}>{part.specs[col]}</TableCell>
+                ))}
+                <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
+                <TableCell className="text-right">
+                  {part.id === selectedId ? (
+                    <Button size="sm" variant="secondary" disabled>
+                      <Check data-icon="inline-start" /> Selected
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => handleAdd(part.id)}>
+                      Add
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </main>

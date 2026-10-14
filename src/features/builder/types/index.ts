@@ -8,12 +8,15 @@ export interface Brand {
 }
 
 export interface Part {
-  id: string
+  id: string // `${component}-${dbId}`; DB ids are only unique within a table
+  dbId: number
   component: ComponentType
   brandId: string
   name: string
-  price: number // USD
+  price: number | null // USD; some catalog rows have no price yet
   specs: Record<string, string> // keys match the component's specColumns
+  lineWeight?: number // rods and lines
+  lineWeightRange?: { min: number; max: number } // reels
 }
 
 export type Build = Partial<Record<ComponentType, Part['id']>>
@@ -25,4 +28,11 @@ export interface ComponentInfo {
   article: 'a' | 'an'
   icon: LucideIcon
   specColumns: string[] // keys into Part.specs, in display order
+}
+
+export interface Catalog {
+  getBrand: (id: string | undefined) => Brand | undefined
+  getPart: (id: string | undefined) => Part | undefined
+  getBrandsFor: (component: ComponentType) => Brand[]
+  getParts: (component: ComponentType, brandId: string | 'all') => Part[]
 }

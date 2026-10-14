@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { getBrandsFor } from '../api/mockParts'
+import { useCatalog } from '../hooks/useCatalog'
 import type { ComponentInfo } from '../types'
 
 // "Scientific Anglers" -> "SA", "Sage" -> "S"
@@ -30,7 +30,7 @@ interface BrandMenuProps {
 }
 
 export function BrandMenu({ component, trigger }: BrandMenuProps) {
-  const brands = getBrandsFor(component.type)
+  const brands = useCatalog().getBrandsFor(component.type)
   const basePath = `/builder/${component.type}`
 
   return (

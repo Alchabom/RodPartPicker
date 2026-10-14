@@ -8,13 +8,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { COMPONENTS } from '../api/components'
-import { getPart } from '../api/mockParts'
 import { useBuild } from '../hooks/useBuild'
+import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '../utils/formatPrice'
 import { ComponentRow } from './ComponentRow'
 
 export function BuilderPage() {
   const { build } = useBuild()
+  const { getPart } = useCatalog()
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
   return (
