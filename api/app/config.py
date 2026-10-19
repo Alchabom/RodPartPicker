@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
 
@@ -9,9 +10,10 @@ class Settings(BaseSettings):
     DB_HOST: str = "localhost"
     DB_PASSWORD: str
     API_PORT: int = 3001
-    DB_USER: str 
-    DB_NAME: str 
+    DB_USER: str
+    DB_NAME: str
     DB_PORT: int = 3306
+    TEST_DB_NAME: str = "rodpartpicker_test"
+
 
 settings = Settings()
-    
