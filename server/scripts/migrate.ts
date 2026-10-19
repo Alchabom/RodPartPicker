@@ -1,8 +1,5 @@
-// Applies server/db/migrations/*.sql in filename order, once each.
+// Applies api/migrations/*.sql in filename order, once each.
 // Applied files are recorded in the schema_migrations table.
-//
-// MySQL commits DDL (CREATE/ALTER) implicitly, so a migration that fails halfway
-// cannot be rolled back automatically: fix the file, drop what it created, rerun.
 import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -11,7 +8,7 @@ import { escapeId } from 'mysql2'
 import type { RowDataPacket } from 'mysql2'
 import { env } from '../src/env.ts'
 
-const migrationsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../db/migrations')
+const migrationsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../api/migrations')
 
 const conn = await mysql.createConnection({
   host: env.DB_HOST,
