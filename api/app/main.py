@@ -3,6 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.db import DbSession
+from app.parts.router import router as parts_router
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
@@ -18,4 +19,5 @@ def health(response: Response, db: DbSession):
         return {"api": "ok", "db": "unreachable"}
 
 
+api.include_router(parts_router)
 app.include_router(api)
