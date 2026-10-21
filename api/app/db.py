@@ -1,23 +1,28 @@
 from collections.abc import Iterator
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy import URL, create_engine
-from app.config import settings
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = URL.create(drivername="mysql+pymysql", 
-                          username=settings.DB_USER,
-                          password=settings.DB_PASSWORD,
-                          host=settings.DB_HOST,
-                          port=settings.DB_PORT,
-                          database=settings.DB_NAME)
+from app.config import settings
 
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+def make_url(db_name: str) -> URL:
+    return URL.create(
+        drivername="mysql+pymysql",
+        username=settings.DB_USER,
+        password=settings.DB_PASSWORD,
+        host=settings.DB_HOST,
+        port=settings.DB_PORT,
+        database=db_name,
+    )
+
+
+engine = create_engine(make_url(settings.DB_NAME), pool_pre_ping=True)
 
 SessionLocal = sessionmaker(bind=engine)
 
-class Base(DeclarativeBase):
-    pass
 
 def get_db() -> Iterator[Session]:
     db = SessionLocal()
@@ -27,9 +32,8 @@ def get_db() -> Iterator[Session]:
         db.close()
 
 
+DbSession = Annotated[Session, Depends(get_db)]
 
 
-
-
-
-    
+class Base(DeclarativeBase):
+    pass
