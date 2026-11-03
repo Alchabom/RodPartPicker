@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
+from app.builds.models import Build
 from app.config import settings
 from app.db import engine as app_engine
 from app.db import get_db, make_url
@@ -79,6 +80,21 @@ def make_part(db, make_brand):
         db.add(part)
         db.flush()
         return part
+
+    return make
+
+
+@pytest.fixture
+def make_build(db):
+    count = 0
+
+    def make(**columns):
+        nonlocal count
+        count += 1
+        build = Build(**{"name": f"Test Build {count}", **columns})
+        db.add(build)
+        db.flush()
+        return build
 
     return make
 

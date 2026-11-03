@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.db import DbSession
 from app.parts.router import router as parts_router
+from app.builds.router import router as builds_router
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
@@ -20,4 +21,5 @@ def health(response: Response, db: DbSession):
 
 
 api.include_router(parts_router)
+api.include_router(builds_router)
 app.include_router(api)
