@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 from app.db import Base
 
 # Mirrors the tables created by api/migrations; never call create_all().
-# Line-weight columns have no ForeignKey because line_weights isn't mapped.
+# Line-weight columns have no ForeignKey because nothing joins through them.
 
 
 class Brand(Base):
@@ -88,3 +88,12 @@ class Tippet(CatalogPart, Base):
     price: Mapped[Decimal]
 
     x_size: Mapped[XSize] = relationship()
+
+
+class LineWeight(Base):
+    __tablename__ = "line_weights"
+
+    weight_class: Mapped[int] = mapped_column(primary_key=True)
+    grains_target: Mapped[int]
+    grains_min: Mapped[int]
+    grains_max: Mapped[int]

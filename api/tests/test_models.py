@@ -1,10 +1,21 @@
 import pytest
 from sqlalchemy import func, select
 
-from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, Tippet, XSize
+from app.parts.models import (
+    Brand,
+    FlyLine,
+    Leader,
+    LineWeight,
+    Reel,
+    Rod,
+    Tippet,
+    XSize,
+)
 
 
-@pytest.mark.parametrize("model", [Brand, XSize, Rod, Reel, FlyLine, Leader, Tippet])
+@pytest.mark.parametrize(
+    "model", [Brand, XSize, Rod, Reel, FlyLine, Leader, Tippet, LineWeight]
+)
 def test_model_columns_match_table(db, model):
     # Selecting every mapped column fails with "Unknown column" on any typo
     db.scalars(select(model).limit(1)).all()
