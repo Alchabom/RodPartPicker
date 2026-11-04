@@ -12,23 +12,24 @@ from app.db import DbSession
 BuildId = Annotated[int, Path(gt=0)]
 router = APIRouter(prefix="/builds", tags=["builds"])
 
+
 def _commit(db: Session) -> None:
     try:
         db.commit()
     except IntegrityError as e:
         db.rollback()
         if e.orig.args[0] == 1452:  # foreign key violation
-            raise HTTPException(status_code=400, detail="Referenced part does not exist") from e
+            raise HTTPException(
+                status_code=400, detail="Referenced part does not exist"
+            ) from e
         raise
 
 
 @router.get("")
 def list_builds(db: DbSession) -> list[BuildOut]:
-    stmt = (
-        select(Build)
-        .order_by(Build.updated_at.desc())
-    )
+    stmt = select(Build).order_by(Build.updated_at.desc())
     return db.scalars(stmt).all()
+
 
 @router.get("/{build_id}")
 def get_build(build_id: BuildId, db: DbSession) -> BuildOut:
@@ -36,6 +37,7 @@ def get_build(build_id: BuildId, db: DbSession) -> BuildOut:
     if not build:
         raise HTTPException(status_code=404, detail="Build not found")
     return build
+
 
 @router.post("", status_code=201)
 def create_build(build: BuildIn, db: DbSession) -> BuildOut:
@@ -51,6 +53,7 @@ def create_build(build: BuildIn, db: DbSession) -> BuildOut:
     _commit(db)
     db.refresh(new_build)
     return new_build
+
 
 @router.put("/{build_id}", status_code=204)
 def update_build(build_id: BuildId, build: BuildIn, db: DbSession) -> None:
