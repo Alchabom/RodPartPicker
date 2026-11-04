@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.compatibility import rules
-from app.parts.models import FlyLine, Leader, Reel, Rod
+from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
 
 # ---------- Water ----------
 
@@ -206,3 +206,166 @@ def test_heavy_line_is_not_recommended_on_other_rods(action):
     line = FlyLine(head_weight_grains=GRAINS_MAX + 1)
 
     assert rules.is_recommended(line, rod, GRAINS_MAX) is False
+
+
+# ---------- Build warnings ----------
+
+HEAVY = Decimal("10.0")
+LIGHT = Decimal("5.9")
+
+
+def codes(rod=None, reel=None, line=None, leader=None, tippet=None):
+    issues = rules.check_build(rod, reel, line, leader, tippet)
+    return [issue.code for issue in issues]
+
+
+def test_empty_build_has_no_warnings():
+    assert codes() == []
+
+
+def test_compatible_build_has_no_warnings():
+    assert (
+        codes(
+            rod=Rod(line_weight=5, water="fresh"),
+            reel=Reel(min_line_weight=4, max_line_weight=6, water="fresh"),
+            line=FlyLine(line_weight=5, water="fresh"),
+            leader=Leader(x_size_id=9, strength_lb=LIGHT, water="fresh"),
+            tippet=Tippet(x_size_id=10, water="fresh"),
+        )
+        == []
+    )
+
+
+def test_every_warning_is_returned_with_a_message():
+    issues = rules.check_build(
+        Rod(line_weight=5, water="fresh"),
+        Reel(min_line_weight=7, max_line_weight=9, water="fresh"),
+        FlyLine(line_weight=8, water="salt"),
+        None,
+        None,
+    )
+
+    assert {issue.code for issue in issues} == {
+        "ROD_LINE_WEIGHT",
+        "ROD_REEL_WEIGHT",
+        "WATER_MISMATCH",
+    }
+    assert all(issue.message for issue in issues)
+
+
+@pytest.mark.parametrize("line_weight, expected", [(4, True), (5, False), (6, True)])
+def test_rod_line_weight(line_weight, expected):
+    rod = Rod(line_weight=5)
+    line = FlyLine(line_weight=line_weight)
+
+    assert ("ROD_LINE_WEIGHT" in codes(rod=rod, line=line)) is expected
+
+
+@pytest.mark.parametrize(
+    "line_weight, expected", [(3, True), (4, False), (6, False), (7, True)]
+)
+def test_reel_line_weight(line_weight, expected):
+    reel = Reel(min_line_weight=4, max_line_weight=6)
+    line = FlyLine(line_weight=line_weight)
+
+    assert ("REEL_LINE_WEIGHT" in codes(reel=reel, line=line)) is expected
+
+
+@pytest.mark.parametrize(
+    "rod_weight, expected", [(3, True), (4, False), (6, False), (7, True)]
+)
+def test_rod_reel_weight(rod_weight, expected):
+    rod = Rod(line_weight=rod_weight)
+    reel = Reel(min_line_weight=4, max_line_weight=6)
+
+    assert ("ROD_REEL_WEIGHT" in codes(rod=rod, reel=reel)) is expected
+
+
+@pytest.mark.parametrize(
+    "rod_weight, strength_lb, expected",
+    [
+        (6, HEAVY, True),
+        (7, HEAVY, False),
+        (6, LIGHT, False),
+        (6, None, False),
+    ],
+)
+def test_rod_leader_weight(rod_weight, strength_lb, expected):
+    rod = Rod(line_weight=rod_weight)
+    leader = Leader(strength_lb=strength_lb)
+
+    assert ("ROD_LEADER_WEIGHT" in codes(rod=rod, leader=leader)) is expected
+
+
+@pytest.mark.parametrize(
+    "tippet_size, expected",
+    [
+        (8, True),  # one size heavier than the leader
+        (9, False),  # the same size
+        (10, False),  # one size finer
+        (11, True),  # two sizes finer
+    ],
+)
+def test_leader_tippet_size(tippet_size, expected):
+    leader = Leader(x_size_id=9)
+    tippet = Tippet(x_size_id=tippet_size)
+
+    assert ("LEADER_TIPPET_SIZE" in codes(leader=leader, tippet=tippet)) is expected
+
+
+def test_leader_tippet_size_skipped_when_leader_has_no_x_size():
+    leader = Leader(x_size_id=None)
+    tippet = Tippet(x_size_id=9)
+
+    assert "LEADER_TIPPET_SIZE" not in codes(leader=leader, tippet=tippet)
+
+
+@pytest.mark.parametrize(
+    "rod_water, line_water, expected",
+    [
+        ("fresh", "salt", True),
+        ("salt", "fresh", True),
+        ("fresh", "fresh", False),
+        ("salt", "salt", False),
+        ("both", "salt", False),
+        ("fresh", "both", False),
+    ],
+)
+def test_water_mismatch(rod_water, line_water, expected):
+    rod = Rod(line_weight=8, water=rod_water)
+    line = FlyLine(line_weight=8, water=line_water)
+
+    assert ("WATER_MISMATCH" in codes(rod=rod, line=line)) is expected
+
+
+def test_water_mismatch_checks_every_part():
+    leader = Leader(x_size_id=9, water="salt")
+    tippet = Tippet(x_size_id=9, water="fresh")
+
+    assert "WATER_MISMATCH" in codes(leader=leader, tippet=tippet)
+
+
+def test_water_mismatch_fires_once_for_many_parts():
+    found = codes(
+        rod=Rod(line_weight=8, water="fresh"),
+        line=FlyLine(line_weight=8, water="salt"),
+        leader=Leader(x_size_id=9, water="salt"),
+        tippet=Tippet(x_size_id=9, water="fresh"),
+    )
+
+    assert found.count("WATER_MISMATCH") == 1
+
+
+@pytest.mark.parametrize(
+    "parts",
+    [
+        {"rod": Rod(line_weight=5, water="fresh")},
+        {"reel": Reel(min_line_weight=7, max_line_weight=9, water="salt")},
+        {"line": FlyLine(line_weight=8, water="salt")},
+        {"leader": Leader(x_size_id=9, strength_lb=HEAVY, water="salt")},
+        {"tippet": Tippet(x_size_id=4, water="fresh")},
+    ],
+    ids=["rod", "reel", "line", "leader", "tippet"],
+)
+def test_one_part_alone_has_no_warnings(parts):
+    assert codes(**parts) == []
