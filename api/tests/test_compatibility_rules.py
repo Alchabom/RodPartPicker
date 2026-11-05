@@ -316,6 +316,14 @@ def test_every_warning_is_returned_with_a_message():
     assert all(issue.message for issue in issues)
 
 
+def test_warning_names_the_part_to_change():
+    reel = Reel(name="Guru X", min_line_weight=6, max_line_weight=8)
+
+    issues = rules.check_build(rod=Rod(line_weight=2), reel=reel)
+
+    assert issues[0].message == "Guru X is rated for 6-8 wt, but your rod is 2 wt."
+
+
 @pytest.mark.parametrize("line_weight, expected", [(4, True), (5, False), (6, True)])
 def test_rod_line_weight(line_weight, expected):
     rod = Rod(line_weight=5)

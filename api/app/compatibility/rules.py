@@ -126,7 +126,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.ROD_LINE_WEIGHT,
-                f"This line is {line.line_weight} wt, but your rod is {rod.line_weight} wt.",
+                f"{line.name} is {line.line_weight} wt, but your rod is {rod.line_weight} wt.",
             )
         )
 
@@ -138,7 +138,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.REEL_LINE_WEIGHT,
-                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your line is {line.line_weight} wt.",
+                f"{reel.name} is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your line is {line.line_weight} wt.",
             )
         )
 
@@ -150,7 +150,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.ROD_REEL_WEIGHT,
-                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your rod is {rod.line_weight} wt.",
+                f"{reel.name} is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your rod is {rod.line_weight} wt.",
             )
         )
 
@@ -163,7 +163,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.ROD_LEADER_WEIGHT,
-                f"This leader is too heavy for a {rod.line_weight} wt rod.",
+                f"{leader.name} is too heavy for a {rod.line_weight} wt rod.",
             )
         )
 
@@ -176,7 +176,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.LEADER_TIPPET_SIZE,
-                "This tippet doesn't suit your leader. Use the same size or one size finer.",
+                f"{tippet.name} doesn't suit {leader.name}. Use the same size or one size finer.",
             )
         )
 
