@@ -1,11 +1,11 @@
-// Loads the parts catalog from the Express API (GET /api/parts/:category)
+// Loads the parts catalog from the API (GET /api/parts/:category)
 // and maps each row into the UI's Part shape.
 import { apiFetch } from '@/lib/api'
 import type { Brand, Catalog, ComponentType, Part } from '../types'
 
 type Water = 'fresh' | 'salt' | 'both'
 
-// Row shapes returned by server/src/routes/parts.ts
+// Row shapes returned by api/app/parts/schemas.py
 interface RodRow {
   id: number
   brand: string

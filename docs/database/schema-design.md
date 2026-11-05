@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-11
 **Status:** Schema and API skeleton implemented; not yet run against a live MySQL server
-**Implementation:** `server/db/migrations/001_init.sql`, `002_seed_lookups.sql`, `server/src/`
+**Implementation:** `api/migrations/`, `api/app/`
 
 This document records *how* we arrived at the RodPartPicker data model, not
 only what it is: the starting proposal, the problems found in it, each decision
@@ -31,7 +31,7 @@ The database and API replace it.
 | 3. Deliberation | Wrote down open questions; team chose an option for each | Decision log (§5) |
 | 4. Design | Rewrote the schema around those decisions, MySQL-specific | `001_init.sql` (§6) |
 | 5. Backend choice | Compared a hosted backend (Supabase) with a self-built API | Decision D7 (§5) |
-| 6. Implementation | Migrations, migration runner, Express API, Vite proxy | `server/` |
+| 6. Implementation | Migrations, migration runner, Express API (later replaced by FastAPI, see D11), Vite proxy | `api/` |
 | 7. Verification | Type check, lint, live smoke tests (§8) | Results and known gaps |
 
 ## 3. Initial proposal
@@ -81,6 +81,7 @@ The database and API replace it.
 | D8 | Name of the line tables | `lines`, `fly_lines` | **`fly_lines`** | `LINES` is a MySQL reserved word and would need backticks everywhere |
 | D9 | Where do compatibility rules live? | DB constraints; application code | **Application code** | A builder should *warn* about a mismatch and still let the user save |
 | D10 | Which fly line specs are stored? | Type, taper, sink rate | **Type and sink rate** (migrations 003, 004) | `taper` dropped as not needed for compatibility. `sink_rate_ips` is NULL exactly when `type` is floating |
+| D11 | Which framework serves the API? | Express; FastAPI | **FastAPI + SQLAlchemy**, replacing D7's Express server | The team wanted the experience of building its own API in Python, with a pytest suite against real MySQL |
 
 ## 6. Final schema
 
@@ -162,17 +163,18 @@ The rules live in `api/app/compatibility/rules.py`. `docs/superpowers/specs/2026
 ## 8. Backend architecture
 
 ```text
-Browser ──/api/*──▶ Vite dev server (5173) ──proxy──▶ Express (3001) ──mysql2 pool──▶ MySQL
+Browser ──/api/*──▶ Vite dev server (5173) ──proxy──▶ FastAPI (3001) ──SQLAlchemy──▶ MySQL
 ```
 
-- **Vite proxies `/api`** to Express, so the browser sees one origin and we don't need CORS in development.
-- **Node 24 runs the server's TypeScript directly** (type stripping), so there is no build step. `tsc -b` still type-checks `server/` through `tsconfig.server.json`.
-- **Every request body and parameter is validated with zod.** Every query uses `?` placeholders.
-- **The migration runner** (`pnpm db:migrate`) applies numbered `.sql` files once each and records them in `schema_migrations`.
+- **Vite proxies `/api`** to FastAPI, so the browser sees one origin and we don't need CORS in development.
+- **Pydantic validates every request,** and SQLAlchemy binds every query parameter.
+- **Migrations own the schema.** The runner (`uv run python -m app.migrate`) applies numbered `.sql` files once each and records them in `schema_migrations`. SQLAlchemy models only map onto those tables.
 
-See `server/README.md` for setup, endpoints and conventions.
+See `api/README.md` for setup.
 
 ## 9. Verification
+
+These results are from the original Express API, kept as a record. The API now has a pytest suite: `cd api && uv run pytest`.
 
 | Check | Result |
 |---|---|
