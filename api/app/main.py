@@ -2,9 +2,9 @@ from fastapi import APIRouter, FastAPI, Response
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.builds.router import router as builds_router
 from app.db import DbSession
 from app.parts.router import router as parts_router
-from app.builds.router import router as builds_router
 
 app = FastAPI()
 api = APIRouter(prefix="/api")

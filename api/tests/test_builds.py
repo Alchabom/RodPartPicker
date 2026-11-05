@@ -64,10 +64,14 @@ def test_list_orders_by_updated_at(client, db, make_build):
     older = make_build()
     newer = make_build()
     db.execute(
-        update(Build).where(Build.id == older.id).values(updated_at=datetime(2025, 1, 1))
+        update(Build)
+        .where(Build.id == older.id)
+        .values(updated_at=datetime(2025, 1, 1))
     )
     db.execute(
-        update(Build).where(Build.id == newer.id).values(updated_at=datetime(2025, 6, 1))
+        update(Build)
+        .where(Build.id == newer.id)
+        .values(updated_at=datetime(2025, 6, 1))
     )
 
     response = client.get("/api/builds")
