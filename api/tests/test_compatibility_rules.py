@@ -208,6 +208,69 @@ def test_heavy_line_is_not_recommended_on_other_rods(action):
     assert rules.is_recommended(line, rod, GRAINS_MAX) is False
 
 
+# ---------- Filter ----------
+
+
+@pytest.mark.parametrize(
+    "part_water, requested, expected",
+    [
+        ("fresh", None, True),  # no parameter: nothing is filtered
+        ("salt", None, True),
+        ("fresh", "fresh", True),
+        ("both", "salt", True),
+        ("fresh", "salt", False),
+        ("salt", "fresh", False),
+    ],
+)
+def test_passes_filter_water(part_water, requested, expected):
+    assert rules.passes_filter(part_water, 8, requested) is expected
+
+
+@pytest.mark.parametrize("top_weight, expected", [(6, False), (7, True), (None, True)])
+def test_passes_filter_salt_minimum(top_weight, expected):
+    assert rules.passes_filter("salt", top_weight, "salt") is expected
+
+
+def test_salt_minimum_needs_the_parameter():
+    assert rules.passes_filter("salt", 6, None) is True
+
+
+# ---------- Conflicts ----------
+
+
+def test_conflicts_with_a_selected_part():
+    selected = {"rod": Rod(line_weight=5)}
+
+    assert rules.conflicts("line", FlyLine(line_weight=6), selected) is True
+
+
+def test_no_conflict_with_a_compatible_part():
+    selected = {"rod": Rod(line_weight=5)}
+
+    assert rules.conflicts("line", FlyLine(line_weight=5), selected) is False
+
+
+def test_no_conflict_with_nothing_selected():
+    selected = {"rod": None, "reel": None}
+
+    assert rules.conflicts("line", FlyLine(line_weight=5), selected) is False
+
+
+def test_clash_between_other_parts_is_ignored():
+    selected = {
+        "rod": Rod(line_weight=2),
+        "reel": Reel(min_line_weight=6, max_line_weight=8),
+    }
+
+    assert rules.conflicts("leader", Leader(x_size_id=9), selected) is False
+
+
+def test_part_is_not_checked_against_its_own_slot():
+    selected = {"line": FlyLine(line_weight=8)}
+
+    assert rules.conflicts("line", FlyLine(line_weight=5), selected) is False
+
+
 # ---------- Build warnings ----------
 
 HEAVY = Decimal("10.0")

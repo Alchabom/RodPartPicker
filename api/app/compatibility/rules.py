@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
+from app.parts.models import CatalogPart, FlyLine, Leader, Reel, Rod, Tippet
 
 SALT_MIN_WEIGHT = 7  # water=salt excludes anything under this weight
 HEAVY_LEADER_LB = 10  # leaders at or above this strength count as heavy
@@ -41,6 +41,17 @@ def passes_water(part_water: str, water: str | None) -> bool:
     if part_water == "both":
         return True
     return part_water == water
+
+
+def passes_filter(
+    part_water: str, top_weight: int | None, requested: str | None
+) -> bool:
+    """Apply the water parameter. Only water=salt enforces a minimum weight."""
+    if not passes_water(part_water, requested):
+        return False
+    if requested != "salt" or top_weight is None:
+        return True
+    return top_weight >= SALT_MIN_WEIGHT
 
 
 def rod_matches(rod: Rod, water: str | None, requested: str | None) -> bool:
@@ -102,11 +113,11 @@ def is_recommended(line: FlyLine, rod: Rod, grains_max: int) -> bool:
 
 
 def check_build(
-    rod: Rod | None,
-    reel: Reel | None,
-    line: FlyLine | None,
-    leader: Leader | None,
-    tippet: Tippet | None,
+    rod: Rod | None = None,
+    reel: Reel | None = None,
+    line: FlyLine | None = None,
+    leader: Leader | None = None,
+    tippet: Tippet | None = None,
 ) -> list[BuildIssue]:
     """Return every compatibility warning for the selected parts."""
     issues: list[BuildIssue] = []
@@ -180,3 +191,16 @@ def check_build(
         )
 
     return issues
+
+
+def conflicts(slot: str, part: CatalogPart, selected: dict) -> bool:
+    """Check whether a part warns against any selected part in another slot.
+
+    Parts are compared one pair at a time, so a clash between two other parts
+    doesn't count against this one. `slot` is a check_build argument name.
+    """
+    return any(
+        check_build(**{slot: part, other_slot: other})
+        for other_slot, other in selected.items()
+        if other_slot != slot and other is not None
+    )
