@@ -136,19 +136,12 @@ Each row is one purchasable size.
 
 The rules live in `api/app/compatibility/rules.py`. `docs/superpowers/specs/2026-11-04-server-compatibility-design.md` records the design. Following D9, a mismatch is a warning and never blocks a save.
 
-**Matching** (`GET /api/compatibility/parts`) decides which parts to highlight:
+**Highlights** (`GET /api/compatibility/parts`) follow one rule: highlighted means no warning. `check_build` is the only definition of compatible, so highlights and warnings can't disagree. A part is highlighted when both are true:
 
-| Part | Matches when |
-|---|---|
-| Rod | Passes water |
-| Reel | Rod weight is within the reel's range, and passes water |
-| Line | Same weight as the rod, and passes water |
-| Leader | Passes water; a leader of 10 lb or more also needs a rod of 7 wt or more |
-| Tippet | Passes water |
+1. It passes the filter, if `water` was sent: its tag equals `water` or is `both`. With `water=salt`, rods and lines must also be 7 wt or above, and reels must reach 7 wt.
+2. Pairing it with each selected part in another component gives no warnings. A clash between two other parts doesn't count against it.
 
-- **Passes water:** the part's tag equals the effective water or is `both`. The effective water is the `water` parameter, otherwise the rod's tag. A `both` rod with no parameter applies no filter.
-- **Saltwater minimum:** with `water=salt` sent as a parameter, rods and lines must be 7 wt or above, and reels must reach 7 wt.
-- **Recommended line:** a matching line whose `head_weight_grains` is above `grains_max`, on a rod with `fast` action.
+**Recommended line:** a highlighted line whose `head_weight_grains` is above `grains_max`, on a selected rod with `fast` action.
 
 **Build warnings** (`GET /api/compatibility/check`) each need both of their parts selected:
 
