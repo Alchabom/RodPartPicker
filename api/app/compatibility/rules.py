@@ -1,10 +1,28 @@
 """Compatibility rules. Plain functions with no database or HTTP code."""
 
-from app.parts.models import FlyLine, Leader, Reel, Rod
+from dataclasses import dataclass
+from enum import StrEnum
+
+from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
 
 SALT_MIN_WEIGHT = 7  # water=salt excludes anything under this weight
 HEAVY_LEADER_LB = 10  # leaders at or above this strength count as heavy
 HEAVY_LEADER_MIN_ROD_WEIGHT = 7  # heavy leaders only match rods at or above this weight
+
+
+class WarningCode(StrEnum):
+    ROD_LINE_WEIGHT = "ROD_LINE_WEIGHT"
+    REEL_LINE_WEIGHT = "REEL_LINE_WEIGHT"
+    ROD_REEL_WEIGHT = "ROD_REEL_WEIGHT"
+    ROD_LEADER_WEIGHT = "ROD_LEADER_WEIGHT"
+    LEADER_TIPPET_SIZE = "LEADER_TIPPET_SIZE"
+    WATER_MISMATCH = "WATER_MISMATCH"
+
+
+@dataclass(frozen=True)
+class BuildIssue:
+    code: WarningCode
+    message: str
 
 
 def effective_water(rod: Rod | None, requested: str | None) -> str | None:
@@ -81,3 +99,84 @@ def is_recommended(line: FlyLine, rod: Rod, grains_max: int) -> bool:
         and line.head_weight_grains is not None
         and line.head_weight_grains > grains_max
     )
+
+
+def check_build(
+    rod: Rod | None,
+    reel: Reel | None,
+    line: FlyLine | None,
+    leader: Leader | None,
+    tippet: Tippet | None,
+) -> list[BuildIssue]:
+    """Return every compatibility warning for the selected parts."""
+    issues: list[BuildIssue] = []
+
+    if rod and line and rod.line_weight != line.line_weight:
+        issues.append(
+            BuildIssue(
+                WarningCode.ROD_LINE_WEIGHT,
+                f"This line is a {line.line_weight} wt, but your rod is a {rod.line_weight} wt.",
+            )
+        )
+
+    if (
+        reel
+        and line
+        and not reel.min_line_weight <= line.line_weight <= reel.max_line_weight
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.REEL_LINE_WEIGHT,
+                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your line is a {line.line_weight} wt.",
+            )
+        )
+
+    if (
+        rod
+        and reel
+        and not reel.min_line_weight <= rod.line_weight <= reel.max_line_weight
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.ROD_REEL_WEIGHT,
+                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your rod is a {rod.line_weight} wt.",
+            )
+        )
+
+    if (
+        rod
+        and leader
+        and is_heavy_leader(leader)
+        and rod.line_weight < HEAVY_LEADER_MIN_ROD_WEIGHT
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.ROD_LEADER_WEIGHT,
+                f"This leader is too heavy for a {rod.line_weight} wt rod.",
+            )
+        )
+
+    if (
+        leader
+        and tippet
+        and leader.x_size_id is not None
+        and tippet.x_size_id not in (leader.x_size_id, leader.x_size_id + 1)
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.LEADER_TIPPET_SIZE,
+                "This tippet doesn't suit your leader. Use the same size or one size finer.",
+            )
+        )
+
+    parts = (rod, reel, line, leader, tippet)
+    tags = {part.water for part in parts if part is not None}
+    if {"fresh", "salt"} <= tags:
+        issues.append(
+            BuildIssue(
+                WarningCode.WATER_MISMATCH,
+                "This build mixes freshwater and saltwater parts.",
+            )
+        )
+
+    return issues
