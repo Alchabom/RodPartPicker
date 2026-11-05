@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
 from app.compatibility import rules
@@ -20,23 +21,64 @@ def _load(db, model, part_id):
     return part
 
 
+def _selected_parts(
+    db: DbSession,
+    rod_id: Annotated[int | None, Query(alias="rodId", gt=0)] = None,
+    reel_id: Annotated[int | None, Query(alias="reelId", gt=0)] = None,
+    fly_line_id: Annotated[int | None, Query(alias="flyLineId", gt=0)] = None,
+    leader_id: Annotated[int | None, Query(alias="leaderId", gt=0)] = None,
+    tippet_id: Annotated[int | None, Query(alias="tippetId", gt=0)] = None,
+) -> dict:
+    """Load the build's parts, keyed by rules.check_build argument name."""
+    return {
+        "rod": _load(db, Rod, rod_id),
+        "reel": _load(db, Reel, reel_id),
+        "line": _load(db, FlyLine, fly_line_id),
+        "leader": _load(db, Leader, leader_id),
+        "tippet": _load(db, Tippet, tippet_id),
+    }
+
+
+SelectedParts = Annotated[dict, Depends(_selected_parts)]
+
+
+def _no_weight(_part) -> None:
+    return None
+
+
+def _fitting(
+    db,
+    model,
+    slot: str,
+    selected: dict,
+    water: str | None,
+    top_weight: Callable = _no_weight,
+) -> list:
+    """Return the parts of one component that fit the rest of the build."""
+    return [
+        part
+        for part in db.scalars(select(model))
+        if rules.passes_filter(part.water, top_weight(part), water)
+        and not rules.conflicts(slot, part, selected)
+    ]
+
+
+def _ids(parts: list) -> list[int]:
+    return [part.id for part in parts]
+
+
 @router.get("/parts")
 def get_compatible_parts(
     db: DbSession,
-    rod_id: Annotated[int | None, Query(alias="rodId", gt=0)] = None,
+    selected: SelectedParts,
     water: Literal["fresh", "salt"] | None = None,
 ) -> CompatibleParts:
-
-    rod = _load(db, Rod, rod_id)
-    effective = rules.effective_water(rod, water)
-
-    lines = [
-        line
-        for line in db.scalars(select(FlyLine))
-        if rules.line_matches(line, rod, effective, water)
-    ]
+    lines = _fitting(
+        db, FlyLine, "line", selected, water, lambda line: line.line_weight
+    )
 
     recommended = []
+    rod = selected["rod"]
     if rod is not None:
         grains_max = dict(
             db.execute(select(LineWeight.weight_class, LineWeight.grains_max)).all()
@@ -48,49 +90,26 @@ def get_compatible_parts(
         ]
 
     return CompatibleParts(
-        rod=[
-            r.id
-            for r in db.scalars(select(Rod))
-            if rules.rod_matches(r, effective, water)
-        ],
-        reel=[
-            reel.id
-            for reel in db.scalars(select(Reel))
-            if rules.reel_matches(reel, rod, effective, water)
-        ],
-        line=[line.id for line in lines],
-        leader=[
-            leader.id
-            for leader in db.scalars(select(Leader))
-            if rules.leader_matches(leader, rod, effective)
-        ],
-        tippet=[
-            tippet.id
-            for tippet in db.scalars(select(Tippet))
-            if rules.passes_water(tippet.water, effective)
-        ],
+        rod=_ids(
+            _fitting(db, Rod, "rod", selected, water, lambda rod: rod.line_weight)
+        ),
+        reel=_ids(
+            _fitting(
+                db, Reel, "reel", selected, water, lambda reel: reel.max_line_weight
+            )
+        ),
+        line=_ids(lines),
+        leader=_ids(_fitting(db, Leader, "leader", selected, water)),
+        tippet=_ids(_fitting(db, Tippet, "tippet", selected, water)),
         recommended_line=recommended,
     )
 
 
 @router.get("/check")
-def check_compatibility(
-    db: DbSession,
-    rod_id: Annotated[int | None, Query(alias="rodId", gt=0)] = None,
-    reel_id: Annotated[int | None, Query(alias="reelId", gt=0)] = None,
-    fly_line_id: Annotated[int | None, Query(alias="flyLineId", gt=0)] = None,
-    leader_id: Annotated[int | None, Query(alias="leaderId", gt=0)] = None,
-    tippet_id: Annotated[int | None, Query(alias="tippetId", gt=0)] = None,
-) -> BuildCheck:
-    issues = rules.check_build(
-        _load(db, Rod, rod_id),
-        _load(db, Reel, reel_id),
-        _load(db, FlyLine, fly_line_id),
-        _load(db, Leader, leader_id),
-        _load(db, Tippet, tippet_id),
-    )
+def check_compatibility(selected: SelectedParts) -> BuildCheck:
     return BuildCheck(
         warnings=[
-            BuildWarning(code=issue.code, message=issue.message) for issue in issues
+            BuildWarning(code=issue.code, message=issue.message)
+            for issue in rules.check_build(**selected)
         ]
     )

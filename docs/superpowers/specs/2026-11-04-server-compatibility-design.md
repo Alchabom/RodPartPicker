@@ -4,6 +4,8 @@
 **Replaces:** "PR 3: Compatibility" in `2026-10-19-fastapi-backend-design.md`
 **Updates:** §7 of `docs/database/schema-design.md`
 
+> **Revised 2026-11-05.** See "Revision: build-aware highlights" at the end. Where the two differ, the revision wins.
+
 ## Goal
 
 Move compatibility decisions from the browser into the FastAPI API, and extend them from rod matching to whole-build checks. The API also exposes the water filter that the planned questionnaire will use.
@@ -222,3 +224,73 @@ These are accepted for now and are not fixed by this work.
 ## Open item
 
 **Avid Trout-Gold 7-wt** has a 270gr head against a 177–193 range. Check it against the product listing. If it's a typo, fix it in a new migration. It affects only whether that line is recommended for fast rods, so it doesn't block this work.
+
+## Revision: build-aware highlights
+
+**Date:** 2026-11-05
+
+Browser testing showed a gap: highlights looked only at the rod, while warnings looked at the whole build, so a page could recommend a part that caused a warning. With a 5X leader, the tippet page highlighted all 32 tippets, but only 8 avoid a warning.
+
+This section overrides "Matching", the "Water" fallback to the rod's tag, the `/parts` API and the parts page behaviour above. The team expects to revisit what counts as compatible, so the definition now lives in one place.
+
+### The rule
+
+**Highlighted means no warning.** `check_build` is the only definition of compatible. A part is highlighted when both are true:
+
+1. It passes the filter, if `water` was sent.
+2. Pairing it with each other selected part gives no warnings.
+
+- **Filter:** the part's tag equals `water` or is `both`. With `water=salt`, rods and lines must also be 7 wt or above, and reels must have `max_line_weight >= 7`. With no `water` parameter, nothing is filtered.
+- **Pairs:** the candidate is checked against one selected part at a time, so an existing clash between two other parts doesn't affect it.
+- **Own slot:** a component is never checked against its own selected part, so swapping a reel ignores the current reel.
+- **Nothing else selected:** every part that passes the filter is returned.
+- **Heavy leaders:** `ROD_LEADER_WEIGHT` covers these, so the rule applies only when a rod is selected.
+- **Recommended line:** unchanged, but it is chosen from the highlighted lines. It needs a selected rod with `fast` action, and a head above `grains_max`.
+
+**Behaviour change:** `water=salt` with a `fresh` rod no longer highlights `salt` parts, because they would trigger `WATER_MISMATCH`. Previously the parameter beat the rod's tag.
+
+### Rules module
+
+- Add `conflicts(candidate_parts, selected_parts) -> bool`, which runs `check_build` on the candidate with each selected part in turn.
+- Add `passes_filter`, which holds the filter above. It replaces `rod_matches`.
+- Remove `reel_matches`, `line_matches`, `leader_matches` and `effective_water`, and their tests. `passes_water`, `is_heavy_leader`, `is_recommended` and `check_build` stay.
+
+### Warning messages
+
+Messages name the part to change. `code` values don't change.
+
+| Code | Message |
+|---|---|
+| `ROD_LINE_WEIGHT` | `{line} is {n} wt, but your rod is {n} wt.` |
+| `REEL_LINE_WEIGHT` | `{reel} is rated for {min}-{max} wt, but your line is {n} wt.` |
+| `ROD_REEL_WEIGHT` | `{reel} is rated for {min}-{max} wt, but your rod is {n} wt.` |
+| `ROD_LEADER_WEIGHT` | `{leader} is too heavy for a {n} wt rod.` |
+| `LEADER_TIPPET_SIZE` | `{tippet} doesn't suit {leader}. Use the same size or one size finer.` |
+| `WATER_MISMATCH` | `This build mixes freshwater and saltwater parts.` |
+
+### API
+
+`GET /api/compatibility/parts` takes `rodId`, `reelId`, `flyLineId`, `leaderId`, `tippetId` and `water`, all optional. The response shape is unchanged. An unknown part ID returns `400`, and an invalid value returns `422`.
+
+### Frontend
+
+- `BrandPartsPage` sends the whole build, using the query from `toCheckQuery` plus nothing else. The frontend still doesn't send `water`.
+- Highlights show on every component page, including rods, when at least one part from another component is selected. Otherwise the page shows no highlights and no banner.
+- The request refetches when the selection changes, and stale responses are ignored the same way as the warning panel.
+- The banner becomes "N of M {components} match your build and are highlighted below."
+- The "Fits rod" badge becomes "Fits build".
+- `ROD_MATCHED` is removed.
+
+**Warning panel:** replaces the hand-written panel with shadcn's `Alert`, `AlertTitle` and `AlertDescription`, added with the shadcn CLI. It uses the default variant and theme colours, keeps the `TriangleAlert` icon, and stays below the table.
+
+### Testing
+
+- **Rule tests:** replace the removed functions' tests with tests for `passes_filter` and `conflicts`, covering a clash, no clash, an existing clash between two other parts, and a component's own slot.
+- **API tests:** a 5X leader leaves 5X and 6X tippets highlighted and others not; a `both` rod with a salt line excludes `fresh` reels; a selected reel doesn't exclude other reels; `water=salt` with a `fresh` rod excludes `salt` lines; an unknown ID for each part returns `400`.
+- **Consistency test:** for a seeded build, adding any highlighted part produces no warning involving that part.
+- **Browser:** the leader and tippet pages respect each other, the rod page highlights with a line selected, and a build with no other parts shows no highlights.
+
+### Delivery
+
+- **`api-compatibility-fit`:** a new PR on top of `api-compatibility` holding the rules, API, warning messages and docs, including section 7 of `schema-design.md`. PRs #12-#15 stay as they are. Its description must say that it removes functions added in #13 and why.
+- **`builder-compatibility`:** moves on top of `api-compatibility-fit`.
