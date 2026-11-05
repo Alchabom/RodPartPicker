@@ -115,7 +115,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.ROD_LINE_WEIGHT,
-                f"This line is a {line.line_weight} wt, but your rod is a {rod.line_weight} wt.",
+                f"This line is {line.line_weight} wt, but your rod is {rod.line_weight} wt.",
             )
         )
 
@@ -127,7 +127,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.REEL_LINE_WEIGHT,
-                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your line is a {line.line_weight} wt.",
+                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your line is {line.line_weight} wt.",
             )
         )
 
@@ -139,7 +139,7 @@ def check_build(
         issues.append(
             BuildIssue(
                 WarningCode.ROD_REEL_WEIGHT,
-                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your rod is a {rod.line_weight} wt.",
+                f"This reel is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your rod is {rod.line_weight} wt.",
             )
         )
 
