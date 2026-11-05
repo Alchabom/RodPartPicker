@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: Builder, Products, Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team is building its own REST API with FastAPI in `api/` (for the learning experience); it replaces the older Express 5 + mysql2 server in `server/`. The API has pytest tests; the frontend has no tests yet.
+RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: Builder, Products, Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has no tests yet.
 
 ## Commands
 
@@ -13,8 +13,7 @@ RodPartPicker is a capstone project: a PCPartPicker-style web app for building f
 - `npm run lint`: run oxlint (config in `.oxlintrc.json`: react, typescript and oxc plugins; `rules-of-hooks` is an error)
 - `npm run preview`: serve the production build
 - `cd api && uv run fastapi dev app/main.py --port 3001`: start the FastAPI API with auto-reload (Vite proxies `/api` to port 3001; run it alongside `npm run dev`). Run `uv sync` in `api/` first.
-- `npm run dev:server`: start the legacy Express API on the same port (don't run both APIs at once)
-- `cd api && uv run python -m app.migrate`: create the database and apply unapplied `api/migrations/*.sql` files (`npm run db:migrate` is the legacy Node runner over the same folder and `schema_migrations` table)
+- `cd api && uv run python -m app.migrate`: create the database and apply unapplied `api/migrations/*.sql` files (`pnpm db:migrate` runs the same command from the repo root)
 - `cd api && uv run pytest`: run the API tests. They drop, re-migrate and use a separate `TEST_DB_NAME` database, and each test's writes are rolled back.
 
 The frontend has no test runner; `tsc -b` inside `npm run build` is its only type check.
@@ -45,16 +44,9 @@ Most of these directories don't exist on disk yet (git doesn't track empty folde
 
 `api/README.md` covers setup. FastAPI + SQLAlchemy 2 (sync, PyMySQL), Python 3.14, managed with `uv`; `ruff` is the dev linter.
 
-- `app/config.py` loads DB settings with pydantic-settings from the repo-root `.env` (the same file the Express server uses).
+- `app/config.py` loads DB settings with pydantic-settings from the repo-root `.env`.
 - `app/db.py` holds the engine, `Base` (DeclarativeBase) and the `get_db` session dependency.
 - All routes live under the `/api` prefix (`app/main.py`); `/api/health` checks the DB. Domain code goes in a package per resource (e.g. `app/parts/` with `models.py`, `schemas.py`, `router.py`).
+- DB credentials come from a gitignored root `.env` (template: `.env.example`). `docs/database/schema-design.md` records the schema decisions.
+- The line tables are `fly_lines`/`fly_line_models` because `LINES` is reserved in MySQL.
 - The schema is owned by the SQL migrations in `api/migrations/` (applied by `app/migrate.py`); SQLAlchemy models map onto those tables rather than creating them. Never edit an applied migration; add a new numbered file.
-
-## Legacy server (Express, `server/`)
-
-Being replaced by `api/`. `server/README.md` covers setup, endpoints and conventions; `docs/database/schema-design.md` records the schema decisions. Key points:
-
-- Node 24 runs `server/**/*.ts` directly via type stripping: imports need `.ts` extensions and only erasable syntax is allowed (no enums or parameter properties). `tsconfig.server.json` type-checks it as part of `tsc -b`.
-- DB credentials come from a gitignored root `.env` (template: `.env.example`).
-- Always use `?` placeholders; validate request input with zod. SQL is `snake_case`, JSON is `camelCase` via `SELECT` aliases.
-- Never edit an applied migration; add a new numbered file. The line tables are `fly_lines`/`fly_line_models` because `LINES` is reserved in MySQL.

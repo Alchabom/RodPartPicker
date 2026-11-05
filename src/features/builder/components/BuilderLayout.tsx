@@ -36,7 +36,7 @@ export function BuilderLayout() {
       <div className="mx-auto max-w-5xl px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-te-papa-green">Couldn't load parts</h1>
         <p className="mt-2 text-muted-foreground">
-          Is the API running? Start it with <code>pnpm dev:server</code>.
+          Is the API running? Start it from <code>api/</code> with <code>uv run fastapi dev app/main.py --port 3001</code>.
         </p>
         <p className="mt-1 text-xs text-muted-foreground">{state.message}</p>
         <Button
