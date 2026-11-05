@@ -132,15 +132,39 @@ Each row is one purchasable size.
 - **`min_line_weight <= max_line_weight` on reels is validated in the API.**
   MySQL restricts `CHECK` constraints on columns that are also foreign keys.
 
-## 7. Compatibility rules (to be implemented in the API/UI)
+## 7. Compatibility rules
 
-| Check | Rule |
+The rules live in `api/app/compatibility/rules.py`. `docs/superpowers/specs/2026-11-04-server-compatibility-design.md` records the design. Following D9, a mismatch is a warning and never blocks a save.
+
+**Matching** (`GET /api/compatibility/parts`) decides which parts to highlight:
+
+| Part | Matches when |
 |---|---|
-| Rod and line | `rod.line_weight = fly_line.line_weight` (warn; some anglers go one size up) |
-| Reel and line | `fly_line.line_weight BETWEEN reel.min_line_weight AND reel.max_line_weight` |
-| Line head | `head_weight_grains` within the line weight's `grains_min`–`grains_max` |
-| Leader and tippet | tippet `x_size_id` equals leader's or is one higher (one size finer) |
-| Saltwater build | every part's `water` is `salt` or `both` |
+| Rod | Passes water |
+| Reel | Rod weight is within the reel's range, and passes water |
+| Line | Same weight as the rod, and passes water |
+| Leader | Passes water; a leader of 10 lb or more also needs a rod of 7 wt or more |
+| Tippet | Passes water |
+
+- **Passes water:** the part's tag equals the effective water or is `both`. The effective water is the `water` parameter, otherwise the rod's tag. A `both` rod with no parameter applies no filter.
+- **Saltwater minimum:** with `water=salt` sent as a parameter, rods and lines must be 7 wt or above, and reels must reach 7 wt.
+- **Recommended line:** a matching line whose `head_weight_grains` is above `grains_max`, on a rod with `fast` action.
+
+**Build warnings** (`GET /api/compatibility/check`) each need both of their parts selected:
+
+| Code | Fires when |
+|---|---|
+| `ROD_LINE_WEIGHT` | Rod and line weights differ |
+| `REEL_LINE_WEIGHT` | Line weight is outside the reel's range |
+| `ROD_REEL_WEIGHT` | Rod weight is outside the reel's range |
+| `ROD_LEADER_WEIGHT` | A leader of 10 lb or more is on a rod under 7 wt |
+| `LEADER_TIPPET_SIZE` | Tippet `x_size_id` is neither the leader's nor one higher (one size finer); skipped if the leader has no X-size |
+| `WATER_MISMATCH` | The selected parts include both a `fresh` and a `salt` tag |
+
+**Changed from the original rules:**
+
+- **Line head check removed.** Comparing `head_weight_grains` to the AFTMA range would have warned on 49 of 58 lines. Those lines aren't wrong, so a heavy head is now a recommendation for fast rods instead.
+- **Saltwater build check replaced.** Requiring every part to be `salt` or `both` became `WATER_MISMATCH`, which also covers freshwater builds.
 
 ## 8. Backend architecture
 
@@ -173,5 +197,5 @@ See `server/README.md` for setup, endpoints and conventions.
 1. Install MySQL Server 8, run `pnpm db:migrate`, confirm `/api/health` reports `db: ok`.
 2. Write `003_seed_catalog.sql` with a small real catalog to replace `mockParts.ts`.
 3. Point the builder feature's `api/` at `apiFetch('/parts/…')`.
-4. Implement the compatibility checks in §7.
+4. Implement the compatibility checks in §7. Done in the API; the frontend swap follows.
 5. Later: `users` table + auth, then shareable builds.

@@ -111,7 +111,7 @@ Query parameters, all optional positive integers: `rodId`, `reelId`, `flyLineId`
 ```json
 {
   "warnings": [
-    { "code": "ROD_LINE_WEIGHT", "message": "This line is a 6 wt, but your rod is a 5 wt." }
+    { "code": "ROD_LINE_WEIGHT", "message": "This line is 6 wt, but your rod is 5 wt." }
   ]
 }
 ```
@@ -196,14 +196,17 @@ All paths are in `src/features/builder/`.
 
 ## Delivery
 
-1. **PR `api-compatibility`:** migration, `LineWeight`, rules, endpoints, tests, and the docs below.
-2. **PR `builder-compatibility`:** the frontend change. It needs PR 1 merged and the FastAPI server running, because Express won't have these routes.
+The work ships as a stack of PRs, each based on the one before and merged from the bottom up:
 
-The first branch starts from `api-builds`, which isn't merged to `main` yet.
+1. **`docs-compatibility`:** this spec and the implementation plan.
+2. **`api-compatibility-rules`:** the migration, `LineWeight` and the matching rules.
+3. **`api-compatibility-warnings`:** the build warnings.
+4. **`api-compatibility`:** the endpoints and the docs below.
+5. **`builder-compatibility`:** the frontend change. It needs the FastAPI server running, because Express won't have these routes.
 
-**Docs in PR 1:** rewrite §7 of `schema-design.md` to match this spec, and mark PR 3 of the 10-19 spec as replaced by this document.
+**Docs in `api-compatibility`:** rewrite §7 of `schema-design.md` to match this spec, and mark PR 3 of the 10-19 spec as replaced by this document.
 
-### For review (must go in the PR 1 description)
+### For review (must go in the `api-compatibility-rules` description)
 
 Omar's teammate should review this rule: **heavy leaders (10 lb and up) only match rods of 7 wt and up.** Water tags alone would show Mirage Big Game and Absolute Streamer as fitting a 3-wt trout rod, so this rule keeps them off light rods. Reviewers should check both the rule and its 10 lb and 7 wt thresholds.
 

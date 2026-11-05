@@ -10,7 +10,7 @@
 
 **After every frontend task:** run `pnpm exec tsc -b && pnpm lint`, ask Claude to review, then commit.
 
-**Branches:** `api-compatibility` already exists, cut from `api-builds`, and holds the spec. Once `api-builds` merges, rebase it onto `main`. Cut `builder-compatibility` from `main` after PR 1 merges. Budget: under 500 lines per PR, not counting pure deletions.
+**Branches:** Phase 1 was built on `api-compatibility` and ships as a stack of PRs (see "Delivery" in the spec). Cut `builder-compatibility` from `api-compatibility`. Budget: under 500 lines per PR, not counting pure deletions.
 
 **Staging:** the working tree has unrelated `.agents/` deletions. Stage files by name, never with `git add -A` or `git add .`.
 
@@ -132,10 +132,10 @@ Most of these lines are tests. If the PR goes over budget, keep the tests and tr
 
 1. Rewrite §7 of `schema-design.md` to match the spec. Say why the line head check was removed.
 2. Add a note under "PR 3: Compatibility" in the 10-19 spec saying the 11-04 spec replaces it.
-3. Open PR 1. **The description must include the "For review" item from the spec** for Omar's teammate: heavy leaders (10 lb and up) only match rods of 7 wt and up, and why.
+3. Open the stack of PRs listed under "Delivery" in the spec. **The `api-compatibility-rules` description must include the "For review" item from the spec** for Omar's teammate: heavy leaders (10 lb and up) only match rods of 7 wt and up, and why.
 
 **Commit:** `docs: update compatibility rules`
-**Open PR 1.**
+**Open the PR stack.**
 
 ---
 
