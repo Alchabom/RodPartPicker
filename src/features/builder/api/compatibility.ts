@@ -44,11 +44,16 @@ export async function fetchCompatibleParts(rodId: number, signal?: AbortSignal):
   }
 }
 
-export async function checkBuild(ids: BuildPartIds, signal?: AbortSignal): Promise<BuildWarning[]> {
+// A plain string, so components can compare builds and use it as an effect dependency
+export function toCheckQuery(ids: BuildPartIds): string {
   const params = new URLSearchParams()
   for (const [name, id] of Object.entries(ids)) {
     if (id !== undefined) params.set(name, String(id))
   }
-  const data = await apiFetch<{ warnings: BuildWarning[] }>(`/compatibility/check?${params}`, { signal })
+  return params.toString()
+}
+
+export async function checkBuild(query: string, signal?: AbortSignal): Promise<BuildWarning[]> {
+  const data = await apiFetch<{ warnings: BuildWarning[] }>(`/compatibility/check?${query}`, { signal })
   return data.warnings
 }
