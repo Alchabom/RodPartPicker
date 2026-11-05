@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { TriangleAlert } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Table,
   TableBody,
@@ -80,19 +81,17 @@ export function BuilderPage() {
       </Table>
 
       {warnings.length > 0 && (
-        <section
-          aria-label="Compatibility warnings"
-          className="mt-6 rounded-md border-l-4 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-        >
-          <h2 className="mb-1 flex items-center gap-2 font-semibold">
-            <TriangleAlert className="size-4" aria-hidden /> Check your build
-          </h2>
-          <ul className="list-disc space-y-1 pl-6">
-            {warnings.map((warning) => (
-              <li key={warning.code}>{warning.message}</li>
-            ))}
-          </ul>
-        </section>
+        <Alert className="mt-6">
+          <TriangleAlert aria-hidden />
+          <AlertTitle>Check your build</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc space-y-1 pl-4">
+              {warnings.map((warning) => (
+                <li key={warning.code}>{warning.message}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
       )}
     </main>
   )
