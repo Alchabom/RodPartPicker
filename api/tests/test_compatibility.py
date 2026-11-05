@@ -71,7 +71,7 @@ def test_parts_use_the_rods_water_tag(client, make_part):
     assert salt_tippet.id not in data["tippet"]
 
 
-def test_parts_water_parameter_beats_the_rods_tag(client, make_part):
+def test_parts_water_parameter_filters_a_both_rod(client, make_part):
     rod = make_part(Rod, line_weight=8, water="both")
     fresh_line = make_part(FlyLine, line_weight=8, water="fresh")
     salt_line = make_part(FlyLine, line_weight=8, water="salt")
@@ -171,6 +171,113 @@ def test_parts_unknown_rod(client):
 @pytest.mark.parametrize("params", [{"water": "both"}, {"water": "lake"}, {"rodId": 0}])
 def test_parts_invalid_parameters(client, params):
     assert client.get(PARTS_URL, params=params).status_code == 422
+
+
+def test_leader_limits_tippets_to_its_size_or_one_finer(client, make_part):
+    leader = make_part(Leader, x_size_id=9)  # 5X
+    heavier = make_part(Tippet, x_size_id=8)
+    same = make_part(Tippet, x_size_id=9)
+    finer = make_part(Tippet, x_size_id=10)
+    too_fine = make_part(Tippet, x_size_id=11)
+
+    data = get_parts(client, leaderId=leader.id)
+
+    assert same.id in data["tippet"]
+    assert finer.id in data["tippet"]
+    assert heavier.id not in data["tippet"]
+    assert too_fine.id not in data["tippet"]
+
+
+def test_tippet_limits_leaders(client, make_part):
+    tippet = make_part(Tippet, x_size_id=7)  # 3X
+    fits = make_part(Leader, x_size_id=6)
+    clashes = make_part(Leader, x_size_id=9)
+    no_size = make_part(Leader, x_size_id=None)
+
+    data = get_parts(client, tippetId=tippet.id)
+
+    assert fits.id in data["leader"]
+    assert clashes.id not in data["leader"]
+    assert no_size.id in data["leader"]
+
+
+def test_selected_line_limits_reels_on_a_both_rod(client, make_part):
+    rod = make_part(Rod, line_weight=8, water="both")
+    line = make_part(FlyLine, line_weight=8, water="salt")
+    fresh_reel = make_part(Reel, min_line_weight=7, max_line_weight=9, water="fresh")
+    both_reel = make_part(Reel, min_line_weight=7, max_line_weight=9, water="both")
+
+    data = get_parts(client, rodId=rod.id, flyLineId=line.id)
+
+    assert fresh_reel.id not in data["reel"]
+    assert both_reel.id in data["reel"]
+
+
+def test_selected_line_limits_rods_with_no_rod_selected(client, make_part):
+    line = make_part(FlyLine, line_weight=5)
+    fits = make_part(Rod, line_weight=5)
+    clashes = make_part(Rod, line_weight=6)
+
+    data = get_parts(client, flyLineId=line.id)
+
+    assert fits.id in data["rod"]
+    assert clashes.id not in data["rod"]
+
+
+def test_a_component_ignores_its_own_selected_part(client, make_part):
+    selected = make_part(Reel, min_line_weight=4, max_line_weight=6)
+    other = make_part(Reel, min_line_weight=8, max_line_weight=10)
+
+    data = get_parts(client, reelId=selected.id)
+
+    assert other.id in data["reel"]
+
+
+def test_existing_clash_doesnt_block_other_components(client, make_part):
+    rod = make_part(Rod, line_weight=2)
+    reel = make_part(Reel, min_line_weight=6, max_line_weight=8)
+    leader = make_part(Leader)
+
+    data = get_parts(client, rodId=rod.id, reelId=reel.id)
+
+    assert leader.id in data["leader"]
+
+
+def test_salt_parameter_doesnt_override_a_fresh_rod(client, make_part):
+    rod = make_part(Rod, line_weight=8, water="fresh")
+    line = make_part(FlyLine, line_weight=8, water="salt")
+
+    data = get_parts(client, rodId=rod.id, water="salt")
+
+    assert line.id not in data["line"]
+
+
+@pytest.mark.parametrize(
+    "param", ["rodId", "reelId", "flyLineId", "leaderId", "tippetId"]
+)
+def test_parts_unknown_id(client, param):
+    response = client.get(PARTS_URL, params={param: 999999})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Referenced part does not exist"}
+
+
+@pytest.mark.parametrize(
+    "component, param", [("reel", "reelId"), ("tippet", "tippetId")]
+)
+def test_highlighted_parts_never_cause_a_warning(client, make_part, component, param):
+    build = {
+        "rodId": make_part(Rod, line_weight=5).id,
+        "flyLineId": make_part(FlyLine, line_weight=5).id,
+        "leaderId": make_part(Leader, x_size_id=9).id,
+    }
+
+    highlighted = get_parts(client, **build)[component]
+
+    assert highlighted
+    for part_id in highlighted:
+        response = client.get(CHECK_URL, params={**build, param: part_id})
+        assert response.json() == {"warnings": []}
 
 
 # ---------- GET /api/compatibility/check ----------
