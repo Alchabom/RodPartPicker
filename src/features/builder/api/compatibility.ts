@@ -30,8 +30,8 @@ export interface BuildWarning {
   message: string
 }
 
-export async function fetchCompatibleParts(rodId: number, signal?: AbortSignal): Promise<CompatibleParts> {
-  const data = await apiFetch<CompatiblePartsResponse>(`/compatibility/parts?rodId=${rodId}`, { signal })
+export async function fetchCompatibleParts(query: string, signal?: AbortSignal): Promise<CompatibleParts> {
+  const data = await apiFetch<CompatiblePartsResponse>(`/compatibility/parts?${query}`, { signal })
   return {
     matches: {
       rod: new Set(data.rod),
@@ -45,7 +45,7 @@ export async function fetchCompatibleParts(rodId: number, signal?: AbortSignal):
 }
 
 // A plain string, so components can compare builds and use it as an effect dependency
-export function toCheckQuery(ids: BuildPartIds): string {
+export function toBuildQuery(ids: BuildPartIds): string {
   const params = new URLSearchParams()
   for (const [name, id] of Object.entries(ids)) {
     if (id !== undefined) params.set(name, String(id))

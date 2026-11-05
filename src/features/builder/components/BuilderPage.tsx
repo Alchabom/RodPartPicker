@@ -10,9 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { checkBuild, toCheckQuery, type BuildWarning } from '../api/compatibility'
+import { checkBuild, type BuildWarning } from '../api/compatibility'
 import { COMPONENTS } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
+import { useBuildQuery } from '../hooks/useBuildQuery'
 import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '../utils/formatPrice'
 import { ComponentRow } from './ComponentRow'
@@ -22,17 +23,8 @@ export function BuilderPage() {
   const { getPart } = useCatalog()
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
-  // getPart drops ids that are no longer in the catalog, so an old saved build
-  // can't send an unknown id
-  const ids = {
-    rodId: getPart(build.rod)?.dbId,
-    reelId: getPart(build.reel)?.dbId,
-    flyLineId: getPart(build.line)?.dbId,
-    leaderId: getPart(build.leader)?.dbId,
-    tippetId: getPart(build.tippet)?.dbId,
-  }
-  const query = toCheckQuery(ids)
-  const hasPairToCheck = Object.values(ids).filter((id) => id !== undefined).length >= 2
+  const { query, selectedCount } = useBuildQuery()
+  const hasPairToCheck = selectedCount >= 2
 
   // The query is stored with the response, so warnings for the previous
   // selection never show while the next request is running
