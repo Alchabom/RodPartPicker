@@ -99,7 +99,6 @@ function basePart(component: ComponentType, row: { id: number; brand: string; mo
 function toRod(row: RodRow): Part {
   return {
     ...basePart('rod', row),
-    lineWeight: row.lineWeight,
     specs: {
       Length: formatLength(row.lengthIn),
       'Line Wt': `${row.lineWeight} wt`,
@@ -113,7 +112,6 @@ function toRod(row: RodRow): Part {
 function toReel(row: ReelRow): Part {
   return {
     ...basePart('reel', row),
-    lineWeightRange: { min: row.minLineWeight, max: row.maxLineWeight },
     specs: {
       'Line Wt': `${row.minLineWeight}–${row.maxLineWeight} wt`,
       Water: WATER_LABELS[row.water],
@@ -124,7 +122,6 @@ function toReel(row: ReelRow): Part {
 function toLine(row: LineRow): Part {
   return {
     ...basePart('line', row),
-    lineWeight: row.lineWeight,
     specs: {
       'Line Wt': `${row.lineWeight} wt`,
       Type: capitalize(row.type),

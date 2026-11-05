@@ -15,8 +15,6 @@ export interface Part {
   name: string
   price: number | null // USD; some catalog rows have no price yet
   specs: Record<string, string> // keys match the component's specColumns
-  lineWeight?: number // rods and lines
-  lineWeightRange?: { min: number; max: number } // reels
 }
 
 export type Build = Partial<Record<ComponentType, Part['id']>>
