@@ -9,8 +9,9 @@ Schema design and the reasoning behind it: [`docs/database/schema-design.md`](..
 
 1. Install **MySQL Server 8.0.16 or later** (MySQL Community Installer on
    Windows; Workbench alone is only a client). Note the root password.
-2. Copy `.env.example` to `.env` at the repo root and fill in `DB_PASSWORD`.
-   `.env` is gitignored; never commit credentials.
+2. Copy `.env.example` to `.env` at the repo root and fill in `DB_PASSWORD`,
+   `JWT_SECRET` and `CODE_HMAC_SECRET` (generate each secret with the command
+   in `.env.example`). `.env` is gitignored; never commit credentials.
 3. From `api/`, run `uv sync`, then `uv run python -m app.migrate`. This creates
    the database and applies every file in `migrations/` that hasn't run yet.
    `pnpm db:migrate` at the repo root does the same.

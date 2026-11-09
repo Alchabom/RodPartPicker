@@ -1,6 +1,7 @@
 """Shared fixtures: a freshly migrated MySQL test database, and per-test sessions
 that roll back so no test sees another test's writes."""
 
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -8,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
+from app.auth.models import User
 from app.builds.models import Build
 from app.config import settings
 from app.db import engine as app_engine
@@ -95,6 +97,26 @@ def make_build(db):
         db.add(build)
         db.flush()
         return build
+
+    return make
+
+
+@pytest.fixture
+def make_user(db):
+    count = 0
+
+    def make(**columns):
+        nonlocal count
+        count += 1
+        defaults = {
+            "email": f"user{count}@example.com",
+            "display_name": None,
+            "created_at": datetime(2026, 1, 1, 12, 0),
+        }
+        user = User(**{**defaults, **columns})
+        db.add(user)
+        db.flush()
+        return user
 
     return make
 
