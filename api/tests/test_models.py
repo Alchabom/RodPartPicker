@@ -1,5 +1,6 @@
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import IntegrityError
 
 from app.parts.models import (
     Brand,
@@ -44,3 +45,19 @@ def test_water_tags_cover_strong_tippets_and_sealed_reels(db):
         select(Tippet.x_size_id).where(Tippet.water == "fresh")
     ).all()
     assert min(fresh_sizes) == 8
+
+
+def test_display_name_unique_ignoring_case(db):
+    db.execute(
+        text(
+            "INSERT INTO users (email, display_name, created_at)"
+            " VALUES ('a@x.com', 'TroutBum', UTC_TIMESTAMP())"
+        )
+    )
+    with pytest.raises(IntegrityError):
+        db.execute(
+            text(
+                "INSERT INTO users (email, display_name, created_at)"
+                " VALUES ('b@x.com', 'troutbum', UTC_TIMESTAMP())"
+            )
+        )
