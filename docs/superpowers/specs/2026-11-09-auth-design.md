@@ -94,7 +94,8 @@ Index: `(family_id)`.
 | `schemas.py` | `CodeRequestIn`, `VerifyIn`, `DisplayNameIn`, `UserOut` (`CamelModel`) |
 | `codes.py` | `generate_code()` (`secrets.randbelow(10**6)`, zero-padded to 6 digits), `hash_code(email, code)`, `codes_match(hash, email, code)` using `hmac.compare_digest` |
 | `tokens.py` | `issue_access_token(user_id, now)`, `decode_access_token(token, now)`, `issue_refresh_token(db, user_id, family_id, now)`, `rotate_refresh_token(db, raw, now)`, `revoke_family(db, family_id, now)` |
-| `email.py` | `EmailSender` protocol with `send_login_code(to, code)`, plus `ConsoleEmailSender` (logs the code), `ResendEmailSender` (calls Resend's HTTP API with `httpx`) and the `get_email_sender` dependency, which `EMAIL_BACKEND` selects |
+| `rate_limit.py` | `retry_after(db, email, ip, now)`: seconds to wait, or `None`, from the three limits under `POST /code` |
+| `email.py` | `EmailSendError`, an `EmailSender` protocol with `send_login_code(to, code)`, plus `ConsoleEmailSender` (logs the code), `ResendEmailSender` (calls Resend's HTTP API with `httpx`) and the `get_email_sender` dependency, which `EMAIL_BACKEND` selects |
 | `deps.py` | `get_now`, `get_client_ip`, `CurrentUserId` |
 | `cookies.py` | `set_auth_cookies(response, access, refresh)` and `clear_auth_cookies(response)` |
 | `router.py` | The routes below |
@@ -198,8 +199,8 @@ New dependency: `pyjwt`.
 
 ### `src/lib/api.ts`
 
-- Add `ApiError extends Error` with `status: number` and `detail: unknown` (the parsed JSON body, if any). `apiFetch` throws it for every non-OK response.
-- On a `401` from a path that doesn't start with `/auth/`:
+- Add `ApiError extends Error` with `status: number`, `detail: unknown` (the parsed JSON body, if any) and `headers: Headers` (so `LoginPage` can read `Retry-After`). `apiFetch` throws it for every non-OK response.
+- On a `401` from any path except `/auth/code`, `/auth/verify`, `/auth/refresh` and `/auth/logout`. `/auth/me` is deliberately included, so the page-load check refreshes too:
   1. Call `POST /api/auth/refresh` through a module-level `refreshPromise`. Concurrent callers wait on the same promise, and it resets once settled.
   2. The refresh succeeded → retry the original request once and return its result, or throw its error.
   3. The refresh failed → notify the `onSessionExpired` listeners and throw the original `401` as an `ApiError`.
