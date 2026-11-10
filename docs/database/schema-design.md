@@ -74,7 +74,7 @@ The database and API replace it.
 | D1 | Which database? | PostgreSQL, MySQL | **MySQL 8.0.16+** | Team choice. 8.0.16 is the first version that enforces `CHECK` constraints |
 | D2 | How are prices stored? | One price per item; a `prices` table per retailer | **One price** (`DECIMAL(8,2)`) | Enough for the capstone; a retailer table can be added later without changing existing tables |
 | D3 | How is a product line with many sizes modeled? | One flat row per size; model table + variant table | **One flat table per category**, one row per size (migrations 003, 005; originally model + variant tables) | Each category shares only one or two specs across sizes, so the split cost a join and a second insert per product for little gain. The builder UI lists parts per brand, not model-then-size. Builds still point at the exact size bought |
-| D4 | Users? | Accounts now; later | **Later** | Builds will be shareable, but not in this iteration. Adding `users` later is one table plus a `user_id` column on `builds` |
+| D4 | Users? | Accounts now; later | **Now**: email-code sign-in, with `users`, `login_codes` and `refresh_tokens` (migration 016; originally deferred) | See `docs/superpowers/specs/2026-11-09-auth-design.md`. Linking builds to users (`builds.user_id`) comes with the builds/catalog spec |
 | D5 | Backing, flies? | In scope; out of scope | **Out of scope** | Not needed for a core setup |
 | D6 | How is X-size stored? | Integer with a `CHECK`; lookup table | **Lookup table** `x_sizes` | Handles heavy sizes (03X–01X) cleanly, and its id order makes "one size finer" a simple `+1` |
 | D7 | Backend? | Supabase (hosted); our own API | **Our own Express + mysql2 API** | Supabase is Postgres-only. A small REST API is within scope and shows our own engineering |
@@ -102,6 +102,7 @@ erDiagram
   fly_lines |o--o{ builds : in
   leaders |o--o{ builds : in
   tippets |o--o{ builds : in
+  users ||--o{ refresh_tokens : "signed in with"
 ```
 
 **What lives where:**
@@ -117,6 +118,8 @@ Each row is one purchasable size.
 | `tippets` | material, water, X-size, spool yards | brand, name, X-size, spool yards |
 
 **Lookups:** `brands`, `line_weights` (seeded with the AFTMA table), `x_sizes` (seeded 03X–8X).
+
+**Auth (migration 016):** `users`, `refresh_tokens`, and `login_codes` (keyed by email, so it has no FK to `users`).
 
 **Integrity choices:**
 
@@ -193,4 +196,4 @@ These results are from the original Express API, kept as a record. The API now h
 2. Write `003_seed_catalog.sql` with a small real catalog to replace `mockParts.ts`.
 3. Point the builder feature's `api/` at `apiFetch('/parts/…')`.
 4. Implement the compatibility checks in §7. Done in the API; the frontend swap follows.
-5. Later: `users` table + auth, then shareable builds.
+5. `users` table + auth: in progress (migration 016, see the auth spec). Shareable builds follow.

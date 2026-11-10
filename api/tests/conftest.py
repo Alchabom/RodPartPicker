@@ -1,6 +1,7 @@
 """Shared fixtures: a freshly migrated MySQL test database, and per-test sessions
 that roll back so no test sees another test's writes."""
 
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -8,6 +9,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
+from app.auth.deps import get_now
+from app.auth.email import EmailSendError, get_email_sender
+from app.auth.models import User
 from app.builds.models import Build
 from app.config import settings
 from app.db import engine as app_engine
@@ -43,11 +47,65 @@ def db(engine):
     conn.close()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def insecure_cookies():
+    # TestClient speaks plain http, and a client drops Secure cookies over http
+    old = settings.COOKIE_SECURE
+    settings.COOKIE_SECURE = False
+    yield
+    settings.COOKIE_SECURE = old
+
+
 @pytest.fixture
 def client(db):
     app.dependency_overrides[get_db] = lambda: db
-    yield TestClient(app)
-    app.dependency_overrides.clear()
+    # The Origin middleware rejects writes without the app's Origin header
+    yield TestClient(app, headers={"Origin": settings.APP_ORIGIN})
+    app.dependency_overrides.pop(get_db, None)
+
+
+# ---------- Auth fakes ----------
+# Each overrides one dependency and removes only its own override afterwards.
+
+
+class FakeClock:
+    def __init__(self):
+        self.now = datetime(2026, 1, 1, 12, 0)
+
+    def advance(self, **timedelta_kwargs):
+        self.now += timedelta(**timedelta_kwargs)
+
+
+@pytest.fixture
+def clock():
+    fake = FakeClock()
+    app.dependency_overrides[get_now] = lambda: fake.now
+    yield fake
+    app.dependency_overrides.pop(get_now, None)
+
+
+class FakeEmailSender:
+    def __init__(self):
+        self.sent: list[tuple[str, str]] = []
+        self.fail = False
+
+    def send_login_code(self, to: str, code: str) -> None:
+        if self.fail:
+            raise EmailSendError("fake send failure")
+        self.sent.append((to, code))
+
+    def last_code_for(self, email: str) -> str:
+        codes = [code for to, code in self.sent if to == email]
+        assert codes, f"no code was sent to {email}"
+        return codes[-1]
+
+
+@pytest.fixture
+def fake_email():
+    fake = FakeEmailSender()
+    app.dependency_overrides[get_email_sender] = lambda: fake
+    yield fake
+    app.dependency_overrides.pop(get_email_sender, None)
 
 
 # ---------- Factories ----------
@@ -95,6 +153,26 @@ def make_build(db):
         db.add(build)
         db.flush()
         return build
+
+    return make
+
+
+@pytest.fixture
+def make_user(db):
+    count = 0
+
+    def make(**columns):
+        nonlocal count
+        count += 1
+        defaults = {
+            "email": f"user{count}@example.com",
+            "display_name": None,
+            "created_at": datetime(2026, 1, 1, 12, 0),
+        }
+        user = User(**{**defaults, **columns})
+        db.add(user)
+        db.flush()
+        return user
 
     return make
 
