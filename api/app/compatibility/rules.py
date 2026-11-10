@@ -1,0 +1,153 @@
+"""Compatibility rules. Plain functions with no database or HTTP code."""
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+from app.parts.models import CatalogPart, FlyLine, Leader, Reel, Rod, Tippet
+
+SALT_MIN_WEIGHT = 7  # water=salt excludes anything under this weight
+HEAVY_LEADER_LB = 10  # leaders at or above this strength count as heavy
+HEAVY_LEADER_MIN_ROD_WEIGHT = 7  # heavy leaders only match rods at or above this weight
+
+
+class WarningCode(StrEnum):
+    ROD_LINE_WEIGHT = "ROD_LINE_WEIGHT"
+    REEL_LINE_WEIGHT = "REEL_LINE_WEIGHT"
+    ROD_REEL_WEIGHT = "ROD_REEL_WEIGHT"
+    ROD_LEADER_WEIGHT = "ROD_LEADER_WEIGHT"
+    LEADER_TIPPET_SIZE = "LEADER_TIPPET_SIZE"
+    WATER_MISMATCH = "WATER_MISMATCH"
+
+
+@dataclass(frozen=True)
+class BuildIssue:
+    code: WarningCode
+    message: str
+
+
+def passes_water(part_water: str, water: str | None) -> bool:
+    """Check whether a part's water tag suits the effective water."""
+    if water is None:
+        return True
+    if part_water == "both":
+        return True
+    return part_water == water
+
+
+def passes_filter(
+    part_water: str, top_weight: int | None, requested: str | None
+) -> bool:
+    """Apply the water parameter. Only water=salt enforces a minimum weight."""
+    if not passes_water(part_water, requested):
+        return False
+    if requested != "salt" or top_weight is None:
+        return True
+    return top_weight >= SALT_MIN_WEIGHT
+
+
+def is_heavy_leader(leader: Leader) -> bool:
+    """Check whether a leader is strong enough to count as heavy."""
+    return leader.strength_lb is not None and leader.strength_lb >= HEAVY_LEADER_LB
+
+
+def is_recommended(line: FlyLine, rod: Rod, grains_max: int) -> bool:
+    """Check whether a heavy line suits a fast rod. Assumes the line already matches."""
+    return (
+        rod.action == "fast"
+        and line.head_weight_grains is not None
+        and line.head_weight_grains > grains_max
+    )
+
+
+def check_build(
+    rod: Rod | None = None,
+    reel: Reel | None = None,
+    line: FlyLine | None = None,
+    leader: Leader | None = None,
+    tippet: Tippet | None = None,
+) -> list[BuildIssue]:
+    """Return every compatibility warning for the selected parts."""
+    issues: list[BuildIssue] = []
+
+    if rod and line and rod.line_weight != line.line_weight:
+        issues.append(
+            BuildIssue(
+                WarningCode.ROD_LINE_WEIGHT,
+                f"{line.name} is {line.line_weight} wt, but your rod is {rod.line_weight} wt.",
+            )
+        )
+
+    if (
+        reel
+        and line
+        and not reel.min_line_weight <= line.line_weight <= reel.max_line_weight
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.REEL_LINE_WEIGHT,
+                f"{reel.name} is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your line is {line.line_weight} wt.",
+            )
+        )
+
+    if (
+        rod
+        and reel
+        and not reel.min_line_weight <= rod.line_weight <= reel.max_line_weight
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.ROD_REEL_WEIGHT,
+                f"{reel.name} is rated for {reel.min_line_weight}-{reel.max_line_weight} wt, but your rod is {rod.line_weight} wt.",
+            )
+        )
+
+    if (
+        rod
+        and leader
+        and is_heavy_leader(leader)
+        and rod.line_weight < HEAVY_LEADER_MIN_ROD_WEIGHT
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.ROD_LEADER_WEIGHT,
+                f"{leader.name} is too heavy for a {rod.line_weight} wt rod.",
+            )
+        )
+
+    if (
+        leader
+        and tippet
+        and leader.x_size_id is not None
+        and tippet.x_size_id not in (leader.x_size_id, leader.x_size_id + 1)
+    ):
+        issues.append(
+            BuildIssue(
+                WarningCode.LEADER_TIPPET_SIZE,
+                f"{tippet.name} doesn't suit {leader.name}. Use the same size or one size finer.",
+            )
+        )
+
+    parts = (rod, reel, line, leader, tippet)
+    tags = {part.water for part in parts if part is not None}
+    if {"fresh", "salt"} <= tags:
+        issues.append(
+            BuildIssue(
+                WarningCode.WATER_MISMATCH,
+                "This build mixes freshwater and saltwater parts.",
+            )
+        )
+
+    return issues
+
+
+def conflicts(slot: str, part: CatalogPart, selected: dict) -> bool:
+    """Check whether a part warns against any selected part in another slot.
+
+    Parts are compared one pair at a time, so a clash between two other parts
+    doesn't count against this one. `slot` is a check_build argument name.
+    """
+    return any(
+        check_build(**{slot: part, other_slot: other})
+        for other_slot, other in selected.items()
+        if other_slot != slot and other is not None
+    )

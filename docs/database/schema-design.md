@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-11
 **Status:** Schema and API skeleton implemented; not yet run against a live MySQL server
-**Implementation:** `server/db/migrations/001_init.sql`, `002_seed_lookups.sql`, `server/src/`
+**Implementation:** `api/migrations/`, `api/app/`
 
 This document records *how* we arrived at the RodPartPicker data model, not
 only what it is: the starting proposal, the problems found in it, each decision
@@ -31,7 +31,7 @@ The database and API replace it.
 | 3. Deliberation | Wrote down open questions; team chose an option for each | Decision log (§5) |
 | 4. Design | Rewrote the schema around those decisions, MySQL-specific | `001_init.sql` (§6) |
 | 5. Backend choice | Compared a hosted backend (Supabase) with a self-built API | Decision D7 (§5) |
-| 6. Implementation | Migrations, migration runner, Express API, Vite proxy | `server/` |
+| 6. Implementation | Migrations, migration runner, Express API (later replaced by FastAPI, see D11), Vite proxy | `api/` |
 | 7. Verification | Type check, lint, live smoke tests (§8) | Results and known gaps |
 
 ## 3. Initial proposal
@@ -74,13 +74,14 @@ The database and API replace it.
 | D1 | Which database? | PostgreSQL, MySQL | **MySQL 8.0.16+** | Team choice. 8.0.16 is the first version that enforces `CHECK` constraints |
 | D2 | How are prices stored? | One price per item; a `prices` table per retailer | **One price** (`DECIMAL(8,2)`) | Enough for the capstone; a retailer table can be added later without changing existing tables |
 | D3 | How is a product line with many sizes modeled? | One flat row per size; model table + variant table | **One flat table per category**, one row per size (migrations 003, 005; originally model + variant tables) | Each category shares only one or two specs across sizes, so the split cost a join and a second insert per product for little gain. The builder UI lists parts per brand, not model-then-size. Builds still point at the exact size bought |
-| D4 | Users? | Accounts now; later | **Later** | Builds will be shareable, but not in this iteration. Adding `users` later is one table plus a `user_id` column on `builds` |
+| D4 | Users? | Accounts now; later | **Now**: email-code sign-in, with `users`, `login_codes` and `refresh_tokens` (migration 016; originally deferred) | See `docs/superpowers/specs/2026-11-09-auth-design.md`. Linking builds to users (`builds.user_id`) comes with the builds/catalog spec |
 | D5 | Backing, flies? | In scope; out of scope | **Out of scope** | Not needed for a core setup |
 | D6 | How is X-size stored? | Integer with a `CHECK`; lookup table | **Lookup table** `x_sizes` | Handles heavy sizes (03X–01X) cleanly, and its id order makes "one size finer" a simple `+1` |
 | D7 | Backend? | Supabase (hosted); our own API | **Our own Express + mysql2 API** | Supabase is Postgres-only. A small REST API is within scope and shows our own engineering |
 | D8 | Name of the line tables | `lines`, `fly_lines` | **`fly_lines`** | `LINES` is a MySQL reserved word and would need backticks everywhere |
 | D9 | Where do compatibility rules live? | DB constraints; application code | **Application code** | A builder should *warn* about a mismatch and still let the user save |
 | D10 | Which fly line specs are stored? | Type, taper, sink rate | **Type and sink rate** (migrations 003, 004) | `taper` dropped as not needed for compatibility. `sink_rate_ips` is NULL exactly when `type` is floating |
+| D11 | Which framework serves the API? | Express; FastAPI | **FastAPI + SQLAlchemy**, replacing D7's Express server | The team wanted the experience of building its own API in Python, with a pytest suite against real MySQL |
 
 ## 6. Final schema
 
@@ -101,6 +102,7 @@ erDiagram
   fly_lines |o--o{ builds : in
   leaders |o--o{ builds : in
   tippets |o--o{ builds : in
+  users ||--o{ refresh_tokens : "signed in with"
 ```
 
 **What lives where:**
@@ -117,6 +119,8 @@ Each row is one purchasable size.
 
 **Lookups:** `brands`, `line_weights` (seeded with the AFTMA table), `x_sizes` (seeded 03X–8X).
 
+**Auth (migration 016):** `users`, `refresh_tokens`, and `login_codes` (keyed by email, so it has no FK to `users`).
+
 **Integrity choices:**
 
 - **Money** is `DECIMAL(8,2)` with `CHECK (price >= 0)`. Floating point would introduce rounding errors.
@@ -132,30 +136,48 @@ Each row is one purchasable size.
 - **`min_line_weight <= max_line_weight` on reels is validated in the API.**
   MySQL restricts `CHECK` constraints on columns that are also foreign keys.
 
-## 7. Compatibility rules (to be implemented in the API/UI)
+## 7. Compatibility rules
 
-| Check | Rule |
+The rules live in `api/app/compatibility/rules.py`. `docs/superpowers/specs/2026-11-04-server-compatibility-design.md` records the design. Following D9, a mismatch is a warning and never blocks a save.
+
+**Highlights** (`GET /api/compatibility/parts`) follow one rule: highlighted means no warning. `check_build` is the only definition of compatible, so highlights and warnings can't disagree. A part is highlighted when both are true:
+
+1. It passes the filter, if `water` was sent: its tag equals `water` or is `both`. With `water=salt`, rods and lines must also be 7 wt or above, and reels must reach 7 wt.
+2. Pairing it with each selected part in another component gives no warnings. A clash between two other parts doesn't count against it.
+
+**Recommended line:** a highlighted line whose `head_weight_grains` is above `grains_max`, on a selected rod with `fast` action.
+
+**Build warnings** (`GET /api/compatibility/check`) each need both of their parts selected:
+
+| Code | Fires when |
 |---|---|
-| Rod and line | `rod.line_weight = fly_line.line_weight` (warn; some anglers go one size up) |
-| Reel and line | `fly_line.line_weight BETWEEN reel.min_line_weight AND reel.max_line_weight` |
-| Line head | `head_weight_grains` within the line weight's `grains_min`–`grains_max` |
-| Leader and tippet | tippet `x_size_id` equals leader's or is one higher (one size finer) |
-| Saltwater build | every part's `water` is `salt` or `both` |
+| `ROD_LINE_WEIGHT` | Rod and line weights differ |
+| `REEL_LINE_WEIGHT` | Line weight is outside the reel's range |
+| `ROD_REEL_WEIGHT` | Rod weight is outside the reel's range |
+| `ROD_LEADER_WEIGHT` | A leader of 10 lb or more is on a rod under 7 wt |
+| `LEADER_TIPPET_SIZE` | Tippet `x_size_id` is neither the leader's nor one higher (one size finer); skipped if the leader has no X-size |
+| `WATER_MISMATCH` | The selected parts include both a `fresh` and a `salt` tag |
+
+**Changed from the original rules:**
+
+- **Line head check removed.** Comparing `head_weight_grains` to the AFTMA range would have warned on 49 of 58 lines. Those lines aren't wrong, so a heavy head is now a recommendation for fast rods instead.
+- **Saltwater build check replaced.** Requiring every part to be `salt` or `both` became `WATER_MISMATCH`, which also covers freshwater builds.
 
 ## 8. Backend architecture
 
 ```text
-Browser ──/api/*──▶ Vite dev server (5173) ──proxy──▶ Express (3001) ──mysql2 pool──▶ MySQL
+Browser ──/api/*──▶ Vite dev server (5173) ──proxy──▶ FastAPI (3001) ──SQLAlchemy──▶ MySQL
 ```
 
-- **Vite proxies `/api`** to Express, so the browser sees one origin and we don't need CORS in development.
-- **Node 24 runs the server's TypeScript directly** (type stripping), so there is no build step. `tsc -b` still type-checks `server/` through `tsconfig.server.json`.
-- **Every request body and parameter is validated with zod.** Every query uses `?` placeholders.
-- **The migration runner** (`pnpm db:migrate`) applies numbered `.sql` files once each and records them in `schema_migrations`.
+- **Vite proxies `/api`** to FastAPI, so the browser sees one origin and we don't need CORS in development.
+- **Pydantic validates every request,** and SQLAlchemy binds every query parameter.
+- **Migrations own the schema.** The runner (`uv run python -m app.migrate`) applies numbered `.sql` files once each and records them in `schema_migrations`. SQLAlchemy models only map onto those tables.
 
-See `server/README.md` for setup, endpoints and conventions.
+See `api/README.md` for setup.
 
 ## 9. Verification
+
+These results are from the original Express API, kept as a record. The API now has a pytest suite: `cd api && uv run pytest`.
 
 | Check | Result |
 |---|---|
@@ -173,5 +195,5 @@ See `server/README.md` for setup, endpoints and conventions.
 1. Install MySQL Server 8, run `pnpm db:migrate`, confirm `/api/health` reports `db: ok`.
 2. Write `003_seed_catalog.sql` with a small real catalog to replace `mockParts.ts`.
 3. Point the builder feature's `api/` at `apiFetch('/parts/…')`.
-4. Implement the compatibility checks in §7.
-5. Later: `users` table + auth, then shareable builds.
+4. Implement the compatibility checks in §7. Done in the API; the frontend swap follows.
+5. `users` table + auth: in progress (migration 016, see the auth spec). Shareable builds follow.

@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, Star } from 'lucide-react'
 import { NotFound } from '@components/NotFound'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,15 +13,12 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { getComponentInfo } from '../api/components'
+import { fetchCompatibleParts, type CompatibleParts } from '../api/compatibility'
+import { COMPONENTS, getComponentInfo } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
+import { useBuildQuery } from '../hooks/useBuildQuery'
 import { useCatalog } from '../hooks/useCatalog'
-import type { ComponentType } from '../types'
-import { fitsRod } from '../utils/compatibility'
 import { formatPrice } from '../utils/formatPrice'
-
-// Components whose rows get highlighted when they match the selected rod
-const ROD_MATCHED: ReadonlySet<ComponentType> = new Set(['reel', 'line', 'leader'])
 
 export function BrandPartsPage() {
   const params = useParams<{ component: string; brand: string }>()
@@ -33,6 +31,30 @@ export function BrandPartsPage() {
   const brand = isAll ? undefined : getBrand(params.brand)
   const brandId = isAll ? 'all' : brand?.id
   const parts = component && brandId ? getParts(component.type, brandId) : []
+  const { query } = useBuildQuery()
+
+  // Highlights compare a part to the rest of the build, so they need another
+  // component to be selected
+  const hasOtherParts = component !== undefined
+    && COMPONENTS.some((c) => c.type !== component.type && getPart(build[c.type]))
+
+  // The query is stored with the response, so highlights for the previous
+  // selection never show while the next request is running
+  const [result, setResult] = useState<{ query: string; parts: CompatibleParts }>()
+  const compatible = hasOtherParts && result?.query === query ? result.parts : undefined
+
+  useEffect(() => {
+    if (!hasOtherParts) return
+    const controller = new AbortController()
+    fetchCompatibleParts(query, controller.signal)
+      .then((parts) => setResult({ query, parts }))
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return
+        // Highlights are optional, so the page keeps working without them
+        console.error('Could not load compatible parts', error)
+      })
+    return () => controller.abort()
+  }, [query, hasOtherParts])
 
   if (!component || parts.length === 0) {
     return (
@@ -46,8 +68,8 @@ export function BrandPartsPage() {
 
   const selectedId = build[component.type]
   const title = `${brand?.name ?? 'All'} ${component.plural}`
-  const rod = ROD_MATCHED.has(component.type) ? getPart(build.rod) : undefined
-  const matchCount = rod ? parts.filter((p) => fitsRod(p, rod)).length : 0
+  const matches = compatible?.matches[component.type]
+  const matchCount = matches ? parts.filter((p) => matches.has(p.dbId)).length : 0
 
   const handleAdd = (partId: string) => {
     selectPart(component.type, partId)
@@ -64,10 +86,9 @@ export function BrandPartsPage() {
       </Link>
       <h1 className="mt-4 mb-8 text-3xl font-bold text-te-papa-green">{title}</h1>
 
-      {rod && (
+      {matches && (
         <p className="mb-6 rounded-md border-l-4 border-sulu bg-sulu/20 px-4 py-3 text-sm text-te-papa-green">
-          <strong>{matchCount}</strong> of {parts.length} {component.plural.toLowerCase()} match your{' '}
-          <strong>{rod.specs['Line Wt']} {getBrand(rod.brandId)?.name} {rod.name}</strong> rod and are highlighted below.
+          <strong>{matchCount}</strong> of {parts.length} {component.plural.toLowerCase()} match your build and are highlighted below.
         </p>
       )}
 
@@ -85,14 +106,20 @@ export function BrandPartsPage() {
         </TableHeader>
         <TableBody>
           {parts.map((part) => {
-            const fits = rod !== undefined && fitsRod(part, rod)
+            const fits = matches?.has(part.dbId) ?? false
+            const recommended = component.type === 'line' && compatible?.recommendedLines.has(part.dbId)
             return (
               <TableRow key={part.id} className={cn(fits && 'bg-sulu/25 hover:bg-sulu/40')}>
                 <TableCell className="font-medium">
                   {part.name}
                   {fits && (
                     <Badge className="ml-2 bg-te-papa-green text-sulu">
-                      <Check data-icon="inline-start" /> Fits rod
+                      <Check data-icon="inline-start" /> Fits build
+                    </Badge>
+                  )}
+                  {recommended && (
+                    <Badge className="ml-2 bg-sulu text-te-papa-green">
+                      <Star data-icon="inline-start" /> Recommended
                     </Badge>
                   )}
                 </TableCell>

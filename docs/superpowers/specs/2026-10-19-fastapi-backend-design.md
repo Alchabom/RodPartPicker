@@ -180,6 +180,8 @@ FastAPI serializes responses by alias, so snake_case fields go out as camelCase 
 
 ## PR 3: Compatibility
 
+> **Replaced by `2026-11-04-server-compatibility-design.md`.** The rules below were never built. That spec drops `is_trout`, because the catalog has saltwater rods, and adds whole-build warnings.
+
 **Migration `api/migrations/014_leader_trout.sql`:**
 
 ```sql
