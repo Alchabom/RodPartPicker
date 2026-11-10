@@ -37,27 +37,31 @@ class ResendEmailSender:
         self, api_key: str, sender: str, transport: httpx.BaseTransport | None = None
     ) -> None:
         # `transport` exists so tests can pass httpx.MockTransport
+        self.api_key = api_key
         self.sender = sender
-        self.client = httpx.Client(
-            transport=transport,
-            timeout=10,
-            headers={"Authorization": f"Bearer {api_key}"},
-        )
+        self.transport = transport
 
     def send_login_code(self, to: str, code: str) -> None:
         # raise_for_status turns a 4xx/5xx into an exception; httpx.HTTPError
         # covers that and timeouts alike
+        # A client per send, closed by the with block: get_email_sender builds a
+        # new sender on every request, so a client kept on self would leak
         try:
-            response = self.client.post(
-                RESEND_URL,
-                json={
-                    "from": self.sender,
-                    "to": [to],
-                    "subject": SUBJECT,
-                    "text": BODY.format(code=code),
-                },
-            )
-            response.raise_for_status()
+            with httpx.Client(
+                transport=self.transport,
+                timeout=10,
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            ) as client:
+                response = client.post(
+                    RESEND_URL,
+                    json={
+                        "from": self.sender,
+                        "to": [to],
+                        "subject": SUBJECT,
+                        "text": BODY.format(code=code),
+                    },
+                )
+                response.raise_for_status()
         except httpx.HTTPError as e:
             raise EmailSendError("Failed to send login code") from e
 

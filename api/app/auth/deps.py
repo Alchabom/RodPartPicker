@@ -1,4 +1,4 @@
-"""Request dependencies: the clock, the client IP and the signed-in user (Task 2.4)."""
+"""Request dependencies: the clock, the client IP and the signed-in user."""
 
 from datetime import UTC, datetime
 from typing import Annotated

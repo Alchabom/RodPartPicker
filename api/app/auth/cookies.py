@@ -41,8 +41,9 @@ def set_auth_cookies(response: Response, access: str, refresh: str) -> None:
 def clear_auth_cookies(response: Response) -> None:
     """Delete both cookies.
 
-    Path and flags must match set_auth_cookies exactly, or the browser treats
-    it as a different cookie and keeps the real one (users stay logged in).
+    Name and Path must match set_auth_cookies, or the browser treats it as a
+    different cookie and keeps the real one (users stay logged in). The flags
+    don't affect matching; they're repeated so the two calls stay alike.
     """
     response.delete_cookie(
         ACCESS_COOKIE,

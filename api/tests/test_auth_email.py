@@ -67,3 +67,20 @@ def test_resend_sender_wraps_timeouts():
     )
     with pytest.raises(EmailSendError):
         sender.send_login_code("a@x.com", "012345")
+
+
+def test_resend_sender_sends_twice():
+    # Each send opens and closes its own client, so the sender stays reusable
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(200, json={"id": "email-1"})
+
+    sender = ResendEmailSender(
+        "re_test_key", SENDER, transport=httpx.MockTransport(handler)
+    )
+    sender.send_login_code("a@x.com", "012345")
+    sender.send_login_code("b@x.com", "678901")
+
+    assert [json.loads(r.content)["to"] for r in requests] == [["a@x.com"], ["b@x.com"]]

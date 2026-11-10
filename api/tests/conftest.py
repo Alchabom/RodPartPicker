@@ -61,7 +61,7 @@ def client(db):
     app.dependency_overrides[get_db] = lambda: db
     # The Origin middleware rejects writes without the app's Origin header
     yield TestClient(app, headers={"Origin": settings.APP_ORIGIN})
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_db, None)
 
 
 # ---------- Auth fakes ----------

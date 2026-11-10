@@ -1,4 +1,4 @@
-"""Access JWTs and refresh tokens (rotation comes in PR 4)."""
+"""Access JWTs and refresh tokens."""
 
 import hashlib
 import secrets
@@ -38,12 +38,20 @@ def decode_access_token(token: str, now: datetime) -> int:
         options={"verify_exp": False, "require": ["sub", "exp"]},
     )
 
-    now_ts = int(now.replace(tzinfo=UTC).timestamp())
+    # A validly signed token can still carry junk claims. Turn them into
+    # InvalidTokenError so callers answer 401, not 500 (bool is an int subclass)
+    exp = payload["exp"]
+    if not isinstance(exp, int | float) or isinstance(exp, bool):
+        raise jwt.InvalidTokenError("exp must be a number")
+    try:
+        user_id = int(payload["sub"])
+    except TypeError, ValueError:
+        raise jwt.InvalidTokenError("sub must be a user ID") from None
 
-    if payload["exp"] <= now_ts:
+    if exp <= int(now.replace(tzinfo=UTC).timestamp()):
         raise jwt.ExpiredSignatureError("Signature has expired")
 
-    return int(payload["sub"])
+    return user_id
 
 
 def hash_refresh_token(raw: str) -> str:
