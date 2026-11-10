@@ -28,6 +28,9 @@ def issue_access_token(user_id: int, now: datetime) -> str:
 
 def decode_access_token(token: str, now: datetime) -> int:
     """The user ID inside a valid token. Raises jwt.InvalidTokenError otherwise."""
+    # algorithms is pinned so the token's own header can't pick the algorithm
+    # (that's how `alg: none` attacks work). verify_exp is off because PyJWT
+    # would check exp against the real clock, not `now`; we check it below.
     payload = jwt.decode(
         token,
         settings.JWT_SECRET,
