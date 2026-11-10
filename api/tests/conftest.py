@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
+from app.auth.email import EmailSendError, get_email_sender
 from app.auth.models import User
 from app.builds.models import Build
 from app.config import settings
@@ -50,6 +51,34 @@ def client(db):
     app.dependency_overrides[get_db] = lambda: db
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+# ---------- Auth fakes ----------
+# Each overrides one dependency and removes only its own override afterwards.
+
+
+class FakeEmailSender:
+    def __init__(self):
+        self.sent: list[tuple[str, str]] = []
+        self.fail = False
+
+    def send_login_code(self, to: str, code: str) -> None:
+        if self.fail:
+            raise EmailSendError("fake send failure")
+        self.sent.append((to, code))
+
+    def last_code_for(self, email: str) -> str:
+        codes = [code for to, code in self.sent if to == email]
+        assert codes, f"no code was sent to {email}"
+        return codes[-1]
+
+
+@pytest.fixture
+def fake_email():
+    fake = FakeEmailSender()
+    app.dependency_overrides[get_email_sender] = lambda: fake
+    yield fake
+    app.dependency_overrides.pop(get_email_sender, None)
 
 
 # ---------- Factories ----------
