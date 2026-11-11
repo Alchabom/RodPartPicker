@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { apiFetch, onSessionExpired } from '@/lib/api'
 import { AuthContext } from './authContext'
 import type { AuthStatus, User } from './types'
@@ -9,6 +9,8 @@ import type { AuthStatus, User } from './types'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
+  // Set by signOut, so a /auth/me still in flight can't sign the user back in
+  const signedOut = useRef(false)
 
   // Who's signed in? A 401 here first tries /auth/refresh inside apiFetch,
   // so an expired access token is fixed without the user noticing.
@@ -17,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     apiFetch<User>('/auth/me')
       .then((me) => {
-        if (cancelled) return
+        if (cancelled || signedOut.current) return
         setUserState(me)
         setStatus('authenticated')
       })
@@ -43,18 +45,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const setUser = (next: User) => {
+    signedOut.current = false
     setUserState(next)
     setStatus('authenticated')
   }
 
   const signOut = async () => {
+    signedOut.current = true
     try {
       await apiFetch<void>('/auth/logout', { method: 'POST' })
-    } finally {
-      // Signed out locally even if the request failed (e.g. offline)
-      setUserState(null)
-      setStatus('anonymous')
+    } catch {
+      // Offline or server error: still sign out locally (below), and don't
+      // hand the error to a click handler that has nothing to do with it
     }
+    setUserState(null)
+    setStatus('anonymous')
   }
 
   return (

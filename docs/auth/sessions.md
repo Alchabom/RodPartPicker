@@ -83,9 +83,10 @@ browser" below).
 
 ## When the refresh fails
 
-The refresh token is missing, expired, revoked or unknown. `apiFetch` doesn't
-retry; it notifies the `onSessionExpired` listeners and throws the original
-401. `AuthProvider` listens and switches to signed out.
+The refresh token is missing, expired, revoked or unknown. `apiFetch` still
+retries the request once (see the next section for why); when that also gets
+a 401, it notifies the `onSessionExpired` listeners and throws the 401.
+`AuthProvider` listens and switches to signed out.
 
 ```mermaid
 sequenceDiagram
@@ -98,10 +99,25 @@ sequenceDiagram
     A-->>F: 401
     F->>A: POST /api/auth/refresh
     A-->>F: 401
+    F->>A: GET /api/auth/me (retry once)
+    A-->>F: 401 again
     F->>P: onSessionExpired listeners
     F-->>P: throw ApiError(401)
     Note over P: status = anonymous, user = null
 ```
+
+### Losing a refresh race with another tab
+
+Two tabs can refresh at the same moment, for example when the browser reopens
+both after 15 idle minutes. The API rotates the token for the first one; the
+second sends the token that was just replaced, gets the grace window's 401,
+and no new cookies. But the browser's cookie jar is shared, so it already
+holds the first tab's new tokens. That's why `apiFetch` retries even after a
+failed refresh: the losing tab's retry goes out with the new access token and
+usually succeeds, instead of signing that tab out. It only gives up when the
+retry gets a 401 too. ("Usually": if the losing tab's 401 reaches the browser
+before the winning tab's `Set-Cookie` does, the retry still fails and that
+tab shows signed out until a reload. The window is a few milliseconds.)
 
 `/auth/code`, `/auth/verify`, `/auth/refresh` and `/auth/logout` never trigger
 a refresh (`NO_REFRESH` in `api.ts`). A 401 there means "wrong code" or "no
@@ -117,15 +133,11 @@ flowchart TD
     lookup --> known{Found and not expired?}
     known -- no --> r401b[401]
     known -- yes --> revoked{Already revoked?}
-    revoked -- no --> rotate["Revoke it, issue a new token in the same family,
-    commit, then delete the user's expired tokens"]
+    revoked -- no --> rotate["Revoke it, issue a new token in the same family,<br>commit, then delete the user's expired tokens"]
     rotate --> ok[200 + new cookies]
-    revoked -- yes --> grace{"Revoked under 30 s ago AND
-    the family still has a live token?"}
-    grace -- yes --> race["Another tab won the race:
-    change nothing"] --> r401c[401]
-    grace -- no --> stolen["Reuse detected:
-    revoke the whole family"] --> r401d[401]
+    revoked -- yes --> grace{"Revoked under 30 s ago AND<br>the family still has a live token?"}
+    grace -- yes --> race["Another tab won the race:<br>change nothing"] --> r401c[401]
+    grace -- no --> stolen["Reuse detected:<br>revoke the whole family"] --> r401d[401]
 ```
 
 - **The grace window** covers two tabs refreshing at once: the losing tab sends
@@ -164,8 +176,9 @@ Checked 2026-11-11 against the dev servers in Chrome, with a throwaway user:
    **one** refresh, then both retried and succeeded.
 
 2. **An unknown refresh token**, then reload: two `/me` 401s, one
-   `/auth/refresh` 401, and nothing after it. No retry, no loop, no console
-   errors.
+   `/auth/refresh` 401, and no loop or console errors. (Checked before the
+   retry-after-failed-refresh change; each `/me` now also retries once, and
+   gets a 401, before giving up.)
 
 To repeat check 1 by hand: sign in, delete only the `access_token` cookie in
 DevTools (Application → Cookies), reload, and watch the Network tab.

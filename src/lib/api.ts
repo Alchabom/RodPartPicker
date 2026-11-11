@@ -58,10 +58,13 @@ export function onSessionExpired(listener: () => void): () => void {
 }
 
 function send(path: string, init?: RequestInit): Promise<Response> {
-  return fetch(`/api${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-  })
+  // new Headers() accepts every form callers may pass (object, array, Headers)
+  const headers = new Headers(init?.headers)
+  // Our bodies are JSON strings; leave FormData etc. to set their own type
+  if (typeof init?.body === 'string' && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+  return fetch(`/api${path}`, { ...init, headers })
 }
 
 async function toApiError(res: Response): Promise<ApiError> {
@@ -78,9 +81,13 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   let res = await send(path, init)
 
   if (res.status === 401 && !NO_REFRESH.includes(path)) {
-    if (await refreshOnce()) {
-      res = await send(path, init) // retry once; a second 401 is thrown below
-    } else {
+    const refreshed = await refreshOnce()
+    // Retry once either way. If our refresh lost a race with another tab
+    // (the API's 30 s grace window answers 401), that tab's new cookies are
+    // already in the shared jar, so the retry still succeeds.
+    // (Safe to resend: our bodies are strings, never one-shot streams.)
+    res = await send(path, init)
+    if (res.status === 401 && !refreshed) {
       const error = await toApiError(res)
       sessionExpiredListeners.forEach((listener) => listener())
       throw error
