@@ -30,7 +30,7 @@ The Products and Completed Builds pages aren't built yet. The API can already sa
 
 ### Setup
 
-1. Copy `.env.example` to `.env` and set `DB_PASSWORD` to your MySQL password. Never commit `.env`.
+1. Copy `.env.example` to `.env`. Set `DB_PASSWORD` to your MySQL password, and fill in `JWT_SECRET` and `CODE_HMAC_SECRET` with the command shown in `.env.example`. Never commit `.env`.
 2. Install the dependencies:
    ```sh
    pnpm install
@@ -57,6 +57,12 @@ pnpm dev
 Open <http://localhost:5173>. To check the connection, <http://localhost:5173/api/health> should return `{"api":"ok","db":"ok"}`. If it says `"db":"unreachable"`, MySQL isn't running or `.env` is wrong.
 
 The interactive API docs are at <http://localhost:3001/docs>.
+
+To sign in locally, use <http://localhost:5173/login>. The code isn't emailed by default; it's printed in the API's terminal. [Email (sign-in codes)](api/README.md#email-sign-in-codes) covers sending real email with Resend.
+
+### After pulling
+
+`.env` is gitignored, so pulling never updates it. Compare yours with `.env.example`, run `pnpm db:migrate`, and restart the API. The checklist is in [After pulling](api/README.md#after-pulling).
 
 ## Commands
 
@@ -87,11 +93,18 @@ All routes start with `/api`.
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | API and database status |
+| POST | `/auth/code` | Email a sign-in code (rate limited) |
+| POST | `/auth/verify` | Check the code and start a session (sets cookies) |
+| POST | `/auth/refresh` | Swap the refresh cookie for new tokens |
+| POST | `/auth/logout` | End the session and clear the cookies |
+| GET, PUT | `/auth/me` | The signed-in user; set the display name |
 | GET | `/parts/{rod,reel,line,leader,tippet}` | List a component's parts |
 | GET, POST | `/builds` | List or create saved builds |
 | GET, PUT, DELETE | `/builds/{id}` | Read, replace or delete a saved build |
 | GET | `/compatibility/parts` | Parts that fit the selected build |
 | GET | `/compatibility/check` | Warnings for the selected build |
+
+Writes (`POST`, `PUT`, `PATCH`, `DELETE`) need an `Origin` header matching `APP_ORIGIN`; the browser sends it for you.
 
 Both compatibility routes take any of `rodId`, `reelId`, `flyLineId`, `leaderId` and `tippetId`. `/compatibility/parts` also takes `water=fresh` or `water=salt`.
 
@@ -100,6 +113,7 @@ Both compatibility routes take any of `rodId`, `reelId`, `flyLineId`, `leaderId`
 ```text
 api/                  FastAPI app
   app/
+    auth/             Email-code sign-in, sessions and rate limits
     builds/           Saved builds
     compatibility/    Compatibility rules and endpoints
     parts/            Parts catalog
@@ -108,7 +122,9 @@ api/                  FastAPI app
 docs/                 Architecture, database and design records
 src/
   components/         Shared components, including shadcn/ui
+  features/auth/      Login, display name, route guard and user menu
   features/builder/   The builder feature
+  hooks/auth/         Shared session state (AuthProvider, useAuth)
   lib/                Shared utilities and the API client
   routes/             App routes
 ```
@@ -121,4 +137,5 @@ The frontend is organized by feature. Each feature in `src/features/` exposes it
 - [Database design record](docs/database/schema-design.md), including the compatibility rules
 - [Seed data notes](docs/database/seed-data-notes.md)
 - [API setup and migrations](api/README.md)
+- [Sign-in rate limits](docs/auth/rate-limiting.md) and [sessions and refresh](docs/auth/sessions.md)
 - [Design specs](docs/superpowers/specs/) and [implementation plans](docs/superpowers/plans/)
