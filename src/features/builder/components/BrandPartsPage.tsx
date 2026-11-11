@@ -72,10 +72,9 @@ export function BrandPartsPage() {
   const matches = compatible?.matches[component.type]
   const matchCount = matches ? parts.filter((p) => matches.has(p.dbId)).length : 0
 
-  // Reels the API doesn't recommend move into a collapsed list below the rest
-  const notRecommended = component.type === 'reel' ? compatible?.notRecommendedReels : undefined
-  const listed = notRecommended ? parts.filter((p) => !notRecommended.has(p.dbId)) : parts
-  const unmatched = notRecommended ? parts.filter((p) => notRecommended.has(p.dbId)) : []
+  // Parts that don't fit the build move into a collapsed list below the rest
+  const notCompatible = compatible?.notCompatible[component.type]
+  const unmatched = notCompatible ? parts.filter((p) => notCompatible.has(p.dbId)) : []
 
   // Lines one weight up that suit a fast rod, cheapest first (unpriced last)
   const heavierLines = component.type === 'line' ? compatible?.heavierLines : undefined
@@ -84,6 +83,9 @@ export function BrandPartsPage() {
         .filter((p) => heavierLines.has(p.dbId))
         .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
     : []
+
+  // Each part shows in one place: its own section, or the main table
+  const listed = parts.filter((p) => !notCompatible?.has(p.dbId) && !heavierLines?.has(p.dbId))
 
   const renderTable = (rows: typeof parts) => (
     <Table>

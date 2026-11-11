@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
 from app.compatibility import rules
-from app.compatibility.schemas import BuildCheck, BuildWarning, CompatibleParts
+from app.compatibility.schemas import (
+    BuildCheck,
+    BuildWarning,
+    CompatibleParts,
+    NotCompatibleParts,
+)
 from app.db import DbSession
 from app.parts.models import FlyLine, Leader, LineWeight, Reel, Rod, Tippet
 
@@ -67,6 +72,20 @@ def _ids(parts: list) -> list[int]:
     return [part.id for part in parts]
 
 
+def _not_compatible(
+    db, model, slot: str, selected: dict, fitting: list, offered: list | None = None
+) -> list[int]:
+    """Return the IDs of one component's parts that don't fit the build.
+
+    Empty until another part is selected, since there's nothing to compare to.
+    `offered` holds parts recommended elsewhere, which are left out.
+    """
+    if all(part is None for other, part in selected.items() if other != slot):
+        return []
+    keep = set(_ids(fitting)) | set(_ids(offered or []))
+    return [part_id for part_id in db.scalars(select(model.id)) if part_id not in keep]
+
+
 def _heavier_lines(db, selected: dict, water: str | None) -> list:
     """Return the one-weight-up lines that suit a fast rod and the rest of the build."""
     rod = selected["rod"]
@@ -118,31 +137,29 @@ def get_compatible_parts(
             if rules.is_recommended(line, rod, grains_max[line.line_weight])
         ]
 
-    reels = _ids(
-        _fitting(db, Reel, "reel", selected, water, lambda reel: reel.max_line_weight)
+    rods = _fitting(db, Rod, "rod", selected, water, lambda rod: rod.line_weight)
+    reels = _fitting(
+        db, Reel, "reel", selected, water, lambda reel: reel.max_line_weight
     )
-
-    # Once a rod is picked, every reel that doesn't fit is offered separately
-    not_recommended_reel = []
-    if rod is not None:
-        fitting_reels = set(reels)
-        not_recommended_reel = [
-            reel_id
-            for reel_id in db.scalars(select(Reel.id))
-            if reel_id not in fitting_reels
-        ]
+    leaders = _fitting(db, Leader, "leader", selected, water)
+    tippets = _fitting(db, Tippet, "tippet", selected, water)
+    heavier = _heavier_lines(db, selected, water)
 
     return CompatibleParts(
-        rod=_ids(
-            _fitting(db, Rod, "rod", selected, water, lambda rod: rod.line_weight)
-        ),
-        reel=reels,
+        rod=_ids(rods),
+        reel=_ids(reels),
         line=_ids(lines),
-        leader=_ids(_fitting(db, Leader, "leader", selected, water)),
-        tippet=_ids(_fitting(db, Tippet, "tippet", selected, water)),
+        leader=_ids(leaders),
+        tippet=_ids(tippets),
         recommended_line=recommended,
-        not_recommended_reel=not_recommended_reel,
-        heavier_line=_ids(_heavier_lines(db, selected, water)),
+        heavier_line=_ids(heavier),
+        not_compatible=NotCompatibleParts(
+            rod=_not_compatible(db, Rod, "rod", selected, rods),
+            reel=_not_compatible(db, Reel, "reel", selected, reels),
+            line=_not_compatible(db, FlyLine, "line", selected, lines, heavier),
+            leader=_not_compatible(db, Leader, "leader", selected, leaders),
+            tippet=_not_compatible(db, Tippet, "tippet", selected, tippets),
+        ),
     )
 
 

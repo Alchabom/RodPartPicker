@@ -1,6 +1,16 @@
 from app.schemas import CamelModel
 
 
+class NotCompatibleParts(CamelModel):
+    """IDs of the parts that don't fit, per component. Empty until another part is picked."""
+
+    rod: list[int]
+    reel: list[int]
+    line: list[int]  # leaves out heavier_line, which is offered separately
+    leader: list[int]
+    tippet: list[int]
+
+
 class CompatibleParts(CamelModel):
     """IDs of the parts that match, per component."""
 
@@ -11,7 +21,7 @@ class CompatibleParts(CamelModel):
     tippet: list[int]
     recommended_line: list[int]
     heavier_line: list[int]  # one weight up, for fast rods
-    not_recommended_reel: list[int]  # reels that don't fit; empty until a rod is picked
+    not_compatible: NotCompatibleParts
 
 
 class BuildWarning(CamelModel):
