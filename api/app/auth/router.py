@@ -11,7 +11,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import delete, select, update
-from sqlalchemy.exc import IntegrityError  # noqa: F401
+from sqlalchemy.exc import IntegrityError
 
 from app.auth.codes import CODE_TTL, MAX_ATTEMPTS, codes_match, generate_code, hash_code
 from app.auth.cookies import set_auth_cookies
@@ -134,7 +134,11 @@ def verify_code(body: VerifyIn, response: Response, db: DbSession, now: Now) -> 
 @router.get("/me")
 def read_me(user_id: CurrentUserId, db: DbSession) -> UserOut:
     """Task 3.3. db.get(User, user_id); None -> HTTPException(401)."""
-    raise NotImplementedError
+
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(401, "Not signed in")
+    return user
 
 
 @router.put("/me")
@@ -145,4 +149,15 @@ def update_me(body: DisplayNameIn, user_id: CurrentUserId, db: DbSession) -> Use
     collation), so don't pre-check with a SELECT; two requests could race past
     it. Catch IntegrityError: db.rollback(), then HTTPException(409, "Display name taken").
     """
-    raise NotImplementedError
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(401, "Not signed in")
+
+    user.display_name = body.display_name
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "Display name taken")
+    return user

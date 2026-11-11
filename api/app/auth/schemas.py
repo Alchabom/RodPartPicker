@@ -51,4 +51,6 @@ class VerifyIn(CamelModel):
 class DisplayNameIn(CamelModel):
     """Body of PUT /me. The JSON key is displayName."""
 
-    # TODO(3.3): display_name: stripped, matching ^[A-Za-z0-9_]{3,30}$
+    display_name: Annotated[
+        str, StringConstraints(strip_whitespace=True, pattern=r"^[A-Za-z0-9_]{3,30}$")
+    ]
