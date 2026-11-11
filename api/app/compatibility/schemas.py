@@ -4,11 +4,11 @@ from app.schemas import CamelModel
 class NotCompatibleParts(CamelModel):
     """IDs of the parts that don't fit, per component. Empty until another part is picked."""
 
-    rod: list[int]
+    rod: list[int]  # always empty: rods start the build and are never filtered
     reel: list[int]
     line: list[int]  # leaves out heavier_line, which is offered separately
     leader: list[int]
-    tippet: list[int]
+    tippet: list[int]  # always empty: tippets are never not-compatible
 
 
 class CompatibleParts(CamelModel):

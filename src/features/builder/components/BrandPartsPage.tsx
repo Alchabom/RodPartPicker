@@ -34,18 +34,20 @@ export function BrandPartsPage() {
   const { query } = useBuildQuery()
 
   // Highlights compare a part to the rest of the build, so they need another
-  // component to be selected
-  const hasOtherParts = component !== undefined
+  // component to be selected. The rod starts the build, so rods are never
+  // filtered: every rod stays plain and available
+  const showsCompatibility = component !== undefined
+    && component.type !== 'rod'
     && COMPONENTS.some((c) => c.type !== component.type && getPart(build[c.type]))
 
   // The query is stored with the response, so highlights for the previous
   // selection never show while the next request is running
   const [result, setResult] = useState<{ query: string; parts: CompatibleParts }>()
   const [showUnmatched, setShowUnmatched] = useState(false)
-  const compatible = hasOtherParts && result?.query === query ? result.parts : undefined
+  const compatible = showsCompatibility && result?.query === query ? result.parts : undefined
 
   useEffect(() => {
-    if (!hasOtherParts) return
+    if (!showsCompatibility) return
     const controller = new AbortController()
     fetchCompatibleParts(query, controller.signal)
       .then((parts) => setResult({ query, parts }))
@@ -55,7 +57,7 @@ export function BrandPartsPage() {
         console.error('Could not load compatible parts', error)
       })
     return () => controller.abort()
-  }, [query, hasOtherParts])
+  }, [query, showsCompatibility])
 
   if (!component || parts.length === 0) {
     return (

@@ -80,27 +80,24 @@ def test_parts_that_dont_fit_are_not_compatible(client, make_part):
     assert other_line.id in not_compatible["line"]
 
 
-def test_selected_parts_slot_compares_against_the_others(client, make_part):
+def test_rods_are_never_not_compatible(client, make_part):
     reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
-    fitting_rod = make_part(Rod, line_weight=5)
-    heavy_rod = make_part(Rod, line_weight=8)
+    make_part(Rod, line_weight=8)
 
     not_compatible = get_parts(client, reelId=reel.id)["notCompatible"]
 
-    assert fitting_rod.id not in not_compatible["rod"]
-    assert heavy_rod.id in not_compatible["rod"]
+    assert not_compatible["rod"] == []
 
 
 def test_not_compatible_needs_another_part(client, make_part):
-    rod = make_part(Rod, line_weight=5)
-    make_part(Rod, line_weight=8)
+    reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
     make_part(Reel, min_line_weight=7, max_line_weight=9)
 
     no_parts = get_parts(client)["notCompatible"]
-    only_a_rod = get_parts(client, rodId=rod.id)["notCompatible"]
+    only_a_reel = get_parts(client, reelId=reel.id)["notCompatible"]
 
     assert all(ids == [] for ids in no_parts.values())
-    assert only_a_rod["rod"] == []  # nothing else to compare rods to
+    assert only_a_reel["reel"] == []  # nothing else to compare reels to
 
 
 def test_heavier_line_is_not_listed_as_not_compatible(client, make_part):
@@ -114,10 +111,10 @@ def test_heavier_line_is_not_listed_as_not_compatible(client, make_part):
 
 
 def test_parts_use_the_rods_water_tag(client, make_part):
-    rod = make_part(Rod, water="fresh")
-    fresh_tippet = make_part(Tippet, water="fresh")
-    both_tippet = make_part(Tippet, water="both")
-    salt_tippet = make_part(Tippet, water="salt")
+    rod = make_part(Rod, line_weight=7, water="fresh")  # light rods skip this
+    fresh_tippet = make_part(Tippet, water="fresh", x_size_id=7)
+    both_tippet = make_part(Tippet, water="both", x_size_id=7)
+    salt_tippet = make_part(Tippet, water="salt", x_size_id=7)
 
     data = get_parts(client, rodId=rod.id)
 
@@ -253,6 +250,48 @@ def test_heavier_line_has_no_weight_warning(client, make_part):
     assert response.json() == {"warnings": []}
 
 
+def test_light_rod_highlights_every_tippet(client, make_part):
+    rod = make_part(Rod, line_weight=6, water="fresh")
+    leader = make_part(Leader, x_size_id=9)  # 5X
+    salt_tippet = make_part(Tippet, water="salt", x_size_id=9)
+    wrong_size = make_part(Tippet, x_size_id=4)  # 0X doesn't suit a 5X leader
+
+    data = get_parts(client, rodId=rod.id, leaderId=leader.id)
+
+    assert salt_tippet.id in data["tippet"]
+    assert wrong_size.id in data["tippet"]
+
+
+def test_heavy_rod_skips_light_tippets(client, make_part):
+    rod = make_part(Rod, line_weight=7)
+    light_tippet = make_part(Tippet, x_size_id=8)  # 4X
+    strong_tippet = make_part(Tippet, x_size_id=7)  # 3X
+
+    data = get_parts(client, rodId=rod.id)
+
+    assert light_tippet.id not in data["tippet"]
+    assert strong_tippet.id in data["tippet"]
+
+
+@pytest.mark.parametrize("rod_weight", [6, 7])
+def test_tippets_are_never_not_compatible(client, make_part, rod_weight):
+    rod = make_part(Rod, line_weight=rod_weight, water="fresh")
+    make_part(Tippet, x_size_id=10, water="salt")
+
+    data = get_parts(client, rodId=rod.id)
+
+    assert data["notCompatible"]["tippet"] == []
+
+
+def test_light_tippet_on_heavy_rod_has_no_warning(client, make_part):
+    rod = make_part(Rod, line_weight=8)
+    tippet = make_part(Tippet, x_size_id=10)  # 6X
+
+    response = client.get(CHECK_URL, params={"rodId": rod.id, "tippetId": tippet.id})
+
+    assert response.json() == {"warnings": []}
+
+
 def test_parts_unknown_rod(client):
     response = client.get(PARTS_URL, params={"rodId": 999999})
 
@@ -358,10 +397,11 @@ def test_parts_unknown_id(client, param):
     "component, param", [("reel", "reelId"), ("tippet", "tippetId")]
 )
 def test_highlighted_parts_never_cause_a_warning(client, make_part, component, param):
+    # A 7 wt rod, since rods under 7 wt highlight every tippet regardless
     build = {
-        "rodId": make_part(Rod, line_weight=5).id,
-        "flyLineId": make_part(FlyLine, line_weight=5).id,
-        "leaderId": make_part(Leader, x_size_id=9).id,
+        "rodId": make_part(Rod, line_weight=7).id,
+        "flyLineId": make_part(FlyLine, line_weight=7).id,
+        "leaderId": make_part(Leader, x_size_id=6).id,  # 2X
     }
 
     highlighted = get_parts(client, **build)[component]

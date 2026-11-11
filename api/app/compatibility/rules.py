@@ -16,6 +16,9 @@ from app.parts.models import (
 SALT_MIN_WEIGHT = 7  # water=salt excludes anything under this weight
 HEAVY_LEADER_LB = 10  # leaders at or above this strength count as heavy
 HEAVY_LEADER_MIN_ROD_WEIGHT = 7  # heavy leaders only match rods at or above this weight
+LIGHT_TIPPET_X_SIZE_ID = 8  # 4X; x_sizes ids rise as tippet gets finer
+# Rods under this weight highlight every tippet; rods at or above it skip light tippets
+LIGHT_TIPPET_MIN_ROD_WEIGHT = 7
 # How far a heavier line must sit from its weight's target toward its grains_min:
 # 0 allows anything under target, 1 only lines at grains_min
 HEAVIER_LINE_FRACTION = 0.5
@@ -59,6 +62,22 @@ def passes_filter(
 def is_heavy_leader(leader: Leader) -> bool:
     """Check whether a leader is strong enough to count as heavy."""
     return leader.strength_lb is not None and leader.strength_lb >= HEAVY_LEADER_LB
+
+
+def highlights_every_tippet(rod: Rod) -> bool:
+    """Check whether a rod is light enough to highlight every tippet."""
+    return rod.line_weight < LIGHT_TIPPET_MIN_ROD_WEIGHT
+
+
+def is_light_tippet_for_rod(tippet: Tippet, rod: Rod) -> bool:
+    """Check whether a tippet is 4X or finer on a heavy rod.
+
+    These still fit the build, so they aren't flagged, just not highlighted.
+    """
+    return (
+        rod.line_weight >= LIGHT_TIPPET_MIN_ROD_WEIGHT
+        and tippet.x_size_id >= LIGHT_TIPPET_X_SIZE_ID
+    )
 
 
 def is_recommended(line: FlyLine, rod: Rod, grains_max: int) -> bool:

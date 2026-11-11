@@ -38,6 +38,31 @@ def test_is_heavy_leader(strength_lb, expected):
     assert rules.is_heavy_leader(Leader(strength_lb=strength_lb)) is expected
 
 
+# ---------- Light tippets ----------
+
+
+@pytest.mark.parametrize(
+    "rod_weight, x_size_id, expected",
+    [
+        (7, 8, True),  # 4X on a 7 wt
+        (7, 9, True),  # 5X
+        (7, 7, False),  # 3X
+        (6, 8, False),  # 4X on a 6 wt
+        (10, 12, True),  # 8X on a 10 wt
+    ],
+)
+def test_is_light_tippet_for_rod(rod_weight, x_size_id, expected):
+    rod = Rod(line_weight=rod_weight)
+    tippet = Tippet(x_size_id=x_size_id)
+
+    assert rules.is_light_tippet_for_rod(tippet, rod) is expected
+
+
+@pytest.mark.parametrize("rod_weight, expected", [(1, True), (6, True), (7, False)])
+def test_highlights_every_tippet(rod_weight, expected):
+    assert rules.highlights_every_tippet(Rod(line_weight=rod_weight)) is expected
+
+
 # ---------- Recommended lines ----------
 
 GRAINS_MAX = 146  # the top of the 5 wt range
