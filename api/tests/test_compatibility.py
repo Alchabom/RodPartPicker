@@ -253,6 +253,30 @@ def test_heavier_line_has_no_weight_warning(client, make_part):
     assert response.json() == {"warnings": []}
 
 
+@pytest.mark.parametrize("rod_weight, highlighted", [(6, True), (7, False)])
+def test_light_tippets_lose_their_highlight_on_heavy_rods(
+    client, make_part, rod_weight, highlighted
+):
+    rod = make_part(Rod, line_weight=rod_weight)
+    light_tippet = make_part(Tippet, x_size_id=8)  # 4X
+    strong_tippet = make_part(Tippet, x_size_id=7)  # 3X
+
+    data = get_parts(client, rodId=rod.id)
+
+    assert (light_tippet.id in data["tippet"]) is highlighted
+    assert light_tippet.id not in data["notCompatible"]["tippet"]
+    assert strong_tippet.id in data["tippet"]
+
+
+def test_light_tippet_on_heavy_rod_has_no_warning(client, make_part):
+    rod = make_part(Rod, line_weight=8)
+    tippet = make_part(Tippet, x_size_id=10)  # 6X
+
+    response = client.get(CHECK_URL, params={"rodId": rod.id, "tippetId": tippet.id})
+
+    assert response.json() == {"warnings": []}
+
+
 def test_parts_unknown_rod(client):
     response = client.get(PARTS_URL, params={"rodId": 999999})
 
