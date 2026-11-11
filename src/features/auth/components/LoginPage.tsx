@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { Navigate, useNavigate, useSearchParams } from 'react-router'
 import { Button } from '@components/ui/button'
 import { ApiError } from '@/lib/api'
 import { useAuth } from '@hooks/auth'
@@ -26,7 +26,7 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 export function LoginPage() {
-  const { setUser } = useAuth()
+  const { status, setUser } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const next = safeNext(searchParams.get('next'))
@@ -38,14 +38,25 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false)
   const [sentAt, setSentAt] = useState(0)
   const [now, setNow] = useState(() => Date.now())
+  const [resent, setResent] = useState(false)
+  // Set together with setUser, so this page's own sign-in isn't mistaken for
+  // "already signed in" below (that would skip /welcome)
+  const [signedInHere, setSignedInHere] = useState(false)
 
-  // Tick once a second while the resend button is waiting
+  // Tick once a second until the resend button unlocks
   const resendIn = Math.max(0, Math.ceil((sentAt + RESEND_AFTER_MS - now) / 1000))
   useEffect(() => {
-    if (step !== 'code' || resendIn === 0) return
-    const id = setInterval(() => setNow(Date.now()), 1000)
+    if (step !== 'code') return
+    const id = setInterval(() => {
+      const t = Date.now()
+      setNow(t)
+      if (t >= sentAt + RESEND_AFTER_MS) clearInterval(id)
+    }, 1000)
     return () => clearInterval(id)
-  }, [step, resendIn])
+  }, [step, sentAt])
+
+  // Already signed in (e.g. opened /login from a bookmark): just continue
+  if (status === 'authenticated' && !signedInHere) return <Navigate to={next} replace />
 
   async function sendCode() {
     setBusy(true)
@@ -53,6 +64,7 @@ export function LoginPage() {
     try {
       await requestCode(email)
       // Same screen whether or not the email has an account (the API never says)
+      setResent(step === 'code')
       setStep('code')
       setCode('')
       setSentAt(Date.now())
@@ -75,12 +87,14 @@ export function LoginPage() {
     setError(null)
     try {
       const user = await verifyCode(email, code)
+      setSignedInHere(true)
       setUser(user)
       // New accounts pick a display name first, then continue to `next`
       const welcome = `/welcome?next=${encodeURIComponent(next)}`
       navigate(user.displayName === null ? welcome : next, { replace: true })
     } catch (e) {
       setError(errorMessage(e, 'Something went wrong, try again'))
+    } finally {
       setBusy(false)
     }
   }
@@ -99,6 +113,8 @@ export function LoginPage() {
             type="email"
             autoComplete="email"
             required
+            aria-invalid={error !== null}
+            aria-describedby={error ? 'login-error' : undefined}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
@@ -113,7 +129,8 @@ export function LoginPage() {
       ) : (
         <form onSubmit={onSubmitCode} className="mt-6 flex flex-col gap-3">
           <p className="text-plantation" role="status">
-            Check your email. We sent a code to <strong>{email}</strong>.
+            {resent ? 'We sent a new code' : 'Check your email. We sent a code'} to{' '}
+            <strong>{email}</strong>.
           </p>
           <label htmlFor="login-code" className="text-sm font-semibold text-plantation">
             Code
@@ -126,6 +143,8 @@ export function LoginPage() {
             maxLength={6}
             required
             autoFocus
+            aria-invalid={error !== null}
+            aria-describedby={error ? 'login-error' : undefined}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
             className={`${inputClass} tracking-[0.4em]`}
@@ -150,6 +169,7 @@ export function LoginPage() {
               onClick={() => {
                 setStep('email')
                 setError(null)
+                setResent(false)
               }}
             >
               Use a different email
@@ -159,7 +179,7 @@ export function LoginPage() {
       )}
 
       {error && (
-        <p role="alert" className="mt-4 text-sm font-semibold text-destructive">
+        <p id="login-error" role="alert" className="mt-4 text-sm font-semibold text-destructive">
           {error}
         </p>
       )}

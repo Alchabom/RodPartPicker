@@ -35,6 +35,7 @@ export function DisplayNamePage() {
           ? 'That name is taken'
           : 'Something went wrong, try again',
       )
+    } finally {
       setBusy(false)
     }
   }
@@ -56,7 +57,8 @@ export function DisplayNamePage() {
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          aria-describedby="display-name-hint"
+          aria-invalid={error !== null}
+          aria-describedby={error ? 'display-name-hint display-name-error' : 'display-name-hint'}
           className="w-full rounded-md border border-twine bg-white px-3 py-2 text-base text-te-papa-green outline-none focus:border-spectra focus:ring-2 focus:ring-spectra/30"
         />
         <p id="display-name-hint" className="text-sm text-muted-foreground">
@@ -68,7 +70,7 @@ export function DisplayNamePage() {
       </form>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm font-semibold text-destructive">
+        <p id="display-name-error" role="alert" className="mt-4 text-sm font-semibold text-destructive">
           {error}
         </p>
       )}

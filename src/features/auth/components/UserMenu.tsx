@@ -33,11 +33,11 @@ export function UserMenu() {
 
   return (
     <DropdownMenu>
+      {/* No aria-label: the visible name is the button's name (WCAG 2.5.3) */}
       <DropdownMenuTrigger
-        aria-label="Account menu"
         className="flex items-center gap-2 rounded-md font-semibold text-tasman outline-none transition-colors duration-200 hover:text-sulu focus-visible:ring-2 focus-visible:ring-sulu"
       >
-        <UserIcon className="size-5" />
+        <UserIcon className="size-5" aria-hidden />
         <span>{user.displayName ?? user.email}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
