@@ -35,7 +35,7 @@ already a `login_codes` row with `email`, `requester_ip` and `created_at`, so
 ## Where it sits in `POST /code`
 
 ```
-normalize email -> delete rows older than 24 h
+normalize email -> delete rows older than 24 h -> commit
   -> retry_after(db, email, ip, now)
        int  -> 429, Retry-After: <int>
        None -> mark this email's old codes consumed
@@ -54,6 +54,23 @@ normalize email -> delete rows older than 24 h
 - Deleting rows older than 24 h is safe, because the longest window is one
   hour and those rows can never affect a decision.
 
+## Cleanup and locking
+
+MySQL's default isolation level (REPEATABLE READ) keeps the locks a statement
+takes until its transaction commits. The 24 h cleanup is a range `DELETE`, so
+two things keep it from blocking other sign-ins:
+
+- **It's committed on its own,** before the rate-limit check. If it shared the
+  transaction that sends the email, its locks would be held through the Resend
+  call (up to a 10 s timeout), and every other `/code` and `/verify` would
+  queue behind one slow send.
+- **`created_at` has its own index** (migration `018`). Without it, the
+  `DELETE` scans and locks every row in `login_codes`; with it, only the
+  expired rows.
+
+A failed send still rolls back everything after the cleanup, so it still
+doesn't count against the limits.
+
 ## How the wait is computed
 
 The limits use a sliding window: "the 60 minutes before now", not "this clock
@@ -64,7 +81,9 @@ hour".
   old. At that point the count drops below the limit.
 
 The wait is rounded **up** to whole seconds (`math.ceil`), so a client that
-waits exactly `Retry-After` seconds is guaranteed to be let through.
+waits exactly `Retry-After` seconds won't be blocked by that same limit again.
+A different limit can still apply: passing the per-email limit doesn't clear
+the per-IP one.
 
 ## Inputs come from dependencies
 

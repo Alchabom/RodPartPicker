@@ -1,8 +1,6 @@
-"""Auth routes under /api/auth (Tasks 3.1-3.3; /refresh and /logout come in PR 4).
+"""Auth routes under /api/auth (/refresh and /logout come in PR 4).
 
-SKELETON: replace each NotImplementedError. Spec: "API" -> each route's section.
-Also add `api.include_router(auth_router)` in app/main.py (Task 3.1), or every
-test gets a 404.
+Spec: docs/superpowers/specs/2026-11-09-auth-design.md, "API" -> each route.
 """
 
 import uuid
@@ -34,22 +32,27 @@ INVALID_CODE = "Invalid or expired code"
 def request_code(
     body: CodeRequestIn, db: DbSession, now: Now, ip: ClientIp, sender: Sender
 ) -> dict:
-    """Task 3.1. Follow the spec's six steps in order:
+    """Send a login code. The spec's six steps, in order:
 
     1. (Done by CodeRequestIn: body.email is already normalized.)
-    2. Delete login_codes rows with created_at older than 24 h.
+    2. Delete login_codes rows with created_at older than 24 h, and commit
+       that on its own so its locks are released before the email send.
     3. n = retry_after(...). If n: raise HTTPException(429, headers={"Retry-After": str(n)}).
     4. Set consumed_at = now on this email's unconsumed codes (an UPDATE).
     5. Add the new LoginCode (hash_code, never the raw code; expires_at =
        now + CODE_TTL), db.flush(), send, THEN db.commit().
        Catch only EmailSendError: db.rollback(), then
        raise HTTPException(503, "Couldn't send the code, try again").
-       Rolling back undoes steps 2-5, so a failed send costs no rate limit.
+       Rolling back undoes steps 4-5, so a failed send costs no rate limit.
     6. return {}. Same answer whether or not an account exists.
     """
     db.execute(
         delete(LoginCode).where(LoginCode.created_at < now - timedelta(hours=24))
     )
+    # Commit the cleanup now: otherwise its row locks are held until the commit
+    # after the email send, and a slow send would stall every other sign-in.
+    # Safe on its own: the delete is idempotent and never changes a decision.
+    db.commit()
 
     wait = retry_after(db, body.email, ip, now)
     if wait is not None:
