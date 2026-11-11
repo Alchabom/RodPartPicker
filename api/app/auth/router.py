@@ -5,22 +5,22 @@ Also add `api.include_router(auth_router)` in app/main.py (Task 3.1), or every
 test gets a 404.
 """
 
-import uuid  # noqa: F401
+import uuid
 from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import delete, select, update  # noqa: F401
+from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError  # noqa: F401
 
-from app.auth.codes import CODE_TTL, MAX_ATTEMPTS, codes_match, generate_code, hash_code  # noqa: F401
-from app.auth.cookies import set_auth_cookies  # noqa: F401
+from app.auth.codes import CODE_TTL, MAX_ATTEMPTS, codes_match, generate_code, hash_code
+from app.auth.cookies import set_auth_cookies
 from app.auth.deps import ClientIp, CurrentUserId, Now
 from app.auth.email import EmailSender, EmailSendError, get_email_sender
-from app.auth.models import LoginCode, User  # noqa: F401
+from app.auth.models import LoginCode, User
 from app.auth.rate_limit import retry_after
 from app.auth.schemas import CodeRequestIn, DisplayNameIn, UserOut, VerifyIn
-from app.auth.tokens import issue_access_token, issue_refresh_token  # noqa: F401
+from app.auth.tokens import issue_access_token, issue_refresh_token
 from app.db import DbSession
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -97,7 +97,38 @@ def verify_code(body: VerifyIn, response: Response, db: DbSession, now: Now) -> 
        (family_id=str(uuid.uuid4())); db.commit(); set_auth_cookies(response, ...);
        return the user (UserOut reads it thanks to from_attributes).
     """
-    raise NotImplementedError
+    row = db.scalars(
+        select(LoginCode)
+        .where(
+            LoginCode.email == body.email,
+            LoginCode.consumed_at.is_(None),
+            LoginCode.expires_at > now,
+        )
+        .order_by(LoginCode.created_at.desc())
+        .limit(1)
+        .with_for_update()
+    ).first()
+
+    if row is None or not codes_match(row.code_hash, body.email, body.code):
+        if row is not None:
+            row.attempts += 1
+            if row.attempts >= MAX_ATTEMPTS:
+                row.consumed_at = now
+        # Commit before raising, or the session closes and the attempt is lost
+        db.commit()
+        raise HTTPException(400, INVALID_CODE)
+
+    row.consumed_at = now
+    user = db.scalars(select(User).where(User.email == body.email)).first()
+    if user is None:
+        user = User(email=body.email, created_at=now)
+        db.add(user)
+        db.flush()  # assigns user.id, which both tokens need
+    access = issue_access_token(user.id, now)
+    refresh = issue_refresh_token(db, user.id, str(uuid.uuid4()), now)
+    db.commit()
+    set_auth_cookies(response, access, refresh)
+    return user
 
 
 @router.get("/me")
