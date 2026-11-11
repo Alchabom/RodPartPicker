@@ -80,27 +80,24 @@ def test_parts_that_dont_fit_are_not_compatible(client, make_part):
     assert other_line.id in not_compatible["line"]
 
 
-def test_selected_parts_slot_compares_against_the_others(client, make_part):
+def test_rods_are_never_not_compatible(client, make_part):
     reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
-    fitting_rod = make_part(Rod, line_weight=5)
-    heavy_rod = make_part(Rod, line_weight=8)
+    make_part(Rod, line_weight=8)
 
     not_compatible = get_parts(client, reelId=reel.id)["notCompatible"]
 
-    assert fitting_rod.id not in not_compatible["rod"]
-    assert heavy_rod.id in not_compatible["rod"]
+    assert not_compatible["rod"] == []
 
 
 def test_not_compatible_needs_another_part(client, make_part):
-    rod = make_part(Rod, line_weight=5)
-    make_part(Rod, line_weight=8)
+    reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
     make_part(Reel, min_line_weight=7, max_line_weight=9)
 
     no_parts = get_parts(client)["notCompatible"]
-    only_a_rod = get_parts(client, rodId=rod.id)["notCompatible"]
+    only_a_reel = get_parts(client, reelId=reel.id)["notCompatible"]
 
     assert all(ids == [] for ids in no_parts.values())
-    assert only_a_rod["rod"] == []  # nothing else to compare rods to
+    assert only_a_reel["reel"] == []  # nothing else to compare reels to
 
 
 def test_heavier_line_is_not_listed_as_not_compatible(client, make_part):
