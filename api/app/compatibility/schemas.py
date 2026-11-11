@@ -8,7 +8,7 @@ class NotCompatibleParts(CamelModel):
     reel: list[int]
     line: list[int]  # leaves out heavier_line, which is offered separately
     leader: list[int]
-    tippet: list[int]
+    tippet: list[int]  # always empty: tippets are never not-compatible
 
 
 class CompatibleParts(CamelModel):

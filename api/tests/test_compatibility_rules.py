@@ -58,6 +58,11 @@ def test_is_light_tippet_for_rod(rod_weight, x_size_id, expected):
     assert rules.is_light_tippet_for_rod(tippet, rod) is expected
 
 
+@pytest.mark.parametrize("rod_weight, expected", [(1, True), (6, True), (7, False)])
+def test_highlights_every_tippet(rod_weight, expected):
+    assert rules.highlights_every_tippet(Rod(line_weight=rod_weight)) is expected
+
+
 # ---------- Recommended lines ----------
 
 GRAINS_MAX = 146  # the top of the 5 wt range
