@@ -5,6 +5,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 import jwt
+from sqlalchemy import delete, exists, select, update
 from sqlalchemy.orm import Session
 
 from app.auth.models import RefreshToken
@@ -13,6 +14,8 @@ from app.config import settings
 ACCESS_TOKEN_TTL = timedelta(minutes=15)
 REFRESH_TOKEN_TTL = timedelta(days=30)
 ALGORITHM = "HS256"
+# How long a just-replaced refresh token is forgiven (another tab's race)
+GRACE_WINDOW = timedelta(seconds=30)
 
 
 def issue_access_token(user_id: int, now: datetime) -> str:
@@ -78,3 +81,73 @@ def issue_refresh_token(
     db.add(row)
     db.flush()
     return raw
+
+
+def revoke_family(db: Session, family_id: str, now: datetime) -> None:
+    """Task 4.1. Set revoked_at = now on every unrevoked token in the family.
+
+    One bulk UPDATE (like "consume older codes" in POST /code). Filter on
+    revoked_at IS NULL so tokens revoked earlier keep their original time.
+    Don't commit; the route does.
+    """
+    db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.family_id == family_id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=now)
+    )
+
+
+def rotate_refresh_token(
+    db: Session, raw: str, now: datetime
+) -> tuple[int, str] | None:
+    """Task 4.1. Swap a refresh token for a new one in the same family.
+
+    Returns (user_id, new_raw), or None if the token is rejected. Applies any
+    revocation itself; the caller commits either way. Spec: "POST /refresh",
+    steps 2-5.
+
+    1. Look the row up by token_hash (hash_refresh_token(raw)), locked with
+       .with_for_update(), so two simultaneous refreshes can't both rotate it.
+    2. No row, or expires_at <= now -> None.
+    3. Already revoked (revoked_at is not None):
+       - Revoked under GRACE_WINDOW ago AND the family still has a live token
+         (some row with revoked_at IS NULL and expires_at > now) -> None and
+         change nothing. That's another tab that just lost the race.
+       - Otherwise -> revoke_family(...), then None. A replaced token came
+         back late, or after logout: treat it as stolen.
+       "Family has a live token" is a yes/no question:
+       db.scalar(select(exists().where(...))) returns True or False.
+    4. Valid: set row.revoked_at = now, issue_refresh_token(db, row.user_id,
+       row.family_id, now), delete this user's rows with expires_at <= now,
+       and return (row.user_id, new_raw).
+    """
+    row = db.scalars(
+        select(RefreshToken)
+        .where(RefreshToken.token_hash == hash_refresh_token(raw))
+        .with_for_update()
+    ).first()
+    if row is None or row.expires_at <= now:
+        return None
+
+    if row.revoked_at is not None:
+        family_is_live = db.scalar(
+            select(
+                exists().where(
+                    RefreshToken.family_id == row.family_id,
+                    RefreshToken.revoked_at.is_(None),
+                    RefreshToken.expires_at > now,
+                )
+            )
+        )
+        if not (now - row.revoked_at < GRACE_WINDOW and family_is_live):
+            revoke_family(db, row.family_id, now)
+        return None
+
+    row.revoked_at = now
+    new_raw = issue_refresh_token(db, row.user_id, row.family_id, now)
+    db.execute(
+        delete(RefreshToken).where(
+            RefreshToken.user_id == row.user_id, RefreshToken.expires_at <= now
+        )
+    )
+    return row.user_id, new_raw
