@@ -108,6 +108,24 @@ def fake_email():
     app.dependency_overrides.pop(get_email_sender, None)
 
 
+@pytest.fixture
+def login():
+    """Sign a client in through the real /code + /verify flow.
+
+    Returns a function: login(client, fake_email, email=...) -> the UserOut
+    JSON. The client keeps the auth cookies, so later requests are signed in.
+    """
+
+    def sign_in(client, fake_email, email="angler@example.com"):
+        assert client.post("/api/auth/code", json={"email": email}).status_code == 202
+        code = fake_email.last_code_for(email)
+        response = client.post("/api/auth/verify", json={"email": email, "code": code})
+        assert response.status_code == 200, response.text
+        return response.json()
+
+    return sign_in
+
+
 # ---------- Factories ----------
 # Each returns a function that inserts one row with sensible defaults; pass
 # keyword arguments to override any column. Rows are flushed so ids exist,
