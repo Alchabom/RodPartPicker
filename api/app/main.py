@@ -21,7 +21,7 @@ async def check_origin(request: Request, call_next):
     # CSRF defense in depth: browsers always send Origin on these methods
     if (
         request.method in WRITE_METHODS
-        and request.url.path.startswith("/api")
+        and (request.url.path == "/api" or request.url.path.startswith("/api/"))
         and request.headers.get("origin") != settings.APP_ORIGIN
     ):
         return JSONResponse({"detail": "Origin not allowed"}, status_code=403)

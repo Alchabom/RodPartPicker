@@ -1,7 +1,7 @@
-"""Request and response bodies for /api/auth (Tasks 3.1-3.3).
+"""Request and response bodies for /api/auth.
 
-SKELETON: fill in each TODO. Spec: "API" -> Routes. CamelModel (app/schemas.py)
-already reads ORM objects and writes camelCase keys (display_name -> displayName).
+CamelModel (app/schemas.py) reads ORM objects and writes camelCase keys
+(display_name -> displayName).
 """
 
 from typing import Annotated
