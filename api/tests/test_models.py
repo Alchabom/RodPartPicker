@@ -54,13 +54,31 @@ def test_water_tags_cover_strong_tippets_and_sealed_reels(db):
     )
     both_reels = select(func.count()).select_from(Reel).where(Reel.water == "both")
     assert db.scalar(both_tippets) == 16
-    assert db.scalar(both_reels) == 13
+    assert db.scalar(both_reels) == 21
 
     # x_sizes ids rise as tippet gets finer, and 4X is id 8
     fresh_sizes = db.scalars(
         select(Tippet.x_size_id).where(Tippet.water == "fresh")
     ).all()
     assert min(fresh_sizes) == 8
+
+    sealed_waters = db.scalars(
+        select(Reel.water).where(Reel.name.like("%(sealed)%")).distinct()
+    ).all()
+    assert sealed_waters == ["both"]
+
+
+def test_water_tags_cover_heavy_rods(db):
+    # 7 wt and up suits saltwater too; saltwater-specific rods keep salt
+    heavy_waters = db.scalars(
+        select(Rod.water).where(Rod.line_weight >= 7).distinct()
+    ).all()
+    assert sorted(heavy_waters) == ["both", "salt"]
+
+    fresh_weights = db.scalars(
+        select(Rod.line_weight).where(Rod.water == "fresh")
+    ).all()
+    assert max(fresh_weights) == 6
 
 
 def test_display_name_unique_ignoring_case(db):
