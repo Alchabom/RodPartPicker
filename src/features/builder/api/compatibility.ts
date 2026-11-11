@@ -11,14 +11,14 @@ interface CompatiblePartsResponse {
   tippet: number[]
   recommendedLine: number[]
   heavierLine: number[]
-  notRecommendedReel: number[]
+  notCompatible: Record<ComponentType, number[]>
 }
 
 export interface CompatibleParts {
   matches: Record<ComponentType, Set<number>>
   recommendedLines: Set<number>
   heavierLines: Set<number> // one weight up, for fast rods
-  notRecommendedReels: Set<number> // empty until a rod is picked
+  notCompatible: Record<ComponentType, Set<number>> // empty until another part is picked
 }
 
 export interface BuildPartIds {
@@ -46,7 +46,13 @@ export async function fetchCompatibleParts(query: string, signal?: AbortSignal):
     },
     recommendedLines: new Set(data.recommendedLine),
     heavierLines: new Set(data.heavierLine),
-    notRecommendedReels: new Set(data.notRecommendedReel),
+    notCompatible: {
+      rod: new Set(data.notCompatible.rod),
+      reel: new Set(data.notCompatible.reel),
+      line: new Set(data.notCompatible.line),
+      leader: new Set(data.notCompatible.leader),
+      tippet: new Set(data.notCompatible.tippet),
+    },
   }
 }
 

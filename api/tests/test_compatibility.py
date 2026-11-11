@@ -33,7 +33,7 @@ def test_parts_response_shape(client):
         "tippet",
         "recommendedLine",
         "heavierLine",
-        "notRecommendedReel",
+        "notCompatible",
     }
 
 
@@ -63,26 +63,54 @@ def test_parts_match_the_rods_weight(client, make_part):
     assert other_line.id not in data["line"]
 
 
-def test_reels_that_dont_fit_the_rod_are_not_recommended(client, make_part):
+def test_parts_that_dont_fit_are_not_compatible(client, make_part):
     rod = make_part(Rod, line_weight=5, water="fresh")
     fitting_reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
     heavy_reel = make_part(Reel, min_line_weight=7, max_line_weight=9)
     salt_reel = make_part(Reel, min_line_weight=4, max_line_weight=6, water="salt")
+    fitting_line = make_part(FlyLine, line_weight=5)
+    other_line = make_part(FlyLine, line_weight=8)
+
+    not_compatible = get_parts(client, rodId=rod.id)["notCompatible"]
+
+    assert fitting_reel.id not in not_compatible["reel"]
+    assert heavy_reel.id in not_compatible["reel"]
+    assert salt_reel.id in not_compatible["reel"]
+    assert fitting_line.id not in not_compatible["line"]
+    assert other_line.id in not_compatible["line"]
+
+
+def test_selected_parts_slot_compares_against_the_others(client, make_part):
+    reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
+    fitting_rod = make_part(Rod, line_weight=5)
+    heavy_rod = make_part(Rod, line_weight=8)
+
+    not_compatible = get_parts(client, reelId=reel.id)["notCompatible"]
+
+    assert fitting_rod.id not in not_compatible["rod"]
+    assert heavy_rod.id in not_compatible["rod"]
+
+
+def test_not_compatible_needs_another_part(client, make_part):
+    rod = make_part(Rod, line_weight=5)
+    make_part(Rod, line_weight=8)
+    make_part(Reel, min_line_weight=7, max_line_weight=9)
+
+    no_parts = get_parts(client)["notCompatible"]
+    only_a_rod = get_parts(client, rodId=rod.id)["notCompatible"]
+
+    assert all(ids == [] for ids in no_parts.values())
+    assert only_a_rod["rod"] == []  # nothing else to compare rods to
+
+
+def test_heavier_line_is_not_listed_as_not_compatible(client, make_part):
+    rod = make_part(Rod, line_weight=6, action="fast")
+    line = make_part(FlyLine, line_weight=7, head_weight_grains=HEAVIER_CUTOFF_7WT)
 
     data = get_parts(client, rodId=rod.id)
 
-    assert fitting_reel.id not in data["notRecommendedReel"]
-    assert heavy_reel.id in data["notRecommendedReel"]
-    assert salt_reel.id in data["notRecommendedReel"]
-
-
-def test_reels_need_a_rod_to_be_not_recommended(client, make_part):
-    line = make_part(FlyLine, line_weight=5)
-    make_part(Reel, min_line_weight=7, max_line_weight=9)
-
-    data = get_parts(client, flyLineId=line.id)
-
-    assert data["notRecommendedReel"] == []
+    assert line.id in data["heavierLine"]
+    assert line.id not in data["notCompatible"]["line"]
 
 
 def test_parts_use_the_rods_water_tag(client, make_part):
