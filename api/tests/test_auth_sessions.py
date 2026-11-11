@@ -178,6 +178,16 @@ def test_reuse_after_grace_revokes_family(client, clock, fake_email, db):
     assert refresh(new).status_code == 401
 
 
+def test_reuse_at_exactly_30_seconds_revokes_family(client, clock, fake_email, db):
+    _, old = sign_in(client, fake_email)
+    new = refresh(old).cookies[REFRESH_COOKIE]
+    clock.advance(seconds=30)  # the window is "less than 30 seconds"
+
+    assert refresh(old).status_code == 401
+
+    assert row_for(db, new).revoked_at is not None
+
+
 def test_reuse_after_logout_is_401(client, clock, fake_email, db):
     _, raw = sign_in(client, fake_email)
     assert logout(raw).status_code == 204
@@ -200,9 +210,11 @@ def test_logout_revokes_family_and_clears_cookies(client, clock, fake_email, db)
     rows = family_rows(db, row_for(db, new).family_id)
     assert all(row.revoked_at is not None for row in rows)
     set_cookies = response.headers.get_list("set-cookie")
-    for name in (ACCESS_COOKIE, REFRESH_COOKIE):
+    # A delete only works if its Path matches the one the cookie was set with
+    for name, path in ((ACCESS_COOKIE, "/api"), (REFRESH_COOKIE, "/api/auth")):
         (header,) = [h for h in set_cookies if h.startswith(f"{name}=")]
         assert "Max-Age=0" in header
+        assert f"Path={path};" in header or header.endswith(f"Path={path}")
     assert refresh(new).status_code == 401
 
 

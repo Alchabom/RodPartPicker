@@ -19,6 +19,7 @@ from app.auth.models import LoginCode, RefreshToken, User
 from app.auth.rate_limit import retry_after
 from app.auth.schemas import CodeRequestIn, DisplayNameIn, UserOut, VerifyIn
 from app.auth.tokens import (
+    delete_expired_tokens,
     hash_refresh_token,
     issue_access_token,
     issue_refresh_token,
@@ -154,8 +155,9 @@ def refresh_session(
        BEFORE looking at the result: a rejected token may have just revoked
        its family, and raising without a commit would throw that away.
     3. None -> 401 (same message as above).
-    4. Otherwise: issue a new access token, set_auth_cookies(response, access,
-       new_raw) and return the user (db.get(User, user_id)).
+    4. Otherwise: delete the user's expired tokens and commit again (its own
+       short transaction, see delete_expired_tokens), issue a new access
+       token, set_auth_cookies(response, access, new_raw) and return the user.
     """
     if refresh_token is None:
         raise HTTPException(401, "Not signed in")
@@ -167,8 +169,14 @@ def refresh_session(
         raise HTTPException(401, "Not signed in")
 
     user_id, new_raw = result
+    delete_expired_tokens(db, user_id, now)
+    db.commit()
+
+    user = db.get(User, user_id)
+    if user is None:  # can't happen today (tokens cascade with their user)
+        raise HTTPException(401, "Not signed in")
     set_auth_cookies(response, issue_access_token(user_id, now), new_raw)
-    return db.get(User, user_id)
+    return user
 
 
 @router.post("/logout", status_code=204)

@@ -118,8 +118,10 @@ def rotate_refresh_token(
        "Family has a live token" is a yes/no question:
        db.scalar(select(exists().where(...))) returns True or False.
     4. Valid: set row.revoked_at = now, issue_refresh_token(db, row.user_id,
-       row.family_id, now), delete this user's rows with expires_at <= now,
-       and return (row.user_id, new_raw).
+       row.family_id, now), and return (row.user_id, new_raw).
+
+    Expired rows are cleaned up separately (delete_expired_tokens), after the
+    caller commits.
     """
     row = db.scalars(
         select(RefreshToken)
@@ -145,9 +147,21 @@ def rotate_refresh_token(
 
     row.revoked_at = now
     new_raw = issue_refresh_token(db, row.user_id, row.family_id, now)
+    return row.user_id, new_raw
+
+
+def delete_expired_tokens(db: Session, user_id: int, now: datetime) -> None:
+    """Delete this user's expired refresh tokens. Don't commit; the route does.
+
+    Run it in its own transaction, after the rotation commits. Under REPEATABLE
+    READ this DELETE locks every row of the user it scans, including another
+    device's just-inserted token, so inside the rotation's transaction two
+    devices refreshing at once could deadlock each other (MySQL error 1213).
+    Only expired rows go: a revoked but unexpired row is still needed to
+    detect reuse.
+    """
     db.execute(
         delete(RefreshToken).where(
-            RefreshToken.user_id == row.user_id, RefreshToken.expires_at <= now
+            RefreshToken.user_id == user_id, RefreshToken.expires_at <= now
         )
     )
-    return row.user_id, new_raw
