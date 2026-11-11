@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { TriangleAlert } from 'lucide-react'
+import { RotateCcw, TriangleAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -19,7 +20,7 @@ import { formatPrice } from '../utils/formatPrice'
 import { ComponentRow } from './ComponentRow'
 
 export function BuilderPage() {
-  const { build } = useBuild()
+  const { build, clearBuild } = useBuild()
   const { getPart } = useCatalog()
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
@@ -46,7 +47,12 @@ export function BuilderPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>
+        <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
+          <RotateCcw data-icon="inline-start" /> Clear build
+        </Button>
+      </div>
       <p className="mt-1 mb-8 text-muted-foreground">
         Choose a brand for each component to browse its parts.
       </p>

@@ -46,8 +46,10 @@ export function BuildProvider({ children }: { children: ReactNode }) {
       return next
     })
 
+  const clearBuild = () => setBuild({})
+
   return (
-    <BuildContext value={{ build, selectPart, removePart }}>
+    <BuildContext value={{ build, selectPart, removePart, clearBuild }}>
       {children}
     </BuildContext>
   )
