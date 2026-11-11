@@ -25,8 +25,17 @@ def wrong_code(code):
     return "000000" if code != "000000" else "111111"
 
 
+def discard_uncommitted(db):
+    """Drop whatever the route changed but didn't commit, then re-read.
+
+    The route shares the test's session, so without this an uncommitted
+    change would still be visible and a missing db.commit() would go unseen.
+    """
+    db.rollback()
+
+
 def latest_code_row(db, email=EMAIL):
-    db.expire_all()
+    discard_uncommitted(db)
     return db.scalars(
         select(LoginCode)
         .where(LoginCode.email == email)
@@ -36,7 +45,7 @@ def latest_code_row(db, email=EMAIL):
 
 
 def count_users(db, email=EMAIL):
-    db.expire_all()
+    discard_uncommitted(db)
     return db.scalar(select(func.count(User.id)).where(User.email == email))
 
 
@@ -47,6 +56,7 @@ def test_verify_signs_in_and_creates_user(client, clock, fake_email, db):
 
     assert response.status_code == 200
     body = response.json()
+    discard_uncommitted(db)
     user = db.scalars(select(User).where(User.email == EMAIL)).one()
     assert body == {"id": user.id, "email": EMAIL, "displayName": None}
     assert user.created_at == clock.now

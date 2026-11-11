@@ -9,10 +9,20 @@ from app.auth.codes import CODE_TTL, hash_code
 from app.auth.models import LoginCode
 
 URL = "/api/auth/code"
+VERIFY_URL = "/api/auth/verify"
+
+
+def discard_uncommitted(db):
+    """Drop whatever the route changed but didn't commit, then re-read.
+
+    The route shares the test's session, so without this an uncommitted
+    change would still be visible and a missing db.commit() would go unseen.
+    """
+    db.rollback()
 
 
 def codes_for(db, email):
-    db.expire_all()
+    discard_uncommitted(db)
     return db.scalars(
         select(LoginCode).where(LoginCode.email == email).order_by(LoginCode.id)
     ).all()
@@ -114,6 +124,24 @@ def test_send_failure_returns_503_and_stores_nothing(client, clock, fake_email, 
     assert client.post(URL, json={"email": "angler@example.com"}).status_code == 202
 
 
+def test_send_failure_keeps_the_previous_code(client, clock, fake_email, db):
+    client.post(URL, json={"email": "angler@example.com"})
+    first_code = fake_email.last_code_for("angler@example.com")
+    clock.advance(seconds=61)
+    fake_email.fail = True
+
+    response = client.post(URL, json={"email": "angler@example.com"})
+
+    assert response.status_code == 503
+    # The rollback undid "consume older codes", so the first code still works
+    (first,) = codes_for(db, "angler@example.com")
+    assert first.consumed_at is None
+    verified = client.post(
+        VERIFY_URL, json={"email": "angler@example.com", "code": first_code}
+    )
+    assert verified.status_code == 200
+
+
 def test_old_codes_are_deleted(client, clock, fake_email, db):
     def insert_code(email, age):
         created_at = clock.now - age
@@ -136,7 +164,7 @@ def test_old_codes_are_deleted(client, clock, fake_email, db):
     response = client.post(URL, json={"email": "angler@example.com"})
 
     assert response.status_code == 202
-    db.expire_all()
+    discard_uncommitted(db)
     assert db.get(LoginCode, old_id) is None
     # Only rows past 24 h go
     assert db.get(LoginCode, recent_id) is not None

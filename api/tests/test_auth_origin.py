@@ -35,6 +35,33 @@ def test_missing_origin_is_403(bare_client, fake_email):
     assert fake_email.sent == []
 
 
+@pytest.mark.parametrize("method", ["PUT", "PATCH", "DELETE"])
+def test_every_write_method_needs_origin(bare_client, method):
+    # Rejected before routing, so even a route that doesn't take this method
+    # (405) or needs a login (401) answers 403 first
+    response = bare_client.request(method, "/api/auth/me", json={})
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin not allowed"}
+
+
+def test_null_origin_is_403(client, fake_email):
+    # Browsers send the literal "null" from sandboxed iframes and file:// pages
+    response = client.post(
+        "/api/auth/code",
+        json={"email": "angler@example.com"},
+        headers={"Origin": "null"},
+    )
+
+    assert response.status_code == 403
+    assert fake_email.sent == []
+
+
+def test_paths_outside_api_are_not_checked(bare_client):
+    # "/apix" only shares a prefix with "/api", so it gets the router's 404
+    assert bare_client.post("/apix").status_code == 404
+
+
 def test_get_without_origin_is_allowed(bare_client):
     response = bare_client.get("/api/health")
 

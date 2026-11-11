@@ -66,7 +66,7 @@ def test_set_display_name(client, fake_email, login, db):
         "email": "angler@example.com",
         "displayName": "TroutBum",
     }
-    db.expire_all()
+    db.rollback()  # drop anything the route didn't commit, then re-read
     stored = db.scalars(select(User).where(User.id == user["id"])).one()
     assert stored.display_name == "TroutBum"
     assert client.get(URL).json()["displayName"] == "TroutBum"
