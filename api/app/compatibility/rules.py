@@ -3,11 +3,22 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from app.parts.models import CatalogPart, FlyLine, Leader, Reel, Rod, Tippet
+from app.parts.models import (
+    CatalogPart,
+    FlyLine,
+    Leader,
+    LineWeight,
+    Reel,
+    Rod,
+    Tippet,
+)
 
 SALT_MIN_WEIGHT = 7  # water=salt excludes anything under this weight
 HEAVY_LEADER_LB = 10  # leaders at or above this strength count as heavy
 HEAVY_LEADER_MIN_ROD_WEIGHT = 7  # heavy leaders only match rods at or above this weight
+# How far a heavier line must sit from its weight's target toward its grains_min:
+# 0 allows anything under target, 1 only lines at grains_min
+HEAVIER_LINE_FRACTION = 0.5
 
 
 class WarningCode(StrEnum):
@@ -59,17 +70,42 @@ def is_recommended(line: FlyLine, rod: Rod, grains_max: int) -> bool:
     )
 
 
+def heavier_line_cutoff(weight: LineWeight) -> float:
+    """Return the most grains a line of this weight can have to count as heavier."""
+    gap = weight.grains_target - weight.grains_min
+    return weight.grains_target - HEAVIER_LINE_FRACTION * gap
+
+
+def is_heavier_recommendation(line: FlyLine, rod: Rod, weight: LineWeight) -> bool:
+    """Check whether a line one weight up suits a fast rod.
+
+    `weight` is the line_weights row for the rod's weight plus one. A line on
+    the light side of that weight loads a fast rod without overpowering it.
+    """
+    return (
+        rod.action == "fast"
+        and line.line_weight == rod.line_weight + 1
+        and line.head_weight_grains is not None
+        and line.head_weight_grains <= heavier_line_cutoff(weight)
+    )
+
+
 def check_build(
     rod: Rod | None = None,
     reel: Reel | None = None,
     line: FlyLine | None = None,
     leader: Leader | None = None,
     tippet: Tippet | None = None,
+    heavier_line: bool = False,
 ) -> list[BuildIssue]:
-    """Return every compatibility warning for the selected parts."""
+    """Return every compatibility warning for the selected parts.
+
+    `heavier_line` is True when the line is a heavier recommendation for the
+    rod (see is_heavier_recommendation), so its weight doesn't warn.
+    """
     issues: list[BuildIssue] = []
 
-    if rod and line and rod.line_weight != line.line_weight:
+    if rod and line and rod.line_weight != line.line_weight and not heavier_line:
         issues.append(
             BuildIssue(
                 WarningCode.ROD_LINE_WEIGHT,

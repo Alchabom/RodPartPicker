@@ -10,6 +10,8 @@ class CompatibleParts(CamelModel):
     leader: list[int]
     tippet: list[int]
     recommended_line: list[int]
+    heavier_line: list[int]  # one weight up, for fast rods
+    not_recommended_reel: list[int]  # reels that don't fit; empty until a rod is picked
 
 
 class BuildWarning(CamelModel):

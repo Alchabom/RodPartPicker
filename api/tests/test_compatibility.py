@@ -7,6 +7,9 @@ from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
 CHECK_URL = "/api/compatibility/check"
 PARTS_URL = "/api/compatibility/parts"
 GRAINS_MAX_5WT = 146  # from the line_weights table
+HEAVIER_CUTOFF_7WT = (
+    181  # halfway from the 7 wt grains_target (185) to grains_min (177)
+)
 
 # Seeded parts also appear in results, so these tests check the rows they
 # insert with `in` and `not in`, and never compare whole lists.
@@ -29,6 +32,8 @@ def test_parts_response_shape(client):
         "leader",
         "tippet",
         "recommendedLine",
+        "heavierLine",
+        "notRecommendedReel",
     }
 
 
@@ -56,6 +61,28 @@ def test_parts_match_the_rods_weight(client, make_part):
     assert other_reel.id not in data["reel"]
     assert fitting_line.id in data["line"]
     assert other_line.id not in data["line"]
+
+
+def test_reels_that_dont_fit_the_rod_are_not_recommended(client, make_part):
+    rod = make_part(Rod, line_weight=5, water="fresh")
+    fitting_reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
+    heavy_reel = make_part(Reel, min_line_weight=7, max_line_weight=9)
+    salt_reel = make_part(Reel, min_line_weight=4, max_line_weight=6, water="salt")
+
+    data = get_parts(client, rodId=rod.id)
+
+    assert fitting_reel.id not in data["notRecommendedReel"]
+    assert heavy_reel.id in data["notRecommendedReel"]
+    assert salt_reel.id in data["notRecommendedReel"]
+
+
+def test_reels_need_a_rod_to_be_not_recommended(client, make_part):
+    line = make_part(FlyLine, line_weight=5)
+    make_part(Reel, min_line_weight=7, max_line_weight=9)
+
+    data = get_parts(client, flyLineId=line.id)
+
+    assert data["notRecommendedReel"] == []
 
 
 def test_parts_use_the_rods_water_tag(client, make_part):
@@ -159,6 +186,43 @@ def test_heavy_line_that_doesnt_match_is_not_recommended(client, make_part):
     data = get_parts(client, rodId=rod.id)
 
     assert line.id not in data["recommendedLine"]
+
+
+@pytest.mark.parametrize(
+    "action, head_grains, expected",
+    [
+        ("fast", HEAVIER_CUTOFF_7WT, True),
+        ("fast", HEAVIER_CUTOFF_7WT + 1, False),
+        ("medium", HEAVIER_CUTOFF_7WT, False),
+    ],
+)
+def test_heavier_lines(client, make_part, action, head_grains, expected):
+    rod = make_part(Rod, line_weight=6, action=action)
+    line = make_part(FlyLine, line_weight=7, head_weight_grains=head_grains)
+
+    data = get_parts(client, rodId=rod.id)
+
+    assert (line.id in data["heavierLine"]) is expected
+    assert line.id not in data["line"]  # true-to-weight results stay unchanged
+
+
+def test_heavier_line_must_fit_the_rest_of_the_build(client, make_part):
+    rod = make_part(Rod, line_weight=6, action="fast")
+    reel = make_part(Reel, min_line_weight=4, max_line_weight=6)
+    line = make_part(FlyLine, line_weight=7, head_weight_grains=HEAVIER_CUTOFF_7WT)
+
+    data = get_parts(client, rodId=rod.id, reelId=reel.id)
+
+    assert line.id not in data["heavierLine"]
+
+
+def test_heavier_line_has_no_weight_warning(client, make_part):
+    rod = make_part(Rod, line_weight=6, action="fast")
+    line = make_part(FlyLine, line_weight=7, head_weight_grains=HEAVIER_CUTOFF_7WT)
+
+    response = client.get(CHECK_URL, params={"rodId": rod.id, "flyLineId": line.id})
+
+    assert response.json() == {"warnings": []}
 
 
 def test_parts_unknown_rod(client):

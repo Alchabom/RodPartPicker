@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.compatibility import rules
-from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
+from app.parts.models import FlyLine, Leader, LineWeight, Reel, Rod, Tippet
 
 # ---------- Water ----------
 
@@ -60,6 +60,53 @@ def test_heavy_line_is_not_recommended_on_other_rods(action):
     line = FlyLine(head_weight_grains=GRAINS_MAX + 1)
 
     assert rules.is_recommended(line, rod, GRAINS_MAX) is False
+
+
+# ---------- Heavier lines ----------
+
+WEIGHT_7 = LineWeight(weight_class=7, grains_target=185, grains_min=177)  # cutoff 181
+
+
+@pytest.mark.parametrize(
+    "line_weight, head_grains, expected",
+    [
+        (7, 181, True),
+        (7, 182, False),
+        (7, None, False),
+        (6, 150, False),  # true to weight
+        (8, 150, False),  # two weights up
+    ],
+)
+def test_heavier_recommendation(line_weight, head_grains, expected):
+    rod = Rod(action="fast", line_weight=6)
+    line = FlyLine(line_weight=line_weight, head_weight_grains=head_grains)
+
+    assert rules.is_heavier_recommendation(line, rod, WEIGHT_7) is expected
+
+
+@pytest.mark.parametrize("action", ["slow", "medium", "medium_fast", None])
+def test_heavier_recommendation_needs_a_fast_rod(action):
+    rod = Rod(action=action, line_weight=6)
+    line = FlyLine(line_weight=7, head_weight_grains=150)
+
+    assert rules.is_heavier_recommendation(line, rod, WEIGHT_7) is False
+
+
+@pytest.mark.parametrize(
+    "target, grains_min, cutoff",
+    [(80, 74, 77), (185, 177, 181), (550, 535, 542.5)],  # 2, 7 and 15 wt
+)
+def test_heavier_line_cutoff_sits_inside_every_weight(target, grains_min, cutoff):
+    weight = LineWeight(grains_target=target, grains_min=grains_min)
+
+    assert rules.heavier_line_cutoff(weight) == cutoff
+
+
+def test_heavier_line_skips_the_rod_weight_warning():
+    rod = Rod(line_weight=6)
+    line = FlyLine(line_weight=7)
+
+    assert rules.check_build(rod=rod, line=line, heavier_line=True) == []
 
 
 # ---------- Filter ----------

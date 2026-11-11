@@ -67,6 +67,35 @@ def _ids(parts: list) -> list[int]:
     return [part.id for part in parts]
 
 
+def _heavier_lines(db, selected: dict, water: str | None) -> list:
+    """Return the one-weight-up lines that suit a fast rod and the rest of the build."""
+    rod = selected["rod"]
+    if rod is None:
+        return []
+    weight = db.get(LineWeight, rod.line_weight + 1)
+    if weight is None:
+        return []
+    others = {slot: part for slot, part in selected.items() if slot != "rod"}
+    candidates = db.scalars(
+        select(FlyLine).where(FlyLine.line_weight == rod.line_weight + 1)
+    )
+    return [
+        line
+        for line in candidates
+        if rules.is_heavier_recommendation(line, rod, weight)
+        and rules.passes_filter(line.water, line.line_weight, water)
+        and not rules.check_build(rod=rod, line=line, heavier_line=True)
+        and not rules.conflicts("line", line, others)
+    ]
+
+
+def _is_heavier_line(db, rod, line) -> bool:
+    if rod is None or line is None:
+        return False
+    weight = db.get(LineWeight, rod.line_weight + 1)
+    return weight is not None and rules.is_heavier_recommendation(line, rod, weight)
+
+
 @router.get("/parts")
 def get_compatible_parts(
     db: DbSession,
@@ -89,27 +118,40 @@ def get_compatible_parts(
             if rules.is_recommended(line, rod, grains_max[line.line_weight])
         ]
 
+    reels = _ids(
+        _fitting(db, Reel, "reel", selected, water, lambda reel: reel.max_line_weight)
+    )
+
+    # Once a rod is picked, every reel that doesn't fit is offered separately
+    not_recommended_reel = []
+    if rod is not None:
+        fitting_reels = set(reels)
+        not_recommended_reel = [
+            reel_id
+            for reel_id in db.scalars(select(Reel.id))
+            if reel_id not in fitting_reels
+        ]
+
     return CompatibleParts(
         rod=_ids(
             _fitting(db, Rod, "rod", selected, water, lambda rod: rod.line_weight)
         ),
-        reel=_ids(
-            _fitting(
-                db, Reel, "reel", selected, water, lambda reel: reel.max_line_weight
-            )
-        ),
+        reel=reels,
         line=_ids(lines),
         leader=_ids(_fitting(db, Leader, "leader", selected, water)),
         tippet=_ids(_fitting(db, Tippet, "tippet", selected, water)),
         recommended_line=recommended,
+        not_recommended_reel=not_recommended_reel,
+        heavier_line=_ids(_heavier_lines(db, selected, water)),
     )
 
 
 @router.get("/check")
-def check_compatibility(selected: SelectedParts) -> BuildCheck:
+def check_compatibility(db: DbSession, selected: SelectedParts) -> BuildCheck:
+    heavier_line = _is_heavier_line(db, selected["rod"], selected["line"])
     return BuildCheck(
         warnings=[
             BuildWarning(code=issue.code, message=issue.message)
-            for issue in rules.check_build(**selected)
+            for issue in rules.check_build(**selected, heavier_line=heavier_line)
         ]
     )
