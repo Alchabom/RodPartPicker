@@ -34,6 +34,8 @@ The project uses a feature-based architecture. `docs/architecture_guidelines.md`
 - Features must not import from other features. Code that two or more features share moves to the global `src/components`, `src/hooks`, `src/utils`, `src/lib` (configured third-party clients), `src/types` or `src/routes`.
 - Co-location comes first. Keep code in the file that uses it, then in the feature that uses it, and promote it to global only when two or more features need it.
 
+Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 401, refreshes the session once (shared across concurrent requests) and retries. `src/hooks/auth` (`@hooks/auth`: `AuthProvider`, `useAuth`) is the shared session state, wrapped around the app in `main.tsx`. `src/features/auth` holds the screens: `LoginPage` (`/login`), `DisplayNamePage` (`/welcome`), `RequireAuth` (route guard) and the navbar's `UserMenu`.
+
 Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed. `src/App.tsx` currently holds placeholder layout markup (navbar and sections) that should be split into features as they are built.
 
 ## Agent skills
@@ -49,4 +51,8 @@ Most of these directories don't exist on disk yet (git doesn't track empty folde
 - All routes live under the `/api` prefix (`app/main.py`); `/api/health` checks the DB. Domain code goes in a package per resource (e.g. `app/parts/` with `models.py`, `schemas.py`, `router.py`).
 - DB credentials come from a gitignored root `.env` (template: `.env.example`). `docs/database/schema-design.md` records the schema decisions.
 - The line tables are `fly_lines`/`fly_line_models` because `LINES` is reserved in MySQL.
+- `app/auth/` is passwordless email-code sign-in (`codes.py`, `tokens.py`, `email.py`, `cookies.py`, `deps.py`, `rate_limit.py`, `router.py`). Sessions are two httpOnly cookies: a 15-minute access JWT and a 30-day rotating refresh token (one family per sign-in; a replaced token coming back revokes the family). `docs/auth/rate-limiting.md` and `docs/auth/sessions.md` explain the flows.
+- Auth settings in `.env`: `JWT_SECRET` and `CODE_HMAC_SECRET` (required), `APP_ORIGIN`, `COOKIE_SECURE` (set `false` for local http), `TRUST_PROXY_HEADERS`, `EMAIL_BACKEND` (`console` prints the code in the API's terminal; `resend` emails it), `RESEND_API_KEY`, `EMAIL_FROM`.
+- Middleware in `app/main.py` rejects `POST`/`PUT`/`PATCH`/`DELETE` under `/api` unless `Origin` equals `APP_ORIGIN` (403). Test clients must send that header; the `client` fixture does.
+- Auth routes use injected time (`Now` from `get_now`) so tests can drive a `clock` fixture. The test `db` session is shared with the routes, so tests call `db.rollback()` before re-reading to catch a missing `commit()`.
 - The schema is owned by the SQL migrations in `api/migrations/` (applied by `app/migrate.py`); SQLAlchemy models map onto those tables rather than creating them. Never edit an applied migration; add a new numbered file.
