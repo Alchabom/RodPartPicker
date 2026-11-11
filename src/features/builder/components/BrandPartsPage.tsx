@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ArrowLeft, Check, Star } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, Star } from 'lucide-react'
 import { NotFound } from '@components/NotFound'
 import { Button } from '@/components/ui/button'
 import {
@@ -41,6 +41,7 @@ export function BrandPartsPage() {
   // The query is stored with the response, so highlights for the previous
   // selection never show while the next request is running
   const [result, setResult] = useState<{ query: string; parts: CompatibleParts }>()
+  const [showUnmatched, setShowUnmatched] = useState(false)
   const compatible = hasOtherParts && result?.query === query ? result.parts : undefined
 
   useEffect(() => {
@@ -71,6 +72,74 @@ export function BrandPartsPage() {
   const matches = compatible?.matches[component.type]
   const matchCount = matches ? parts.filter((p) => matches.has(p.dbId)).length : 0
 
+  // Reels the API doesn't recommend move into a collapsed list below the rest
+  const notRecommended = component.type === 'reel' ? compatible?.notRecommendedReels : undefined
+  const listed = notRecommended ? parts.filter((p) => !notRecommended.has(p.dbId)) : parts
+  const unmatched = notRecommended ? parts.filter((p) => notRecommended.has(p.dbId)) : []
+
+  // Lines one weight up that suit a fast rod, cheapest first (unpriced last)
+  const heavierLines = component.type === 'line' ? compatible?.heavierLines : undefined
+  const heavier = heavierLines
+    ? parts
+        .filter((p) => heavierLines.has(p.dbId))
+        .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
+    : []
+
+  const renderTable = (rows: typeof parts) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          {isAll && <TableHead>Brand</TableHead>}
+          {component.specColumns.map((col) => (
+            <TableHead key={col}>{col}</TableHead>
+          ))}
+          <TableHead className="text-right">Price</TableHead>
+          <TableHead className="w-28" />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((part) => {
+          const fits = matches?.has(part.dbId) ?? false
+          const recommended = component.type === 'line' && compatible?.recommendedLines.has(part.dbId)
+          return (
+            <TableRow key={part.id} className={cn(fits && 'bg-sulu/25 hover:bg-sulu/40')}>
+              <TableCell className="font-medium">
+                {part.name}
+                {fits && (
+                  <Badge className="ml-2 bg-te-papa-green text-sulu">
+                    <Check data-icon="inline-start" /> Fits build
+                  </Badge>
+                )}
+                {recommended && (
+                  <Badge className="ml-2 bg-sulu text-te-papa-green">
+                    <Star data-icon="inline-start" /> Recommended
+                  </Badge>
+                )}
+              </TableCell>
+              {isAll && <TableCell>{getBrand(part.brandId)?.name}</TableCell>}
+              {component.specColumns.map((col) => (
+                <TableCell key={col}>{part.specs[col]}</TableCell>
+              ))}
+              <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
+              <TableCell className="text-right">
+                {part.id === selectedId ? (
+                  <Button size="sm" variant="secondary" disabled>
+                    <Check data-icon="inline-start" /> Selected
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => handleAdd(part.id)}>
+                    Add
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          )
+        })}
+      </TableBody>
+    </Table>
+  )
+
   const handleAdd = (partId: string) => {
     selectPart(component.type, partId)
     navigate('/builder')
@@ -92,58 +161,33 @@ export function BrandPartsPage() {
         </p>
       )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            {isAll && <TableHead>Brand</TableHead>}
-            {component.specColumns.map((col) => (
-              <TableHead key={col}>{col}</TableHead>
-            ))}
-            <TableHead className="text-right">Price</TableHead>
-            <TableHead className="w-28" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {parts.map((part) => {
-            const fits = matches?.has(part.dbId) ?? false
-            const recommended = component.type === 'line' && compatible?.recommendedLines.has(part.dbId)
-            return (
-              <TableRow key={part.id} className={cn(fits && 'bg-sulu/25 hover:bg-sulu/40')}>
-                <TableCell className="font-medium">
-                  {part.name}
-                  {fits && (
-                    <Badge className="ml-2 bg-te-papa-green text-sulu">
-                      <Check data-icon="inline-start" /> Fits build
-                    </Badge>
-                  )}
-                  {recommended && (
-                    <Badge className="ml-2 bg-sulu text-te-papa-green">
-                      <Star data-icon="inline-start" /> Recommended
-                    </Badge>
-                  )}
-                </TableCell>
-                {isAll && <TableCell>{getBrand(part.brandId)?.name}</TableCell>}
-                {component.specColumns.map((col) => (
-                  <TableCell key={col}>{part.specs[col]}</TableCell>
-                ))}
-                <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
-                <TableCell className="text-right">
-                  {part.id === selectedId ? (
-                    <Button size="sm" variant="secondary" disabled>
-                      <Check data-icon="inline-start" /> Selected
-                    </Button>
-                  ) : (
-                    <Button size="sm" onClick={() => handleAdd(part.id)}>
-                      Add
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+      {listed.length > 0 && renderTable(listed)}
+
+      {heavier.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-4 text-xl font-bold text-te-papa-green">
+            Consider a slightly heavier line, for your fast action rod
+          </h2>
+          {renderTable(heavier)}
+        </section>
+      )}
+
+      {unmatched.length > 0 && (
+        <section className="mt-8">
+          <Button
+            variant="outline"
+            aria-expanded={showUnmatched}
+            onClick={() => setShowUnmatched((open) => !open)}
+          >
+            Not recommended, but up to you ({unmatched.length})
+            <ChevronDown
+              data-icon="inline-end"
+              className={cn('transition-transform', showUnmatched && 'rotate-180')}
+            />
+          </Button>
+          {showUnmatched && <div className="mt-4">{renderTable(unmatched)}</div>}
+        </section>
+      )}
     </main>
   )
 }
