@@ -1,65 +1,99 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router'
 import { getComponentInfo } from '../api/components'
-import type { Build, ComponentType } from '../types'
+import type { Build, BuildNotes, ComponentType, RecommendedPart } from '../types'
 import { BuildContext } from './buildContext'
+import { without } from './without'
 
 // v2: part ids became `${component}-${dbId}` when the catalog moved to the API
 const STORAGE_KEY = 'rpp:build:v2'
+// Kept apart from the build, so builds saved before notes existed still load
+const NOTES_KEY = 'rpp:notes:v1'
 
-// Keep only well-formed entries. Ids that no longer exist in the catalog
-// (which loads later, from the API) simply resolve to no part when read.
-function loadBuild(): Build {
+function readStorage(key: string): object {
   try {
-    const raw: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
-    if (typeof raw !== 'object' || raw === null) return {}
-    const build: Build = {}
-    for (const [component, partId] of Object.entries(raw)) {
-      const info = getComponentInfo(component)
-      if (info && typeof partId === 'string' && partId.startsWith(`${info.type}-`)) {
-        build[info.type] = partId
-      }
-    }
-    return build
+    const raw: unknown = JSON.parse(localStorage.getItem(key) ?? '{}')
+    return typeof raw === 'object' && raw !== null ? raw : {}
   } catch {
     return {}
   }
 }
 
-function storeBuild(build: Build) {
+function writeStorage(key: string, value: object) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(build))
+    localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // Storage unavailable (private mode, quota) — build still works in memory
   }
 }
 
+// Keep only well-formed entries. Ids that no longer exist in the catalog
+// (which loads later, from the API) simply resolve to no part when read.
+function loadBuild(): Build {
+  const build: Build = {}
+  for (const [component, partId] of Object.entries(readStorage(STORAGE_KEY))) {
+    const info = getComponentInfo(component)
+    if (info && typeof partId === 'string' && partId.startsWith(`${info.type}-`)) {
+      build[info.type] = partId
+    }
+  }
+  return build
+}
+
+function loadNotes(): BuildNotes {
+  const notes: BuildNotes = {}
+  for (const [component, note] of Object.entries(readStorage(NOTES_KEY))) {
+    const info = getComponentInfo(component)
+    if (info && typeof note === 'string') notes[info.type] = note
+  }
+  return notes
+}
+
 export function LocalBuildProvider() {
   const [build, setBuild] = useState<Build>(loadBuild)
+  // A note explains why its part was recommended, so it goes when the part changes
+  const [notes, setNotes] = useState<BuildNotes>(loadNotes)
 
-  useEffect(() => storeBuild(build), [build])
+  useEffect(() => writeStorage(STORAGE_KEY, build), [build])
+  useEffect(() => writeStorage(NOTES_KEY, notes), [notes])
 
-  const selectPart = (component: ComponentType, partId: string) =>
+  const selectPart = (component: ComponentType, partId: string) => {
     setBuild((prev) => ({ ...prev, [component]: partId }))
+    setNotes((prev) => without(prev, component))
+  }
 
-  const removePart = (component: ComponentType) =>
-    setBuild((prev) => {
-      const next = { ...prev }
-      delete next[component]
-      return next
-    })
+  const removePart = (component: ComponentType) => {
+    setBuild((prev) => without(prev, component))
+    setNotes((prev) => without(prev, component))
+  }
 
-  // Written to storage right away, not only from the effect: saving a draft
+  // Written to storage right away, not only from the effects: saving a draft
   // clears it and then navigates away, which unmounts this provider before
-  // the effect for the cleared state may run
+  // the effects for the cleared state may run
   const clearBuild = () => {
-    storeBuild({})
+    writeStorage(STORAGE_KEY, {})
+    writeStorage(NOTES_KEY, {})
     setBuild({})
+    setNotes({})
+  }
+
+  const loadRecommendation = (parts: RecommendedPart[]) => {
+    setBuild(Object.fromEntries(parts.map((part) => [part.component, part.partId])))
+    setNotes(Object.fromEntries(parts.map((part) => [part.component, part.reason])))
   }
 
   return (
     <BuildContext
-      value={{ kind: 'draft', build, basePath: '/builder', selectPart, removePart, clearBuild }}
+      value={{
+        kind: 'draft',
+        build,
+        notes,
+        basePath: '/builder',
+        selectPart,
+        removePart,
+        clearBuild,
+        loadRecommendation,
+      }}
     >
       <Outlet />
     </BuildContext>

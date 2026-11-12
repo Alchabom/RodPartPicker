@@ -5,9 +5,10 @@ import { ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { NotFound } from '@components/NotFound'
 import { buildKeys, getBuild, toBuild, toBuildIn, updateBuild, type BuildInput, type SavedBuild } from '../api/builds'
-import type { Build, ComponentType } from '../types'
+import type { Build, BuildNotes, ComponentType, RecommendedPart } from '../types'
 import { BuildContext } from './buildContext'
 import { useCatalog } from './useCatalog'
+import { without } from './without'
 
 const SAVE_DELAY_MS = 600
 const BUILD_ID = /^[1-9]\d*$/
@@ -81,6 +82,9 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
   const queryClient = useQueryClient()
   const [build, setBuild] = useState<Build>(() => toBuild(saved))
   const [name, setName] = useState(saved.name)
+  // Recommendation notes aren't stored by the API, so they last only while
+  // this build is open. Like the draft's, a note goes when its part changes.
+  const [notes, setNotes] = useState<BuildNotes>({})
   // What the server already has, as JSON
   const [lastSent, setLastSent] = useState(() => JSON.stringify(toBuildIn(toBuild(saved), saved.name, getPart)))
   // The debounced save waiting to fire, if any
@@ -157,17 +161,25 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [gone, saveStatus])
 
-  const selectPart = (component: ComponentType, partId: string) =>
+  const selectPart = (component: ComponentType, partId: string) => {
     setBuild((prev) => ({ ...prev, [component]: partId }))
+    setNotes((prev) => without(prev, component))
+  }
 
-  const removePart = (component: ComponentType) =>
-    setBuild((prev) => {
-      const next = { ...prev }
-      delete next[component]
-      return next
-    })
+  const removePart = (component: ComponentType) => {
+    setBuild((prev) => without(prev, component))
+    setNotes((prev) => without(prev, component))
+  }
 
-  const clearBuild = () => setBuild({})
+  const clearBuild = () => {
+    setBuild({})
+    setNotes({})
+  }
+
+  const loadRecommendation = (parts: RecommendedPart[]) => {
+    setBuild(Object.fromEntries(parts.map((part) => [part.component, part.partId])))
+    setNotes(Object.fromEntries(parts.map((part) => [part.component, part.reason])))
+  }
 
   // Resend the current state (after a failed save)
   const retrySave = () => {
@@ -188,10 +200,12 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
         saveStatus,
         retrySave,
         build,
+        notes,
         basePath: `/builder/${saved.id}`,
         selectPart,
         removePart,
         clearBuild,
+        loadRecommendation,
       }}
     >
       <Outlet />

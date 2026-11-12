@@ -1,6 +1,8 @@
-import { RotateCcw } from 'lucide-react'
+import { useState } from 'react'
+import { RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBuild } from '../hooks/useBuild'
+import { QuestionnaireDialog } from './QuestionnaireDialog'
 
 const STATUS_TEXT = { saving: 'Saving…', saved: 'Saved', error: "Couldn't save" }
 
@@ -8,6 +10,7 @@ export function BuildHeader() {
   const buildState = useBuild()
   const { build, clearBuild } = buildState
   const nameInvalid = buildState.kind === 'saved' && buildState.name.trim() === ''
+  const [questionnaireOpen, setQuestionnaireOpen] = useState(false)
 
   return (
     <div className="flex items-start justify-between gap-4">
@@ -42,9 +45,21 @@ export function BuildHeader() {
           <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>
         )}
       </div>
-      <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
-        <RotateCcw data-icon="inline-start" /> Clear build
-      </Button>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          onClick={() => {
+            // The questionnaire builds a whole setup, so it starts from an empty build
+            clearBuild()
+            setQuestionnaireOpen(true)
+          }}
+        >
+          <Sparkles data-icon="inline-start" /> Click here to get a setup tailored to you
+        </Button>
+        <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
+          <RotateCcw data-icon="inline-start" /> Clear build
+        </Button>
+      </div>
+      <QuestionnaireDialog open={questionnaireOpen} onOpenChange={setQuestionnaireOpen} />
     </div>
   )
 }

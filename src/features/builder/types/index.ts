@@ -19,6 +19,15 @@ export interface Part {
 
 export type Build = Partial<Record<ComponentType, Part['id']>>
 
+// Why a part was recommended, per component; set only by the questionnaire
+export type BuildNotes = Partial<Record<ComponentType, string>>
+
+export interface RecommendedPart {
+  component: ComponentType
+  partId: Part['id']
+  reason: string
+}
+
 export interface ComponentInfo {
   type: ComponentType
   label: string // "Rod"

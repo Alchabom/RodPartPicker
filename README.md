@@ -8,8 +8,9 @@ A capstone project: a PCPartPicker-style web app for building fly fishing setups
 - **Compatibility highlights:** parts pages highlight the parts that fit the rest of your build. A highlighted part never causes a warning.
 - **Build warnings:** the build page flags mismatches in line weight, tippet size and fresh or salt water. Warnings are advice and never stop you from choosing a part.
 - **Line recommendations:** lines heavier than standard for their weight are recommended for fast-action rods.
+- **Setup questionnaire:** a button on the build page asks five questions (experience, where you fish, target species, whether it's your only rod, budget) and fills your build with a full setup. Each part shows why it was picked, and you can still change any of them. Only small creeks is supported so far; the other kinds of water are marked "coming soon".
 
-The Products and Completed Builds pages aren't built yet. The API can already save builds, but the frontend doesn't use that yet. A questionnaire that recommends parts for fresh or salt water is planned.
+The Products and Completed Builds pages aren't built yet. The API can already save builds, but the frontend doesn't use that yet.
 
 ## Tech stack
 
