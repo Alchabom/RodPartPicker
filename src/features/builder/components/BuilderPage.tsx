@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { RotateCcw, TriangleAlert } from 'lucide-react'
+import { RotateCcw, Sparkles, TriangleAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,10 +18,12 @@ import { useBuildQuery } from '../hooks/useBuildQuery'
 import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '../utils/formatPrice'
 import { ComponentRow } from './ComponentRow'
+import { QuestionnaireDialog } from './QuestionnaireDialog'
 
 export function BuilderPage() {
   const { build, clearBuild } = useBuild()
   const { getPart } = useCatalog()
+  const [questionnaireOpen, setQuestionnaireOpen] = useState(false)
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
   const { query, selectedCount } = useBuildQuery()
@@ -47,12 +49,24 @@ export function BuilderPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>
-        <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
-          <RotateCcw data-icon="inline-start" /> Clear build
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => {
+              // The questionnaire builds a whole setup, so it starts from an empty build
+              clearBuild()
+              setQuestionnaireOpen(true)
+            }}
+          >
+            <Sparkles data-icon="inline-start" /> Click here to get a setup tailored to you
+          </Button>
+          <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
+            <RotateCcw data-icon="inline-start" /> Clear build
+          </Button>
+        </div>
       </div>
+      <QuestionnaireDialog open={questionnaireOpen} onOpenChange={setQuestionnaireOpen} />
       <p className="mt-1 mb-8 text-muted-foreground">
         Choose a brand for each component to browse its parts.
       </p>
