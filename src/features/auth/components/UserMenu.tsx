@@ -45,6 +45,9 @@ export function UserMenu() {
           {user.email}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/builder/saved">My Builds</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void signOut()}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

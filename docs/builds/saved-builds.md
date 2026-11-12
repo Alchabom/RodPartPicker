@@ -60,13 +60,14 @@ From `src/routes/AppRoutes.tsx`:
 ├── (LocalBuildProvider)              pathless layout route
 │   ├── index                         BuilderPage
 │   └── :component/:brand             BrandPartsPage
-├── saved                             RequireAuth → MyBuildsPage (next PR)
+├── saved                             RequireAuth → MyBuildsPage
 └── :buildId                          RequireAuth → SavedBuildProvider
     ├── index                         BuilderPage
     └── :component/:brand             BrandPartsPage
 ```
 
-- React Router ranks the static `saved` above the dynamic `:buildId`.
+- React Router ranks the static `saved` above the dynamic `:buildId`, so
+  `/builder/saved` is the list, never a build id.
 - `SavedBuildProvider` shows "Build not found" for a `:buildId` that isn't a
   positive integer, without calling the API.
 - `BuilderLayout` loads the parts catalog once for both providers, so
@@ -93,9 +94,10 @@ sequenceDiagram
   L->>A: POST /api/auth/verify
   A-->>L: session cookies
   L->>B: /builder?save=1
+  B->>B: drop ?save
   B->>A: POST /api/builds {name: "Untitled build", parts}
   A-->>B: 201 {id: 42}
-  B->>B: clear local draft, drop ?save
+  B->>B: clear local draft
   B->>U: /builder/42
 ```
 

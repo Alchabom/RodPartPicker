@@ -2,6 +2,7 @@
 export { BrandPartsPage } from './components/BrandPartsPage'
 export { BuilderLayout } from './components/BuilderLayout'
 export { BuilderPage } from './components/BuilderPage'
+export { MyBuildsPage } from './components/MyBuildsPage'
 export { LocalBuildProvider } from './hooks/LocalBuildProvider'
 export { SavedBuildProvider } from './hooks/SavedBuildProvider'
 export { useBuild } from './hooks/useBuild'
