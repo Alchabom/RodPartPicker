@@ -117,7 +117,7 @@ export function MyBuildsPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">My Builds</h1>
+        <h1 className="text-3xl font-bold text-te-papa-green">My Builds</h1>
         <Button asChild>
           <Link to="/builder">New build</Link>
         </Button>

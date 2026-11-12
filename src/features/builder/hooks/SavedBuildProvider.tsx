@@ -146,9 +146,9 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
 
   const saveStatus = dirty || isPending ? 'saving' : isError ? 'error' : 'saved'
 
-  // Ask before the tab closes with a save pending or in flight
+  // Ask before the tab closes with a save pending, in flight or failed
   useEffect(() => {
-    if (gone || saveStatus !== 'saving') return
+    if (gone || saveStatus === 'saved') return
     const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault()
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
