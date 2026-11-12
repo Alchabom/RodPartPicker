@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Outlet, useParams } from 'react-router'
 import { ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -28,34 +28,45 @@ export function SavedBuildProvider() {
   const { buildId = '' } = useParams()
   // Malformed ids never reach the API
   if (!BUILD_ID.test(buildId)) return <BuildNotFound />
-  return <SavedBuildLoader id={Number(buildId)} />
+  // Keyed by id: a different build gets a fresh loader, so its seed starts empty
+  return <SavedBuildLoader key={buildId} id={Number(buildId)} />
 }
 
 function SavedBuildLoader({ id }: { id: number }) {
+  // A save of this build may still be in flight from an editor that just
+  // unmounted. Until it settles, the cache (or a GET answered before the PUT
+  // commits) can hold the pre-save build, so don't fetch or seed until then.
+  const saving = useIsMutating({ mutationKey: buildKeys.detail(id) }) > 0
   const { data, error, isFetching, refetch } = useQuery({
     queryKey: buildKeys.detail(id),
     queryFn: ({ signal }) => getBuild(id, signal),
+    enabled: !saving,
   })
 
-  if (!data && (!error || isFetching)) {
+  // The build the editor is seeded from, latched the first time the query has
+  // settled with no save in flight. Once set, the editor's own autosaves
+  // (which flip `saving`) never send the loader back to "Loading build…".
+  // Once `enabled` turns true the stale query refetches, and `isFetching` is
+  // true from that same render, so the seed is the post-save GET.
+  const [seed, setSeed] = useState<SavedBuild | null>(null)
+  if (!seed && data && !error && !saving && !isFetching) setSeed(data)
+
+  if (seed) return <SavedBuildEditor saved={seed} />
+
+  if (saving || isFetching || !error) {
     return <p className="mx-auto max-w-5xl px-4 py-16 text-center text-muted-foreground">Loading build…</p>
   }
 
-  if (!data) {
-    // Another user's build is a 404 too, so it looks the same as a missing one
-    if (error instanceof ApiError && error.status === 404) return <BuildNotFound />
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-16 text-center">
-        <p className="text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
-        <Button className="mt-6" onClick={() => refetch()}>
-          Try again
-        </Button>
-      </div>
-    )
-  }
-
-  // Keyed by id: a different build gets a fresh editor (and the old one flushes)
-  return <SavedBuildEditor key={id} saved={data} />
+  // Another user's build is a 404 too, so it looks the same as a missing one
+  if (error instanceof ApiError && error.status === 404) return <BuildNotFound />
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-16 text-center">
+      <p className="text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
+      <Button className="mt-6" onClick={() => refetch()}>
+        Try again
+      </Button>
+    </div>
+  )
 }
 
 type PendingSave = { timer: ReturnType<typeof setTimeout>; input: BuildInput }
@@ -71,14 +82,22 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
   const [lastSent, setLastSent] = useState(() => JSON.stringify(toBuildIn(toBuild(saved), saved.name, getPart)))
   // The debounced save waiting to fire, if any
   const pending = useRef<PendingSave | null>(null)
+  // Set when a save finds the build deleted
+  const [gone, setGone] = useState(false)
 
   const { mutate, isPending, isError } = useMutation({
     mutationFn: (input: BuildInput) => updateBuild(saved.id, input),
+    // The loader watches this key to wait for in-flight saves before reopening
+    mutationKey: buildKeys.detail(saved.id),
     // Same scope: saves of one build run one at a time, in order
     scope: { id: `build-${saved.id}` },
     onSuccess: (_, input) => {
       queryClient.setQueryData<SavedBuild>(buildKeys.detail(saved.id), (old) => old && { ...old, ...input })
       queryClient.invalidateQueries({ queryKey: buildKeys.list() })
+    },
+    // A 404 means the build was deleted elsewhere: retrying can't help
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 404) setGone(true)
     },
   })
 
@@ -129,11 +148,11 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
 
   // Ask before the tab closes with a save pending or in flight
   useEffect(() => {
-    if (saveStatus !== 'saving') return
+    if (gone || saveStatus !== 'saving') return
     const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault()
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [saveStatus])
+  }, [gone, saveStatus])
 
   const selectPart = (component: ComponentType, partId: string) =>
     setBuild((prev) => ({ ...prev, [component]: partId }))
@@ -153,6 +172,8 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
     setLastSent(inputJson)
     mutate(input)
   }
+
+  if (gone) return <BuildNotFound />
 
   return (
     <BuildContext
