@@ -26,16 +26,18 @@ function loadBuild(): Build {
   }
 }
 
+function storeBuild(build: Build) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(build))
+  } catch {
+    // Storage unavailable (private mode, quota) — build still works in memory
+  }
+}
+
 export function LocalBuildProvider() {
   const [build, setBuild] = useState<Build>(loadBuild)
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(build))
-    } catch {
-      // Storage unavailable (private mode, quota) — build still works in memory
-    }
-  }, [build])
+  useEffect(() => storeBuild(build), [build])
 
   const selectPart = (component: ComponentType, partId: string) =>
     setBuild((prev) => ({ ...prev, [component]: partId }))
@@ -47,7 +49,13 @@ export function LocalBuildProvider() {
       return next
     })
 
-  const clearBuild = () => setBuild({})
+  // Written to storage right away, not only from the effect: saving a draft
+  // clears it and then navigates away, which unmounts this provider before
+  // the effect for the cleared state may run
+  const clearBuild = () => {
+    storeBuild({})
+    setBuild({})
+  }
 
   return (
     <BuildContext
