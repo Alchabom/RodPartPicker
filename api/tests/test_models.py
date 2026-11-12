@@ -1,10 +1,11 @@
 from datetime import datetime
 
 import pytest
-from sqlalchemy import func, select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import delete, func, select, text
+from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from app.auth.models import LoginCode, RefreshToken, User
+from app.builds.models import Build
 from app.parts.models import (
     Brand,
     FlyLine,
@@ -118,3 +119,15 @@ def test_make_user_round_trips(db, make_user):
     assert loaded.email == user.email
     assert loaded.display_name == "TroutBum"
     assert loaded.created_at == datetime(2026, 1, 1, 12, 0)
+
+
+def test_build_requires_an_owner(db):
+    with pytest.raises(DBAPIError):
+        db.execute(text("INSERT INTO builds (name) VALUES ('Orphan')"))
+
+
+def test_deleting_a_user_deletes_their_builds(db, make_user, make_build):
+    user = make_user()
+    build = make_build(user_id=user.id)
+    db.execute(delete(User).where(User.id == user.id))
+    assert db.execute(select(Build.id).where(Build.id == build.id)).first() is None

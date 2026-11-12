@@ -161,12 +161,14 @@ def make_part(db, make_brand):
 
 
 @pytest.fixture
-def make_build(db):
+def make_build(db, make_user):
     count = 0
 
     def make(**columns):
         nonlocal count
         count += 1
+        if "user_id" not in columns and "user" not in columns:
+            columns["user_id"] = make_user().id
         build = Build(**{"name": f"Test Build {count}", **columns})
         db.add(build)
         db.flush()

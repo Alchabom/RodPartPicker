@@ -98,12 +98,14 @@ All routes take `CurrentUserId`, so a request with no valid access cookie gets a
 - **Cache clearing:** `AuthProvider` calls `queryClient.removeQueries({ queryKey: ['builds'] })` on sign-out and in its `onSessionExpired` listener. The catalog and compatibility caches stay, since they're public.
 - **Query keys** live next to the fetchers that use them, so invalidation can't drift from the keys used to read:
   - `src/features/builder/api/builds.ts`: `buildKeys.all = ['builds']`, `buildKeys.list() = ['builds', 'list']`, `buildKeys.detail(id) = ['builds', id]`
-  - `['catalog']` in `api/parts.ts`, `['compatibility', query]` in `api/compatibility.ts`
+  - `['catalog']` in `api/parts.ts`; `['compatibility', 'check', query]` and `['compatibility', 'parts', query]` in `api/compatibility.ts`, one key per endpoint
 
 ### Migrated fetches (no behavior change)
 
 - **`BuilderLayout`:** `useQuery({ queryKey: ['catalog'], queryFn: ({ signal }) => fetchCatalog(signal), staleTime: Infinity })`. `isPending`, `isError` and `refetch()` replace the `useState`/`useEffect`/`attempt` plumbing. Leaving `/builder` and coming back no longer refetches the catalog.
-- **Compatibility check in `BuilderPage`:** `useQuery({ queryKey: ['compatibility', query], queryFn, enabled: hasPairToCheck })`. Results are keyed by the query string, so the `result.query === query` guard goes away: the previous selection's warnings can't show for the new one. Errors still go to `console.error`, and the page shows no warnings. No `placeholderData`, because that would show the old selection's warnings during a refetch.
+- **Compatibility check in `BuilderPage`:** `useQuery({ queryKey: ['compatibility', 'check', query], queryFn, enabled: hasPairToCheck })`. Results are keyed by the query string, so the `result.query === query` guard goes away: the previous selection's warnings can't show for the new one. Errors still go to `console.error`, and the page shows no warnings. No `placeholderData`, because that would show the old selection's warnings during a refetch.
+
+- **Compatible parts in `BrandPartsPage`:** the compatible-parts fetch also moves to `useQuery` with `queryKey: ['compatibility', 'parts', query]`.
 
 ### Builds API module (`src/features/builder/api/builds.ts`)
 
@@ -262,7 +264,7 @@ sequenceDiagram
 
 Fixtures (`api/tests/conftest.py`):
 - `make_build(**columns)` accepts `user_id`. When none is given, it creates an owner with `make_user`, so the factory stays easy to call.
-- Route tests sign in with the existing `login` fixture. Tests that need a second user sign in a second client.
+- Route tests sign in with the existing `login` fixture. Ownership tests make the other user with `make_user` instead of signing in a second client.
 
 Cases:
 
