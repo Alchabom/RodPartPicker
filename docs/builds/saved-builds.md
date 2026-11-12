@@ -185,7 +185,9 @@ Where this lives (all in `src/features/builder/hooks/SavedBuildProvider.tsx`):
   one at a time, so an earlier full-build `PUT` can never land after a later
   one and undo the latest edit.
 - **On success:** `setQueryData` writes the sent values into
-  `buildKeys.detail(id)` (reopening the build is instant and current) and
+  `buildKeys.detail(id)` (so the cache matches what the server accepted;
+  reopening still waits for a fresh `GET`, see "Why local state is seeded
+  once") and
   `invalidateQueries` marks `buildKeys.list()` stale.
 - **Status:** `saveStatus` is `'saving'` while a debounce is pending or a
   request is running, `'error'` after a failed save, else `'saved'`.

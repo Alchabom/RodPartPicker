@@ -37,18 +37,21 @@ function SavedBuildLoader({ id }: { id: number }) {
   // unmounted. Until it settles, the cache (or a GET answered before the PUT
   // commits) can hold the pre-save build, so don't fetch or seed until then.
   const saving = useIsMutating({ mutationKey: buildKeys.detail(id) }) > 0
-  const { data, error, isFetching, refetch } = useQuery({
-    queryKey: buildKeys.detail(id),
-    queryFn: ({ signal }) => getBuild(id, signal),
-    enabled: !saving,
-  })
 
   // The build the editor is seeded from, latched the first time the query has
   // settled with no save in flight. Once set, the editor's own autosaves
   // (which flip `saving`) never send the loader back to "Loading build…".
-  // Once `enabled` turns true the stale query refetches, and `isFetching` is
-  // true from that same render, so the seed is the post-save GET.
   const [seed, setSeed] = useState<SavedBuild | null>(null)
+
+  // Fetch only until the editor is seeded: after that the editor's local
+  // state is the source of truth, so a GET after every autosave would be
+  // wasted. Once `enabled` turns true the stale query refetches, and
+  // `isFetching` is true from that same render, so the seed is the post-save GET.
+  const { data, error, isFetching, refetch } = useQuery({
+    queryKey: buildKeys.detail(id),
+    queryFn: ({ signal }) => getBuild(id, signal),
+    enabled: !seed && !saving,
+  })
   if (!seed && data && !error && !saving && !isFetching) setSeed(data)
 
   if (seed) return <SavedBuildEditor saved={seed} />
