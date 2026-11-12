@@ -1,4 +1,4 @@
-"""Auth routes under /api/auth (/refresh and /logout come in PR 4).
+"""Auth routes under /api/auth.
 
 Spec: docs/superpowers/specs/2026-11-09-auth-design.md, "API" -> each route.
 """
@@ -7,18 +7,25 @@ import uuid
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.auth.codes import CODE_TTL, MAX_ATTEMPTS, codes_match, generate_code, hash_code
-from app.auth.cookies import set_auth_cookies
+from app.auth.cookies import REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.auth.deps import ClientIp, CurrentUserId, Now
 from app.auth.email import EmailSender, EmailSendError, get_email_sender
-from app.auth.models import LoginCode, User
+from app.auth.models import LoginCode, RefreshToken, User
 from app.auth.rate_limit import retry_after
 from app.auth.schemas import CodeRequestIn, DisplayNameIn, UserOut, VerifyIn
-from app.auth.tokens import issue_access_token, issue_refresh_token
+from app.auth.tokens import (
+    delete_expired_tokens,
+    hash_refresh_token,
+    issue_access_token,
+    issue_refresh_token,
+    revoke_family,
+    rotate_refresh_token,
+)
 from app.db import DbSession
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -26,6 +33,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 Sender = Annotated[EmailSender, Depends(get_email_sender)]
 
 INVALID_CODE = "Invalid or expired code"
+
+# The refresh_token cookie, or None when the browser didn't send one
+RefreshCookie = Annotated[str | None, Cookie(alias=REFRESH_COOKIE)]
 
 
 @router.post("/code", status_code=202)
@@ -132,6 +142,64 @@ def verify_code(body: VerifyIn, response: Response, db: DbSession, now: Now) -> 
     db.commit()
     set_auth_cookies(response, access, refresh)
     return user
+
+
+@router.post("/refresh")
+def refresh_session(
+    response: Response, db: DbSession, now: Now, refresh_token: RefreshCookie = None
+) -> UserOut:
+    """Task 4.1. Swap the refresh cookie for new tokens.
+
+    1. No cookie -> HTTPException(401, "Not signed in").
+    2. result = rotate_refresh_token(db, refresh_token, now), then db.commit()
+       BEFORE looking at the result: a rejected token may have just revoked
+       its family, and raising without a commit would throw that away.
+    3. None -> 401 (same message as above).
+    4. Otherwise: delete the user's expired tokens and commit again (its own
+       short transaction, see delete_expired_tokens), issue a new access
+       token, set_auth_cookies(response, access, new_raw) and return the user.
+    """
+    if refresh_token is None:
+        raise HTTPException(401, "Not signed in")
+
+    result = rotate_refresh_token(db, refresh_token, now)
+    # Commit first: a rejected token may have just revoked its family
+    db.commit()
+    if result is None:
+        raise HTTPException(401, "Not signed in")
+
+    user_id, new_raw = result
+    delete_expired_tokens(db, user_id, now)
+    db.commit()
+
+    user = db.get(User, user_id)
+    if user is None:  # can't happen today (tokens cascade with their user)
+        raise HTTPException(401, "Not signed in")
+    set_auth_cookies(response, issue_access_token(user_id, now), new_raw)
+    return user
+
+
+@router.post("/logout", status_code=204)
+def logout(
+    response: Response, db: DbSession, now: Now, refresh_token: RefreshCookie = None
+) -> None:
+    """Task 4.1. End this sign-in. Always 204, even with no or unknown cookie.
+
+    1. If there's a cookie and a RefreshToken row with that token_hash,
+       revoke_family(db, row.family_id, now). No lock needed: revoking twice
+       is harmless.
+    2. db.commit(), then clear_auth_cookies(response). Return nothing.
+    """
+    if refresh_token is not None:
+        row = db.scalars(
+            select(RefreshToken).where(
+                RefreshToken.token_hash == hash_refresh_token(refresh_token)
+            )
+        ).first()
+        if row is not None:
+            revoke_family(db, row.family_id, now)
+    db.commit()
+    clear_auth_cookies(response)
 
 
 @router.get("/me")

@@ -203,7 +203,7 @@ New dependency: `pyjwt`.
 - On a `401` from any path except `/auth/code`, `/auth/verify`, `/auth/refresh` and `/auth/logout`. `/auth/me` is deliberately included, so the page-load check refreshes too:
   1. Call `POST /api/auth/refresh` through a module-level `refreshPromise`. Concurrent callers wait on the same promise, and it resets once settled.
   2. The refresh succeeded → retry the original request once and return its result, or throw its error.
-  3. The refresh failed → notify the `onSessionExpired` listeners and throw the original `401` as an `ApiError`.
+  3. The refresh failed → still retry the original request once, because a refresh that lost a race with another tab gets a `401` while the shared cookie jar already holds that tab's new tokens. If the retry also gets a `401`, notify the `onSessionExpired` listeners and throw it as an `ApiError`. (Amended in PR 5 after review.)
 - Export `onSessionExpired(listener): () => void`, which returns an unsubscribe function.
 
 ### `src/hooks/auth/` (shared)
