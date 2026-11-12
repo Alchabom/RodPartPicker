@@ -2,7 +2,7 @@ import { Link, Outlet, Route, Routes } from 'react-router'
 import App from '@/App'
 import { NotFound } from '@components/NotFound'
 import { DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
-import { BrandPartsPage, BuilderLayout, BuilderPage } from '@features/builder'
+import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider } from '@features/builder'
 
 const navLinkClass = 'font-semibold text-tasman transition-colors duration-200 hover:text-sulu'
 
@@ -33,8 +33,10 @@ export function AppRoutes() {
       <Route element={<Layout />}>
         <Route index element={<App />} />
         <Route path="builder" element={<BuilderLayout />}>
-          <Route index element={<BuilderPage />} />
-          <Route path=":component/:brand" element={<BrandPartsPage />} />
+          <Route element={<LocalBuildProvider />}>
+            <Route index element={<BuilderPage />} />
+            <Route path=":component/:brand" element={<BrandPartsPage />} />
+          </Route>
         </Route>
         <Route path="login" element={<LoginPage />} />
         <Route

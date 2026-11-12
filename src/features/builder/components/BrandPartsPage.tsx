@@ -24,7 +24,7 @@ import { formatPrice } from '../utils/formatPrice'
 export function BrandPartsPage() {
   const params = useParams<{ component: string; brand: string }>()
   const navigate = useNavigate()
-  const { build, selectPart } = useBuild()
+  const { build, basePath, selectPart } = useBuild()
   const { getBrand, getPart, getParts } = useCatalog()
 
   const component = getComponentInfo(params.component)
@@ -61,7 +61,7 @@ export function BrandPartsPage() {
     return (
       <NotFound
         message="We don't have any parts for that component and brand."
-        backTo="/builder"
+        backTo={basePath}
         backLabel="Back to your build"
       />
     )
@@ -144,13 +144,13 @@ export function BrandPartsPage() {
 
   const handleAdd = (partId: string) => {
     selectPart(component.type, partId)
-    navigate('/builder')
+    navigate(basePath)
   }
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <Link
-        to="/builder"
+        to={basePath}
         className="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline"
       >
         <ArrowLeft className="size-4" aria-hidden /> Back to your build

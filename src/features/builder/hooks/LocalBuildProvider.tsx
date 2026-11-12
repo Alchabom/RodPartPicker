@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
+import { Outlet } from 'react-router'
 import { getComponentInfo } from '../api/components'
 import type { Build, ComponentType } from '../types'
 import { BuildContext } from './buildContext'
@@ -25,7 +26,7 @@ function loadBuild(): Build {
   }
 }
 
-export function BuildProvider({ children }: { children: ReactNode }) {
+export function LocalBuildProvider() {
   const [build, setBuild] = useState<Build>(loadBuild)
 
   useEffect(() => {
@@ -49,8 +50,10 @@ export function BuildProvider({ children }: { children: ReactNode }) {
   const clearBuild = () => setBuild({})
 
   return (
-    <BuildContext value={{ build, selectPart, removePart, clearBuild }}>
-      {children}
+    <BuildContext
+      value={{ kind: 'draft', build, basePath: '/builder', selectPart, removePart, clearBuild }}
+    >
+      <Outlet />
     </BuildContext>
   )
 }

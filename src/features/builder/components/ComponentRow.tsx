@@ -9,7 +9,7 @@ import { formatPrice } from '../utils/formatPrice'
 import { BrandMenu } from './BrandMenu'
 
 export function ComponentRow({ component }: { component: ComponentInfo }) {
-  const { build, removePart } = useBuild()
+  const { build, basePath, removePart } = useBuild()
   const { getBrand, getPart } = useCatalog()
   const part = getPart(build[component.type])
   // Model names repeat across sizes ("Guru X"), so show the key specs too
@@ -23,7 +23,7 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
     <TableRow>
       <TableCell className="w-44">
         <Link
-          to={`/builder/${component.type}/all`}
+          to={`${basePath}/${component.type}/all`}
           className="inline-flex items-center gap-2 font-semibold text-primary underline-offset-4 hover:underline"
         >
           <Icon className="size-[18px]" aria-hidden />
