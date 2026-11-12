@@ -193,7 +193,7 @@ Where this lives (all in `src/features/builder/hooks/SavedBuildProvider.tsx`):
   (`retrySave` resends the current state; so does the next edit).
 - **Leaving:** unmounting flushes a pending debounce at once, and a
   `beforeunload` handler asks before the tab closes while `saveStatus` is
-  `'saving'`.
+  `'saving'` or `'error'` (a failed save leaves unsaved local edits).
 - **Rename:** the title is an inline input. A name that's empty once trimmed
   shows "Give your build a name" and isn't sent; saves keep the last valid
   name.
@@ -207,12 +207,30 @@ page.
 If the editor read the cache directly, a background refetch (on window focus,
 say) could overwrite an edit in progress: a rename halfway through typing, or
 a part picked a moment before the refetch answered. Seeding once rules that
-out. The cache still gets the latest values, because every successful save
-writes them into `buildKeys.detail(id)`, so leaving and reopening the build
-shows what was saved.
+out. Every successful save writes its values into `buildKeys.detail(id)`.
 
-Keying `SavedBuildEditor` by the id gives a different build a fresh editor
-(and lets the old one flush its pending save).
+Seeding once means the seed has to be right, and reopening a build mid-save
+could get it wrong. Leaving the page flushes a pending save; if the user comes
+back before that PUT resolves, the cache (or a GET answered before the PUT
+commits) still holds the pre-save build. So the loader waits for any in-flight
+save of that build before seeding. The update mutation carries
+`mutationKey: buildKeys.detail(id)`, and the loader reads
+`useIsMutating({ mutationKey: buildKeys.detail(id) })`. While a save is in
+flight, the detail query is disabled and the page shows "Loading build…". Once
+the save settles, the query refetches, and the loader seeds the editor from
+that fresh GET. If the PUT failed, the GET shows what the server really has,
+and the editor resends nothing it never got. The cache is never written
+optimistically for the same reason.
+
+The loader latches the seed the first time it is ready, so the gate applies
+only until the editor mounts. Without the latch, the editor's own autosaves
+would send the loader back to "Loading build…" and unmount the editor on every
+save. Keying `SavedBuildLoader` by the id gives a different build a fresh
+loader and editor, which resets the latch and lets the old editor flush its
+pending save.
+
+If a save gets a 404 (the build was deleted elsewhere), the editor shows the
+same "Build not found" page instead of retrying forever.
 
 ## Signing out and other users
 

@@ -50,6 +50,7 @@ Most of these directories don't exist on disk yet (git doesn't track empty folde
 
 - `app/config.py` loads DB settings with pydantic-settings from the repo-root `.env`.
 - `app/db.py` holds the engine, `Base` (DeclarativeBase) and the `get_db` session dependency.
+- Every engine comes from `make_engine()` in `app/db.py`, which pins the MySQL session `time_zone` to `'+00:00'` so TIMESTAMP columns read as UTC. Never call `create_engine` directly.
 - All routes live under the `/api` prefix (`app/main.py`); `/api/health` checks the DB. Domain code goes in a package per resource (e.g. `app/parts/` with `models.py`, `schemas.py`, `router.py`).
 - DB credentials come from a gitignored root `.env` (template: `.env.example`). `docs/database/schema-design.md` records the schema decisions.
 - The line tables are `fly_lines`/`fly_line_models` because `LINES` is reserved in MySQL.

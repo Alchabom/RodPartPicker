@@ -133,6 +133,7 @@ Each row is one purchasable size.
   |---|---|---|
   | A part used in a build | The build stays; that part slot becomes empty | `SET NULL` |
   | A brand or lookup row still in use | The delete is refused | default (`RESTRICT`) |
+  | A user | Their builds are deleted too (migration 019) | `CASCADE` |
 
 - **`min_line_weight <= max_line_weight` on reels is validated in the API.**
   MySQL restricts `CHECK` constraints on columns that are also foreign keys.
