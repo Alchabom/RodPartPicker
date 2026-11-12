@@ -1,6 +1,6 @@
 # Setup questionnaire design
 
-Date: 2026-11-11 · Branch: `questionnaire` · Status: awaiting review
+Date: 2026-11-11 · Branch: `questionnaire` · Status: approved
 
 ## Purpose
 
@@ -51,14 +51,14 @@ The experience descriptions are a first draft; the budget descriptions are the t
 
 Each answer maps to one part of the setup:
 
-- **Only rod?** sets the rod weight and length, and the tippet.
+- **Only rod?** sets the rod weight and length.
 - **Budget** sets the price tier.
 - **Experience** sets the rod action where the catalog allows it (only high experience with a
   high budget on the 4wt branch), and the wording of the reasons everywhere else.
 - **Trout?** changes only the reasons. If the answer is no, the reasons add that this light
   setup also suits panfish and small bass in creeks.
 
-### Only small creeks: 3wt, 5X tippet
+### Only small creeks: 3wt
 
 | Budget | Rod | Reel | Line |
 |---|---|---|---|
@@ -66,7 +66,7 @@ Each answer maps to one part of the setup:
 | Medium | Redington Classic Trout 376-4 $199.99 | Lamson Guru X 2-4 $309 | RIO Avid Trout-Gold 3wt $69 |
 | High | Sage Classic R8 380-4 (8', medium) $1,100 | Lamson Litespeed F 2-4 (sealed) $579 | RIO Avid Trout-Gold 3wt $69 |
 
-### Other water too: 8'6" 4wt, 4X tippet
+### Other water too: 8'6" 4wt
 
 | Budget | Rod | Reel | Line |
 |---|---|---|---|
@@ -77,8 +77,7 @@ Each answer maps to one part of the setup:
 ### Leader and tippet (every combination)
 
 - **Leader:** RIO Powerflex Plus Trout Leader, 7.5' 5X (3-pack) $19.99
-- **Tippet:** RIO Powerflex Plus 5X $7.99 when this is the only place they'll fish; RIO
-  Powerflex Plus 4X when they'll fish other water too
+- **Tippet:** RIO Powerflex Plus 5X $7.99
 
 ### Notes on the picks
 
@@ -94,12 +93,10 @@ Each answer maps to one part of the setup:
 - **Short rod:** the 7'6" 376 is picked over the 8'6" 386 because tight creek cover favors a
   shorter rod.
 
-### Open issue: 4X tippet on a 5X leader
-
-The existing `LEADER_TIPPET_SIZE` rule warns unless the tippet is the leader's size or one
-size finer, so a 4X tippet on a 5X leader triggers a warning. Every leader in the catalog is
-5X. The "other water too" setups therefore contradict the test that every recommended build
-passes `check_build` with no warnings. This needs a decision before planning.
+- **Tippet size:** every setup uses 5X tippet. A 4X tippet would suit bigger water, but the
+  existing `LEADER_TIPPET_SIZE` rule only accepts tippet the leader's size or one size finer,
+  and every leader in the catalog is 5X. The "other water too" tippet reason mentions
+  stepping up to 4X tippet for bigger fish. Revisit when a 4X leader is added.
 
 ## Architecture
 
@@ -158,7 +155,7 @@ API (`api/tests/test_questionnaire.py`):
 - All 36 answer combinations (3 experience × 2 trout × 2 only rod × 3 budget) return five
   parts, one per component, each existing in the catalog with a non-empty reason.
 - The picks match the tables above. Spot checks: low budget + only rod gives the Redington 376,
-  the 7.5' 5X leader and 5X tippet; not only rod gives an 8'6" 4wt and 4X tippet; high
+  the 7.5' 5X leader and 5X tippet; not only rod gives an 8'6" 4wt; high
   experience + high budget + not only rod gives the R8 Core 486.
 - Every recommended build passes `check_build` with no warnings.
 - Trout = no adds the panfish and small bass note.
