@@ -9,9 +9,10 @@ import { formatPrice } from '../utils/formatPrice'
 import { BrandMenu } from './BrandMenu'
 
 export function ComponentRow({ component }: { component: ComponentInfo }) {
-  const { build, removePart } = useBuild()
+  const { build, notes, removePart } = useBuild()
   const { getBrand, getPart } = useCatalog()
   const part = getPart(build[component.type])
+  const note = notes[component.type]
   // Model names repeat across sizes ("Guru X"), so show the key specs too
   const subtitle = part && [
     getBrand(part.brandId)?.name,
@@ -37,6 +38,7 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
             <div>
               <div className="font-medium">{part.name}</div>
               <div className="text-xs text-muted-foreground">{subtitle}</div>
+              {note && <p className="mt-1 max-w-prose text-xs whitespace-normal text-muted-foreground">Why: {note}</p>}
             </div>
             <BrandMenu
               component={component}
