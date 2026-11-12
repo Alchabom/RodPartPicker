@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { RotateCcw, TriangleAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { checkBuild, type BuildWarning } from '../api/compatibility'
+import { checkBuild, compatibilityKeys } from '../api/compatibility'
 import { COMPONENTS } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
 import { useBuildQuery } from '../hooks/useBuildQuery'
@@ -27,23 +28,19 @@ export function BuilderPage() {
   const { query, selectedCount } = useBuildQuery()
   const hasPairToCheck = selectedCount >= 2
 
-  // The query is stored with the response, so warnings for the previous
-  // selection never show while the next request is running
-  const [result, setResult] = useState<{ query: string; warnings: BuildWarning[] }>()
-  const warnings = hasPairToCheck && result?.query === query ? result.warnings : []
+  // No placeholderData: warnings for the previous selection never show
+  // while the next request is running
+  const { data, error } = useQuery({
+    queryKey: compatibilityKeys.check(query),
+    queryFn: ({ signal }) => checkBuild(query, signal),
+    enabled: hasPairToCheck,
+  })
+  const warnings = hasPairToCheck ? (data ?? []) : []
 
   useEffect(() => {
-    if (!hasPairToCheck) return
-    const controller = new AbortController()
-    checkBuild(query, controller.signal)
-      .then((warnings) => setResult({ query, warnings }))
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return
-        // Warnings are optional, so the page keeps working without them
-        console.error('Could not check the build', error)
-      })
-    return () => controller.abort()
-  }, [query, hasPairToCheck])
+    // Warnings are optional, so the page keeps working without them
+    if (error) console.error('Could not check the build', error)
+  }, [error])
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">

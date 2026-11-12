@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ArrowLeft, Check, ChevronDown, Star } from 'lucide-react'
 import { NotFound } from '@components/NotFound'
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { fetchCompatibleParts, type CompatibleParts } from '../api/compatibility'
+import { compatibilityKeys, fetchCompatibleParts } from '../api/compatibility'
 import { COMPONENTS, getComponentInfo } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
 import { useBuildQuery } from '../hooks/useBuildQuery'
@@ -40,24 +41,21 @@ export function BrandPartsPage() {
     && component.type !== 'rod'
     && COMPONENTS.some((c) => c.type !== component.type && getPart(build[c.type]))
 
-  // The query is stored with the response, so highlights for the previous
-  // selection never show while the next request is running
-  const [result, setResult] = useState<{ query: string; parts: CompatibleParts }>()
   const [showUnmatched, setShowUnmatched] = useState(false)
-  const compatible = showsCompatibility && result?.query === query ? result.parts : undefined
+
+  // No placeholderData: highlights for the previous selection never show
+  // while the next request is running
+  const { data, error } = useQuery({
+    queryKey: compatibilityKeys.parts(query),
+    queryFn: ({ signal }) => fetchCompatibleParts(query, signal),
+    enabled: showsCompatibility,
+  })
+  const compatible = showsCompatibility ? data : undefined
 
   useEffect(() => {
-    if (!showsCompatibility) return
-    const controller = new AbortController()
-    fetchCompatibleParts(query, controller.signal)
-      .then((parts) => setResult({ query, parts }))
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return
-        // Highlights are optional, so the page keeps working without them
-        console.error('Could not load compatible parts', error)
-      })
-    return () => controller.abort()
-  }, [query, showsCompatibility])
+    // Highlights are optional, so the page keeps working without them
+    if (error) console.error('Could not load compatible parts', error)
+  }, [error])
 
   if (!component || parts.length === 0) {
     return (
