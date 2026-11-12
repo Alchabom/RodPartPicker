@@ -156,6 +156,8 @@ function toTippet(row: TippetRow): Part {
   }
 }
 
+export const catalogKey = ['catalog'] as const
+
 export async function fetchCatalog(signal?: AbortSignal): Promise<Catalog> {
   const [rods, reels, lines, leaders, tippets] = await Promise.all([
     apiFetch<RodRow[]>('/parts/rod', { signal }),
