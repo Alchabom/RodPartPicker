@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_now
@@ -15,7 +15,7 @@ from app.auth.models import User
 from app.builds.models import Build
 from app.config import settings
 from app.db import engine as app_engine
-from app.db import get_db, make_url
+from app.db import get_db, make_engine
 from app.main import app
 from app.migrate import migrate
 from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, Tippet
@@ -31,7 +31,7 @@ def engine():
         conn.execute(text(f"DROP DATABASE IF EXISTS `{settings.TEST_DB_NAME}`"))
     migrate(settings.TEST_DB_NAME)
 
-    test_engine = create_engine(make_url(settings.TEST_DB_NAME))
+    test_engine = make_engine(settings.TEST_DB_NAME)
     yield test_engine
     test_engine.dispose()
 

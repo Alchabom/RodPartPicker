@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import update
@@ -176,3 +176,10 @@ def test_other_users_build_is_not_found(
     assert response.json()["detail"] == "Build not found"
     db.rollback()
     assert db.get(Build, theirs.id).name == "Theirs"
+
+
+def test_build_timestamps_are_utc(client, signed_in):
+    response = client.post("/api/builds", json={"name": "Clock check"})
+    updated = datetime.fromisoformat(response.json()["updatedAt"])
+    assert updated.tzinfo is None  # naive UTC, as the frontend expects
+    assert abs(updated - datetime.now(UTC).replace(tzinfo=None)) < timedelta(minutes=1)
