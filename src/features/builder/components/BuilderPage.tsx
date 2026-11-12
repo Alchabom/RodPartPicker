@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { RotateCcw, Sparkles, TriangleAlert } from 'lucide-react'
+import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { TriangleAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -11,62 +11,41 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { checkBuild, type BuildWarning } from '../api/compatibility'
+import { checkBuild, compatibilityKeys } from '../api/compatibility'
 import { COMPONENTS } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
 import { useBuildQuery } from '../hooks/useBuildQuery'
 import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '../utils/formatPrice'
+import { BuildHeader } from './BuildHeader'
 import { ComponentRow } from './ComponentRow'
-import { QuestionnaireDialog } from './QuestionnaireDialog'
+import { SaveDraftButton } from './SaveDraftButton'
 
 export function BuilderPage() {
-  const { build, clearBuild } = useBuild()
+  const { build, kind } = useBuild()
   const { getPart } = useCatalog()
-  const [questionnaireOpen, setQuestionnaireOpen] = useState(false)
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
   const { query, selectedCount } = useBuildQuery()
   const hasPairToCheck = selectedCount >= 2
 
-  // The query is stored with the response, so warnings for the previous
-  // selection never show while the next request is running
-  const [result, setResult] = useState<{ query: string; warnings: BuildWarning[] }>()
-  const warnings = hasPairToCheck && result?.query === query ? result.warnings : []
+  // No placeholderData: warnings for the previous selection never show
+  // while the next request is running
+  const { data, error } = useQuery({
+    queryKey: compatibilityKeys.check(query),
+    queryFn: ({ signal }) => checkBuild(query, signal),
+    enabled: hasPairToCheck,
+  })
+  const warnings = hasPairToCheck ? (data ?? []) : []
 
   useEffect(() => {
-    if (!hasPairToCheck) return
-    const controller = new AbortController()
-    checkBuild(query, controller.signal)
-      .then((warnings) => setResult({ query, warnings }))
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return
-        // Warnings are optional, so the page keeps working without them
-        console.error('Could not check the build', error)
-      })
-    return () => controller.abort()
-  }, [query, hasPairToCheck])
+    // Warnings are optional, so the page keeps working without them
+    if (error) console.error('Could not check the build', error)
+  }, [error])
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => {
-              // The questionnaire builds a whole setup, so it starts from an empty build
-              clearBuild()
-              setQuestionnaireOpen(true)
-            }}
-          >
-            <Sparkles data-icon="inline-start" /> Click here to get a setup tailored to you
-          </Button>
-          <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
-            <RotateCcw data-icon="inline-start" /> Clear build
-          </Button>
-        </div>
-      </div>
-      <QuestionnaireDialog open={questionnaireOpen} onOpenChange={setQuestionnaireOpen} />
+      <BuildHeader />
       <p className="mt-1 mb-8 text-muted-foreground">
         Choose a brand for each component to browse its parts.
       </p>
@@ -91,6 +70,13 @@ export function BuilderPage() {
           </TableRow>
         </TableFooter>
       </Table>
+
+      {/* Saved builds autosave, so only a draft gets a save button */}
+      {kind === 'draft' && (
+        <div className="mt-4 flex justify-end">
+          <SaveDraftButton />
+        </div>
+      )}
 
       {warnings.length > 0 && (
         <Alert className="mt-6">

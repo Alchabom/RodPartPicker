@@ -36,6 +36,8 @@ The project uses a feature-based architecture. `docs/architecture_guidelines.md`
 
 Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 401, refreshes the session once (shared across concurrent requests) and retries. `src/hooks/auth` (`@hooks/auth`: `AuthProvider`, `useAuth`) is the shared session state, wrapped around the app in `main.tsx`. `src/features/auth` holds the screens: `LoginPage` (`/login`), `DisplayNamePage` (`/welcome`), `RequireAuth` (route guard) and the navbar's `UserMenu`.
 
+Builder persistence: the builder keeps a local draft (`LocalBuildProvider`, `localStorage` key `rpp:build:v2`) and saved builds (`SavedBuildProvider`, with debounced autosave). My Builds lives at `/builder/saved`. TanStack Query is the data layer: the client is in `src/lib/queryClient.ts` and query keys live next to their fetchers (e.g. `buildKeys` in `features/builder/api/builds.ts`). See `docs/builds/saved-builds.md`.
+
 Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed. `src/App.tsx` currently holds placeholder layout markup (navbar and sections) that should be split into features as they are built.
 
 ## Agent skills
@@ -48,10 +50,12 @@ Most of these directories don't exist on disk yet (git doesn't track empty folde
 
 - `app/config.py` loads DB settings with pydantic-settings from the repo-root `.env`.
 - `app/db.py` holds the engine, `Base` (DeclarativeBase) and the `get_db` session dependency.
+- Every engine comes from `make_engine()` in `app/db.py`, which pins the MySQL session `time_zone` to `'+00:00'` so TIMESTAMP columns read as UTC. Never call `create_engine` directly.
 - All routes live under the `/api` prefix (`app/main.py`); `/api/health` checks the DB. Domain code goes in a package per resource (e.g. `app/parts/` with `models.py`, `schemas.py`, `router.py`).
 - DB credentials come from a gitignored root `.env` (template: `.env.example`). `docs/database/schema-design.md` records the schema decisions.
 - The line tables are `fly_lines`/`fly_line_models` because `LINES` is reserved in MySQL.
 - `app/auth/` is passwordless email-code sign-in (`models.py`, `schemas.py`, `codes.py`, `tokens.py`, `email.py`, `cookies.py`, `deps.py`, `rate_limit.py`, `router.py`). Sessions are two httpOnly cookies: a 15-minute access JWT and a 30-day rotating refresh token (one family per sign-in; a replaced token coming back revokes the family). `docs/auth/rate-limiting.md` and `docs/auth/sessions.md` explain the flows.
+- The builds API is owner-scoped: every route acts only on the signed-in user's builds (see `docs/builds/saved-builds.md`).
 - Auth settings in `.env`: `JWT_SECRET` and `CODE_HMAC_SECRET` (required), `APP_ORIGIN`, `COOKIE_SECURE` (set `false` for local http), `TRUST_PROXY_HEADERS`, `EMAIL_BACKEND` (`console` prints the code in the API's terminal; `resend` emails it), `RESEND_API_KEY`, `EMAIL_FROM`.
 - Middleware in `app/main.py` rejects `POST`/`PUT`/`PATCH`/`DELETE` under `/api` unless `Origin` equals `APP_ORIGIN` (403). Test clients must send that header; the `client` fixture does.
 - Auth routes use injected time (`Now` from `get_now`) so tests can drive a `clock` fixture. The test `db` session is shared with the routes, so tests call `db.rollback()` before re-reading to catch a missing `commit()`.

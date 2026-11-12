@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useBuild } from '../hooks/useBuild'
 import { useCatalog } from '../hooks/useCatalog'
 import type { ComponentInfo } from '../types'
 
@@ -31,7 +32,8 @@ interface BrandMenuProps {
 
 export function BrandMenu({ component, trigger }: BrandMenuProps) {
   const brands = useCatalog().getBrandsFor(component.type)
-  const basePath = `/builder/${component.type}`
+  const { basePath: buildPath } = useBuild()
+  const basePath = `${buildPath}/${component.type}`
 
   return (
     <DropdownMenu>

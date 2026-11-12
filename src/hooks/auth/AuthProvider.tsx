@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { apiFetch, onSessionExpired } from '@/lib/api'
 import { AuthContext } from './authContext'
 import type { AuthStatus, User } from './types'
@@ -9,6 +10,7 @@ import type { AuthStatus, User } from './types'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
+  const queryClient = useQueryClient()
   // Set by signOut, so a /auth/me still in flight can't sign the user back in
   const signedOut = useRef(false)
 
@@ -40,8 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       onSessionExpired(() => {
         setUserState(null)
         setStatus('anonymous')
+        queryClient.removeQueries({ queryKey: ['builds'] })
       }),
-    [],
+    [queryClient],
   )
 
   const setUser = (next: User) => {
@@ -60,6 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUserState(null)
     setStatus('anonymous')
+    // Drop this user's builds so the next account can't see them from cache.
+    // A literal key: shared code can't import from the builder feature.
+    queryClient.removeQueries({ queryKey: ['builds'] })
   }
 
   return (

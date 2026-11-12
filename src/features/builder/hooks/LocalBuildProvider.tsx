@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
+import { Outlet } from 'react-router'
 import { getComponentInfo } from '../api/components'
 import type { Build, BuildNotes, ComponentType, RecommendedPart } from '../types'
 import { BuildContext } from './buildContext'
+import { without } from './without'
 
 // v2: part ids became `${component}-${dbId}` when the catalog moved to the API
 const STORAGE_KEY = 'rpp:build:v2'
@@ -47,13 +49,7 @@ function loadNotes(): BuildNotes {
   return notes
 }
 
-function without<T extends object>(record: T, component: ComponentType): T {
-  const next = { ...record }
-  delete next[component as keyof T]
-  return next
-}
-
-export function BuildProvider({ children }: { children: ReactNode }) {
+export function LocalBuildProvider() {
   const [build, setBuild] = useState<Build>(loadBuild)
   // A note explains why its part was recommended, so it goes when the part changes
   const [notes, setNotes] = useState<BuildNotes>(loadNotes)
@@ -71,7 +67,12 @@ export function BuildProvider({ children }: { children: ReactNode }) {
     setNotes((prev) => without(prev, component))
   }
 
+  // Written to storage right away, not only from the effects: saving a draft
+  // clears it and then navigates away, which unmounts this provider before
+  // the effects for the cleared state may run
   const clearBuild = () => {
+    writeStorage(STORAGE_KEY, {})
+    writeStorage(NOTES_KEY, {})
     setBuild({})
     setNotes({})
   }
@@ -82,8 +83,19 @@ export function BuildProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <BuildContext value={{ build, notes, selectPart, removePart, clearBuild, loadRecommendation }}>
-      {children}
+    <BuildContext
+      value={{
+        kind: 'draft',
+        build,
+        notes,
+        basePath: '/builder',
+        selectPart,
+        removePart,
+        clearBuild,
+        loadRecommendation,
+      }}
+    >
+      <Outlet />
     </BuildContext>
   )
 }

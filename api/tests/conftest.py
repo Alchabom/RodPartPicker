@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.auth.deps import get_now
@@ -15,7 +15,7 @@ from app.auth.models import User
 from app.builds.models import Build
 from app.config import settings
 from app.db import engine as app_engine
-from app.db import get_db, make_url
+from app.db import get_db, make_engine
 from app.main import app
 from app.migrate import migrate
 from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, Tippet
@@ -31,7 +31,7 @@ def engine():
         conn.execute(text(f"DROP DATABASE IF EXISTS `{settings.TEST_DB_NAME}`"))
     migrate(settings.TEST_DB_NAME)
 
-    test_engine = create_engine(make_url(settings.TEST_DB_NAME))
+    test_engine = make_engine(settings.TEST_DB_NAME)
     yield test_engine
     test_engine.dispose()
 
@@ -126,6 +126,12 @@ def login():
     return sign_in
 
 
+@pytest.fixture
+def signed_in(client, fake_email, login):
+    """Sign the client in; returns the signed-in UserOut JSON."""
+    return login(client, fake_email)
+
+
 # ---------- Factories ----------
 # Each returns a function that inserts one row with sensible defaults; pass
 # keyword arguments to override any column. Rows are flushed so ids exist,
@@ -161,12 +167,14 @@ def make_part(db, make_brand):
 
 
 @pytest.fixture
-def make_build(db):
+def make_build(db, make_user):
     count = 0
 
     def make(**columns):
         nonlocal count
         count += 1
+        if "user_id" not in columns and "user" not in columns:
+            columns["user_id"] = make_user().id
         build = Build(**{"name": f"Test Build {count}", **columns})
         db.add(build)
         db.flush()

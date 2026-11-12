@@ -34,6 +34,11 @@ export interface BuildWarning {
   message: string
 }
 
+export const compatibilityKeys = {
+  check: (query: string) => ['compatibility', 'check', query] as const,
+  parts: (query: string) => ['compatibility', 'parts', query] as const,
+}
+
 export async function fetchCompatibleParts(query: string, signal?: AbortSignal): Promise<CompatibleParts> {
   const data = await apiFetch<CompatiblePartsResponse>(`/compatibility/parts?${query}`, { signal })
   return {
