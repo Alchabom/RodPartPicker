@@ -126,6 +126,12 @@ def login():
     return sign_in
 
 
+@pytest.fixture
+def signed_in(client, fake_email, login):
+    """Sign the client in; returns the signed-in UserOut JSON."""
+    return login(client, fake_email)
+
+
 # ---------- Factories ----------
 # Each returns a function that inserts one row with sensible defaults; pass
 # keyword arguments to override any column. Rows are flushed so ids exist,

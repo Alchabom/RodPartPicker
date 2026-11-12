@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth.deps import CurrentUserId
 from app.builds.models import Build
 from app.builds.schemas import BuildIn, BuildOut
 from app.db import DbSession
@@ -25,23 +26,32 @@ def _commit(db: Session) -> None:
         raise
 
 
-@router.get("")
-def list_builds(db: DbSession) -> list[BuildOut]:
-    stmt = select(Build).order_by(Build.updated_at.desc())
-    return db.scalars(stmt).all()
-
-
-@router.get("/{build_id}")
-def get_build(build_id: BuildId, db: DbSession) -> BuildOut:
+def _get_owned_build(db: Session, build_id: int, user_id: int) -> Build:
     build = db.get(Build, build_id)
-    if not build:
+    if build is None or build.user_id != user_id:
         raise HTTPException(status_code=404, detail="Build not found")
     return build
 
 
+@router.get("")
+def list_builds(db: DbSession, user_id: CurrentUserId) -> list[BuildOut]:
+    stmt = (
+        select(Build)
+        .where(Build.user_id == user_id)
+        .order_by(Build.updated_at.desc(), Build.id.desc())
+    )
+    return db.scalars(stmt).all()
+
+
+@router.get("/{build_id}")
+def get_build(build_id: BuildId, db: DbSession, user_id: CurrentUserId) -> BuildOut:
+    return _get_owned_build(db, build_id, user_id)
+
+
 @router.post("", status_code=201)
-def create_build(build: BuildIn, db: DbSession) -> BuildOut:
+def create_build(build: BuildIn, db: DbSession, user_id: CurrentUserId) -> BuildOut:
     new_build = Build(
+        user_id=user_id,
         name=build.name,
         rod_id=build.rod_id,
         reel_id=build.reel_id,
@@ -56,10 +66,10 @@ def create_build(build: BuildIn, db: DbSession) -> BuildOut:
 
 
 @router.put("/{build_id}", status_code=204)
-def update_build(build_id: BuildId, build: BuildIn, db: DbSession) -> None:
-    existing_build = db.get(Build, build_id)
-    if not existing_build:
-        raise HTTPException(status_code=404, detail="Build not found")
+def update_build(
+    build_id: BuildId, build: BuildIn, db: DbSession, user_id: CurrentUserId
+) -> None:
+    existing_build = _get_owned_build(db, build_id, user_id)
 
     existing_build.name = build.name
     existing_build.rod_id = build.rod_id
@@ -71,9 +81,7 @@ def update_build(build_id: BuildId, build: BuildIn, db: DbSession) -> None:
 
 
 @router.delete("/{build_id}", status_code=204)
-def delete_build(build_id: BuildId, db: DbSession) -> None:
-    existing_build = db.get(Build, build_id)
-    if not existing_build:
-        raise HTTPException(status_code=404, detail="Build not found")
+def delete_build(build_id: BuildId, db: DbSession, user_id: CurrentUserId) -> None:
+    existing_build = _get_owned_build(db, build_id, user_id)
     db.delete(existing_build)
     _commit(db)
