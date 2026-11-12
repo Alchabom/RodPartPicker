@@ -82,11 +82,15 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
     },
   })
 
-  const input = toBuildIn(build, name, getPart)
-  const inputJson = JSON.stringify(input)
+  // While the name is invalid, saves keep using the last valid one
+  const [lastValidName, setLastValidName] = useState(saved.name)
   const nameValid = isValidName(name)
+  if (nameValid && name !== lastValidName) setLastValidName(name)
+
+  const input = toBuildIn(build, nameValid ? name : lastValidName, getPart)
+  const inputJson = JSON.stringify(input)
   // Unsent changes; true exactly while a debounced save is pending
-  const dirty = nameValid && inputJson !== lastSent
+  const dirty = inputJson !== lastSent
 
   const cancelPending = () => {
     if (pending.current) clearTimeout(pending.current.timer)
@@ -95,11 +99,11 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
 
   // Restart the debounce on every change. Comparing against lastSent means
   // StrictMode's extra run and an edit that changes nothing send nothing.
-  // An invalid name cancels a pending save, so it is never sent.
+  // An invalid name is never sent: the input falls back to the last valid name.
   useEffect(() => {
     cancelPending()
     const next = JSON.parse(inputJson) as BuildInput
-    if (!isValidName(next.name) || inputJson === lastSent) return
+    if (inputJson === lastSent) return
     const timer = setTimeout(() => {
       pending.current = null
       setLastSent(inputJson)
@@ -145,7 +149,6 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
 
   // Resend the current state (after a failed save)
   const retrySave = () => {
-    if (!nameValid) return
     cancelPending()
     setLastSent(inputJson)
     mutate(input)
