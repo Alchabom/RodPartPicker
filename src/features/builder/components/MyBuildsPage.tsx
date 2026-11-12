@@ -1,5 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link } from 'react-router'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -9,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { buildKeys, listBuilds, toBuild, type SavedBuild } from '../api/builds'
+import { buildKeys, deleteBuild, listBuilds, toBuild, type SavedBuild } from '../api/builds'
 import { COMPONENTS } from '../api/components'
 import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '../utils/formatPrice'
@@ -19,6 +31,59 @@ const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', tim
 // The API's timestamps are UTC but carry no offset; without one, JS reads them as local time
 const formatEdited = (updatedAt: string) =>
   dateFormat.format(new Date(/(Z|[+-]\d\d:?\d\d)$/.test(updatedAt) ? updatedAt : `${updatedAt}Z`))
+
+function DeleteBuildButton({ id, name }: { id: number; name: string }) {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const mutation = useMutation({
+    mutationFn: () => deleteBuild(id),
+    onSuccess: () => {
+      setOpen(false)
+      queryClient.invalidateQueries({ queryKey: buildKeys.list() })
+      queryClient.removeQueries({ queryKey: buildKeys.detail(id) })
+    },
+  })
+
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (!next) mutation.reset()
+      }}
+    >
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{`Delete "${name}"?`}</AlertDialogTitle>
+          <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
+        </AlertDialogHeader>
+        {mutation.isError && (
+          <p role="alert" className="text-sm text-destructive">
+            Couldn't delete, try again
+          </p>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={mutation.isPending}
+            onClick={(e) => {
+              e.preventDefault()
+              mutation.mutate()
+            }}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
 
 export function MyBuildsPage() {
   const { getPart } = useCatalog()
@@ -73,6 +138,9 @@ export function MyBuildsPage() {
               <TableHead>Parts</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Last edited</TableHead>
+              <TableHead className="text-right">
+                <span className="sr-only">Actions</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,6 +154,9 @@ export function MyBuildsPage() {
                 <TableCell className="tabular-nums">{count} / {COMPONENTS.length}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatPrice(total)}</TableCell>
                 <TableCell>{formatEdited(saved.updatedAt)}</TableCell>
+                <TableCell className="text-right">
+                  <DeleteBuildButton id={saved.id} name={saved.name} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
