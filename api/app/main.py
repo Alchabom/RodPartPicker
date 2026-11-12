@@ -9,6 +9,7 @@ from app.compatibility.router import router as compatibility_router
 from app.config import settings
 from app.db import DbSession
 from app.parts.router import router as parts_router
+from app.questionnaire.router import router as questionnaire_router
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -42,4 +43,5 @@ api.include_router(parts_router)
 api.include_router(builds_router)
 api.include_router(compatibility_router)
 api.include_router(auth_router)
+api.include_router(questionnaire_router)
 app.include_router(api)

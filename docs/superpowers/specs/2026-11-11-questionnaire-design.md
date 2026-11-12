@@ -109,7 +109,7 @@ another. The rules live in the API, matching how compatibility moved server-side
 - `schemas.py`
   - `Answers`: `experience: Literal["low", "medium", "high"]`, `place: Literal["small_creeks"]`,
     `trout: bool`, `only_rod: bool`, `budget: Literal["low", "medium", "high"]`.
-  - `RecommendedPart`: `component` (rod/reel/line/leader/tippet), `part_id` (database id),
+  - `RecommendedPart`: `component` (rod/reel/line/leader/tippet), `partId` (database id; the API writes camelCase keys),
     `reason: str`.
   - `Recommendation`: `parts: list[RecommendedPart]`, always five, one per component.
 - `rules.py`: the rule table as plain Python. Each pick identifies its part by natural key
@@ -137,7 +137,7 @@ Errors:
 - `utils/questions.ts`: question text, answer labels, descriptions, reaction lines and which
   places are "coming soon", so wording changes don't touch the component.
 - `api/questionnaire.ts`: `getRecommendation(answers, signal)` calls the endpoint and maps each
-  part to the Builder's id format (`${component}-${part_id}`).
+  part to the Builder's id format (`${component}-${partId}`).
 - `hooks/buildContext.ts` and `hooks/BuildProvider.tsx`:
   - `notes: Partial<Record<ComponentType, string>>`, the reason per component.
   - `loadRecommendation(parts)` sets all five parts and notes at once.

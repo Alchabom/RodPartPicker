@@ -87,12 +87,12 @@ The rules are pure Python and don't touch the database, so these tests run witho
 These tests use the migrated test database, which already holds the seeded catalog, so the picks resolve to real rows.
 
 1. **Tests:**
-   - All 36 combinations return 200 and five parts. Each `part_id` exists in its table (`db.get(Model, part_id)`), and each reason is non-empty.
+   - All 36 combinations return 200 and five parts. Each `partId` exists in its table (`db.get(Model, part_id)`), and each reason is non-empty.
    - **Consistency:** for all 36, `GET /api/compatibility/check` with the returned IDs (`rodId`, `reelId`, `flyLineId`, `leaderId`, `tippetId`) returns no warnings.
    - Spot check: low experience, trout, only rod, low budget returns the `Classic Trout 376-4` rod's ID.
    - `place=large_rivers` returns 422, as does a missing `budget` or `experience=expert`.
    - A pick missing from the catalog returns 500. Monkeypatch one rod key to a name that doesn't exist.
-2. **Schemas:** `RecommendedPart` (`component`, `part_id: int`, `reason: str`) and `Recommendation` (`parts: list[RecommendedPart]`). Also an `AnswersQuery` model with `experience`, `place: Literal["small_creeks"]`, `trout: bool`, `only_rod: bool` and `budget`. `only_rod` takes the alias `onlyRod`, matching the camelCase query names in `compatibility`.
+2. **Schemas:** `RecommendedPart` (`component`, `part_id: int` written as `partId`, `reason: str`) and `Recommendation` (`parts: list[RecommendedPart]`). Also an `AnswersQuery` model with `experience`, `place: Literal["small_creeks"]`, `trout: bool`, `only_rod: bool` and `budget`. `only_rod` takes the alias `onlyRod`, matching the camelCase query names in `compatibility`.
 3. **Router:** `router = APIRouter(prefix="/questionnaire", tags=["questionnaire"])`. Take the answers with `Annotated[AnswersQuery, Query()]`. For each pick, build a `select` that joins `Brand` (and `XSize` for leaders and tippets) and filters on the key. `scalar_one_or_none()`; if it's `None`, log the missing key and raise `HTTPException(500, "Recommended part is missing from the catalog")`.
 4. Register the router in `app/main.py` next to the others.
 
