@@ -1,7 +1,6 @@
 import { RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBuild } from '../hooks/useBuild'
-import { SaveDraftButton } from './SaveDraftButton'
 
 const STATUS_TEXT = { saving: 'Saving…', saved: 'Saved', error: "Couldn't save" }
 
@@ -38,12 +37,9 @@ export function BuildHeader() {
           <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>
         )}
       </div>
-      <div className="flex items-start gap-2">
-        {buildState.kind === 'draft' && <SaveDraftButton />}
-        <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
-          <RotateCcw data-icon="inline-start" /> Clear build
-        </Button>
-      </div>
+      <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
+        <RotateCcw data-icon="inline-start" /> Clear build
+      </Button>
     </div>
   )
 }

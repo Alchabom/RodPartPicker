@@ -19,9 +19,10 @@ import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '../utils/formatPrice'
 import { BuildHeader } from './BuildHeader'
 import { ComponentRow } from './ComponentRow'
+import { SaveDraftButton } from './SaveDraftButton'
 
 export function BuilderPage() {
-  const { build } = useBuild()
+  const { build, kind } = useBuild()
   const { getPart } = useCatalog()
   const total = COMPONENTS.reduce((sum, c) => sum + (getPart(build[c.type])?.price ?? 0), 0)
 
@@ -69,6 +70,13 @@ export function BuilderPage() {
           </TableRow>
         </TableFooter>
       </Table>
+
+      {/* Saved builds autosave, so only a draft gets a save button */}
+      {kind === 'draft' && (
+        <div className="mt-4 flex justify-end">
+          <SaveDraftButton />
+        </div>
+      )}
 
       {warnings.length > 0 && (
         <Alert className="mt-6">

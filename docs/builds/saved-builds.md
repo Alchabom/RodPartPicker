@@ -103,7 +103,8 @@ Where this lives:
 
 - **The button:** `SaveDraftButton` in
   `src/features/builder/components/SaveDraftButton.tsx`, rendered by
-  `BuildHeader` in draft mode only. It's disabled while the draft is empty or
+  `BuilderPage` below the build table, right-aligned under the Total, in
+  draft mode only. It's disabled while the draft is empty or
   the session is still loading. Signed out, it navigates to
   `/login?next=%2Fbuilder%3Fsave%3D1`; signed in, it runs the save directly.
 - **The round trip:** `LoginPage` sends the user to `safeNext(next)` (query
