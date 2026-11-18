@@ -1,6 +1,7 @@
 // The owner's side of publishing: /api/builds/{id}/published. Each saved build
 // has at most one published snapshot, and only its owner can see these routes.
 import { ApiError, apiFetch } from '@/lib/api'
+import type { ComponentType } from '../types'
 
 export interface PublishedRef {
   id: number
@@ -31,4 +32,16 @@ export function publishBuild(buildId: number, input: PublishInput): Promise<Publ
 
 export async function unpublishBuild(buildId: number): Promise<void> {
   await apiFetch(`/builds/${buildId}/published`, { method: 'DELETE' })
+}
+
+// The public side: what Open in Builder needs from /api/published/{id}
+export interface PublicBuildParts {
+  title: string
+  parts: Record<ComponentType, { id: number } | null>
+}
+
+// Returns the response as sent, not a trimmed copy: the catalog's detail page
+// reads the same query cache entry (publishedKeys.detail) and needs the rest of it
+export function getPublicBuildParts(id: number, signal?: AbortSignal): Promise<PublicBuildParts> {
+  return apiFetch<PublicBuildParts>(`/published/${id}`, { signal })
 }

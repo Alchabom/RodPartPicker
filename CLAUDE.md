@@ -36,6 +36,8 @@ The project uses a feature-based architecture. `docs/architecture_guidelines.md`
 
 Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 401, refreshes the session once (shared across concurrent requests) and retries. `src/hooks/auth` (`@hooks/auth`: `AuthProvider`, `useAuth`) is the shared session state, wrapped around the app in `main.tsx`. `src/features/auth` holds the screens: `LoginPage` (`/login`), `DisplayNamePage` (`/welcome`), `RequireAuth` (route guard) and the navbar's `UserMenu`.
 
+Public catalog: `src/features/catalog` holds the signed-out-friendly pages `/builds` and `/builds/:id` (outside `BuilderLayout`). Its **Open in Builder** link goes to `/builder?copy=<id>`, handled by `CopyPublishedIntent` in the builder (the `save=1` pattern), so the features never import each other. Publish controls live in the builder; shared query keys are in `src/lib/publishedKeys.ts`. See `docs/builds/published-builds.md`.
+
 Builder persistence: the builder keeps a local draft (`LocalBuildProvider`, `localStorage` key `rpp:build:v2`) and saved builds (`SavedBuildProvider`, with debounced autosave). My Builds lives at `/builder/saved`. TanStack Query is the data layer: the client is in `src/lib/queryClient.ts` and query keys live next to their fetchers (e.g. `buildKeys` in `features/builder/api/builds.ts`). See `docs/builds/saved-builds.md`.
 
 Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed. `src/App.tsx` currently holds placeholder layout markup (navbar and sections) that should be split into features as they are built.
@@ -55,6 +57,7 @@ Most of these directories don't exist on disk yet (git doesn't track empty folde
 - DB credentials come from a gitignored root `.env` (template: `.env.example`). `docs/database/schema-design.md` records the schema decisions.
 - The line tables are `fly_lines`/`fly_line_models` because `LINES` is reserved in MySQL.
 - `app/auth/` is passwordless email-code sign-in (`models.py`, `schemas.py`, `codes.py`, `tokens.py`, `email.py`, `cookies.py`, `deps.py`, `rate_limit.py`, `router.py`). Sessions are two httpOnly cookies: a 15-minute access JWT and a 30-day rotating refresh token (one family per sign-in; a replaced token coming back revokes the family). `docs/auth/rate-limiting.md` and `docs/auth/sessions.md` explain the flows.
+- `app/published/` has a public router (`/api/published`, no sign-in) and an owner router (`/api/builds/{id}/published`). A published build is a snapshot of five part ids; the owner routes reuse `get_owned_build` from `app/builds/ownership.py`. Titles and write-ups are untrusted text, so build SQL only from SQLAlchemy expressions (see `docs/builds/published-builds.md`).
 - The builds API is owner-scoped: every route acts only on the signed-in user's builds (see `docs/builds/saved-builds.md`).
 - Auth settings in `.env`: `JWT_SECRET` and `CODE_HMAC_SECRET` (required), `APP_ORIGIN`, `COOKIE_SECURE` (set `false` for local http), `TRUST_PROXY_HEADERS`, `EMAIL_BACKEND` (`console` prints the code in the API's terminal; `resend` emails it), `RESEND_API_KEY`, `EMAIL_FROM`.
 - Middleware in `app/main.py` rejects `POST`/`PUT`/`PATCH`/`DELETE` under `/api` unless `Origin` equals `APP_ORIGIN` (403). Test clients must send that header; the `client` fixture does.

@@ -335,3 +335,19 @@ One branch, `oa-published-builds`. If the total goes over the 500-line guideline
 2. **Catalog pages:** `formatPrice` moved to `src/utils`, `src/lib/publishedKeys.ts`, the `catalog` feature, the routes and the navbar link.
 3. **Publishing from the builder:** `flushSave`, `api/publish.ts`, `PublishControls` and `PublishDialog`.
 4. **Open in Builder and docs:** `CopyPublishedIntent`, `docs/builds/published-builds.md`, `schema-design.md` and CLAUDE.md.
+
+## Changes during implementation
+
+Deviations from this spec:
+
+- `_get_owned_build` moves to `app/builds/ownership.py` as the public `get_owned_build`. The spec only said "a shared spot in `app/builds/`".
+- The owner's query key is `buildKeys.published(id)` (`['builds', id, 'published']`), added to the existing `buildKeys`, not a separate keys object.
+- `CopyPublishedIntent` fetches through `useQuery` with `publishedKeys.detail(id)`, so it shares a cache entry with the catalog's detail page.
+
+Rulings made during execution:
+
+- An empty page past the end with no filters set (and `total > 0`) says "No builds on this page".
+- After a publish or update succeeds, the controls show "Published"/"Updated" in a `role="status"` element.
+- A failed publish-status load shows "Couldn't load publish status" and Try again.
+- An Unpublish that gets a 404 resyncs the controls silently.
+- Dates go through the shared `src/utils/formatApiDate.ts`.

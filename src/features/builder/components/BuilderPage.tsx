@@ -19,6 +19,7 @@ import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '@utils/formatPrice'
 import { BuildHeader } from './BuildHeader'
 import { ComponentRow } from './ComponentRow'
+import { CopyPublishedIntent } from './CopyPublishedIntent'
 import { SaveDraftButton } from './SaveDraftButton'
 
 export function BuilderPage() {
@@ -45,6 +46,7 @@ export function BuilderPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
+      {kind === 'draft' && <CopyPublishedIntent />}
       <BuildHeader />
       <p className="mt-1 mb-8 text-muted-foreground">
         Choose a brand for each component to browse its parts.
