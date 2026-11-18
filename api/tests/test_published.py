@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
 from app.builds.models import Build
-from app.config import settings
 from app.db import get_db
 from app.main import app
 from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
@@ -259,7 +258,6 @@ def test_owner_writes_need_origin(bare_client, method):
     )
 
     assert response.status_code == 403
-    assert settings.APP_ORIGIN  # the header the client left out
 
 
 def test_deleting_saved_build_keeps_published(client, db, named, make_full_build):
@@ -288,3 +286,240 @@ def test_deleting_user_deletes_published(db, make_published):
     db.expire_all()
 
     assert db.get(PublishedBuild, published_id) is None
+
+
+# ---------- Public routes ----------
+
+LIST = "/api/published"
+
+
+def priced(make_part, make_published, prices, **columns):
+    """Publish a build whose five parts cost `prices` (None leaves it unset)."""
+    parts = {}
+    for column, model, price in zip(
+        PART_COLUMNS, [Rod, Reel, FlyLine, Leader, Tippet], prices, strict=True
+    ):
+        parts[column] = make_part(model, price=price).id
+    return make_published(**{**parts, **columns})
+
+
+def ids(response):
+    return [item["id"] for item in response.json()["items"]]
+
+
+def test_list_newest_first_with_id_tiebreak(client, make_published):
+    old = make_published(published_at=datetime(2026, 1, 1))
+    new = make_published(published_at=datetime(2026, 2, 1))
+    tie = make_published(published_at=datetime(2026, 2, 1))
+
+    response = client.get(LIST)
+
+    assert response.status_code == 200
+    assert ids(response) == [tie.id, new.id, old.id]
+
+
+def test_list_pages_of_20(client, make_published):
+    for _ in range(21):
+        make_published()
+
+    first = client.get(LIST).json()
+    second = client.get(LIST, params={"page": 2}).json()
+
+    assert len(first["items"]) == 20
+    assert first["total"] == 21
+    assert first["pageSize"] == 20
+    assert first["page"] == 1
+    assert len(second["items"]) == 1
+    assert second["page"] == 2
+
+
+def test_page_past_the_end_is_empty(client, make_published):
+    make_published()
+    make_published()
+
+    response = client.get(LIST, params={"page": 99})
+
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+    assert response.json()["total"] == 2
+    assert response.json()["page"] == 99
+
+
+def test_filter_by_weight(client, make_part, make_published):
+    five = make_published(rod_id=make_part(Rod, line_weight=5).id)
+    make_published(rod_id=make_part(Rod, line_weight=3).id)
+
+    response = client.get(LIST, params={"weight": 5})
+
+    assert ids(response) == [five.id]
+    assert response.json()["total"] == 1
+
+
+def test_weight_filter_uses_the_rod_not_the_line(client, make_part, make_published):
+    build = make_published(
+        rod_id=make_part(Rod, line_weight=5).id,
+        fly_line_id=make_part(FlyLine, line_weight=9).id,
+    )
+
+    assert ids(client.get(LIST, params={"weight": 5})) == [build.id]
+    assert ids(client.get(LIST, params={"weight": 9})) == []
+
+
+def test_max_price_is_inclusive_with_cents(client, make_part, make_published):
+    cheap = priced(make_part, make_published, [100, 100, 100, 100, "99.99"])
+    exact = priced(make_part, make_published, [100, 100, 100, 100, 100])
+
+    below = client.get(LIST, params={"maxPrice": "499.99"})
+    both = client.get(LIST, params={"maxPrice": 500})
+
+    assert ids(below) == [cheap.id]
+    assert sorted(ids(both)) == sorted([cheap.id, exact.id])
+    assert below.json()["items"][0]["totalPrice"] == 499.99
+    assert both.json()["items"][0]["totalPrice"] == 500.0
+
+
+def test_total_counts_missing_part_as_zero(client, db, make_part, make_published):
+    no_leader_price = priced(make_part, make_published, [100, 50, 25, None, 5])
+    reel = make_part(Reel, price=50)
+    no_reel = priced(make_part, make_published, [100, 1, 25, 10, 5], reel_id=reel.id)
+    db.delete(reel)
+    db.flush()
+    db.expire_all()
+
+    items = {i["id"]: i for i in client.get(LIST).json()["items"]}
+
+    assert items[no_leader_price.id]["totalPrice"] == 180
+    assert items[no_reel.id]["totalPrice"] == 140
+    assert ids(client.get(LIST, params={"maxPrice": 140})) == [no_reel.id]
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"page": 0},
+        {"weight": 0},
+        {"weight": 16},
+        {"weight": "abc"},
+        {"maxPrice": -1},
+        {"maxPrice": "1 OR 1=1"},
+    ],
+)
+def test_bad_list_params_are_422(client, params):
+    assert client.get(LIST, params=params).status_code == 422
+
+
+def test_summary_shape(client, make_part, make_published, make_user):
+    author = make_user(display_name="Rivers")
+    rod = make_part(Rod, line_weight=6)
+    make_published(user_id=author.id, rod_id=rod.id)
+
+    (item,) = client.get(LIST).json()["items"]
+
+    assert set(item) == {
+        "id",
+        "title",
+        "author",
+        "rod",
+        "totalPrice",
+        "publishedAt",
+    }
+    assert item["author"] == "Rivers"
+    assert item["rod"] == {
+        "brand": rod.brand.name,
+        "name": rod.name,
+        "lineWeight": 6,
+    }
+
+
+def test_detail(client, make_part, make_published):
+    published = priced(
+        make_part, make_published, [100, 50, 25, 10, 5], writeup="Line one\nTwo"
+    )
+
+    response = client.get(f"{LIST}/{published.id}")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == published.id
+    assert data["title"] == published.title
+    assert data["author"] == published.user.display_name
+    assert data["writeup"] == "Line one\nTwo"
+    assert data["totalPrice"] == 190
+    assert data["publishedAt"] is not None
+    assert data["updatedAt"] is not None
+    assert data["rod"]["lineWeight"] == published.rod.line_weight
+    assert set(data["parts"]) == {"rod", "reel", "line", "leader", "tippet"}
+    assert data["parts"]["line"] == {
+        "id": published.fly_line.id,
+        "brand": published.fly_line.brand.name,
+        "name": published.fly_line.name,
+        "price": 25,
+    }
+    for part in data["parts"].values():
+        assert set(part) == {"id", "brand", "name", "price"}
+
+
+def test_detail_removed_part_is_null(client, db, make_part, make_published):
+    rod = make_part(Rod, line_weight=5, price=100)
+    published = priced(make_part, make_published, [0, 50, 25, 10, 5], rod_id=rod.id)
+    db.delete(rod)
+    db.flush()
+    db.expire_all()
+
+    data = client.get(f"{LIST}/{published.id}").json()
+
+    assert data["parts"]["rod"] is None
+    assert data["rod"] is None
+    assert data["totalPrice"] == 90
+    assert ids(client.get(LIST, params={"weight": 5})) == []
+
+
+def test_detail_unknown_is_404(client):
+    response = client.get(f"{LIST}/999999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Published build not found"
+
+
+def test_public_routes_hide_private_ids(client, make_published):
+    published = make_published()
+
+    for url in (LIST, f"{LIST}/{published.id}"):
+        text = client.get(url).text
+        for secret in (
+            "userId",
+            "sourceBuildId",
+            "user_id",
+            "source_build_id",
+            "@example.com",
+        ):
+            assert secret not in text
+
+
+def test_public_routes_need_no_sign_in(client, make_published):
+    published = make_published()
+
+    assert client.get(LIST).status_code == 200
+    assert client.get(f"{LIST}/{published.id}").status_code == 200
+
+
+def test_sql_injection_text_is_stored_verbatim(client, named, make_full_build):
+    build = make_full_build(named["id"])
+    title = "x'); DROP TABLE builds; --"
+
+    created = client.put(URL.format(build.id), json={**BODY, "title": title})
+
+    assert created.status_code == 201
+    assert client.get(f"{LIST}/{created.json()['id']}").json()["title"] == title
+    builds = client.get("/api/builds")
+    assert builds.status_code == 200
+    assert build.id in [b["id"] for b in builds.json()]
+
+
+def test_script_text_is_returned_verbatim(client, named, make_full_build):
+    build = make_full_build(named["id"])
+    writeup = "<script>alert(1)</script>"
+
+    created = client.put(URL.format(build.id), json={**BODY, "writeup": writeup})
+
+    assert client.get(f"{LIST}/{created.json()['id']}").json()["writeup"] == writeup
