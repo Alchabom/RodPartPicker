@@ -243,7 +243,7 @@ API (`api/tests/test_part_details.py`, plus new cases in `test_parts.py` and `te
 
 Frontend: there's no test runner, so `npm run build` and `npm run lint` must pass, plus this manual script:
 1. `/builds` shows a card with a rod image, and another card with the dashed placeholder.
-2. Point a part's image at a file that doesn't exist (in a dev-only SQL `UPDATE`). The card shows the placeholder, and the Network tab shows a single failed request.
+2. Point a part's image at a file that doesn't exist (in a dev-only SQL `UPDATE`). The card shows the placeholder. In dev, Vite's SPA fallback answers a missing `/parts/...` file with `index.html` (200, text/html), so the Network tab shows the image request returning HTML (or failing), not a decoded image.
 3. A build page shows the rod and reel images and a Buy column. Buy opens the product page in a new tab, and `window.opener` there is `null`.
 4. A part with no link has no Buy button.
 5. The builder shows Buy on a selected part that has a link.

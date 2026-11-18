@@ -89,7 +89,7 @@ batches. Each batch is a numbered migration generated from a CSV by
 5. Run `pnpm db:migrate`.
 6. Run `uv run python -m app.part_details missing` to see what is still empty.
 
-A statement matches every size row of that model, and can be repeated, so a later batch can correct an earlier one. Never edit an applied batch; add a new one. Cells are trimmed, the CSV may come from Excel (UTF-8 BOM, CRLF), and brand and model match the catalog without regard to case.
+A statement matches every size row of that model, and can be repeated, so a later batch can replace an earlier link or image, but it cannot clear one. Clearing a value (for example a dead link) needs a hand-written migration with `UPDATE ... SET purchase_url = NULL ...`. Fully blank rows in the CSV are skipped. Never edit an applied batch; add a new one. Cells are trimmed, the CSV may come from Excel (UTF-8 BOM, CRLF), and brand and model match the catalog without regard to case.
 
 **Image rules**
 

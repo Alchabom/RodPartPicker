@@ -211,6 +211,28 @@ def test_build_matches_case_insensitively(
     assert "UPDATE reels" in sql
 
 
+def test_build_refuses_wrong_case_image_file(
+    tmp_path, db, parts_dir, make_part, make_brand
+):
+    make_part(Reel, name="B", brand=make_brand("A"))
+    (parts_dir / "reels" / "Lamson-Liquid-S.webp").write_bytes(b"x")
+    csv_path = write_csv(tmp_path, "reel,A,B,,reels/lamson-liquid-s.webp")
+    with pytest.raises(PartDetailsError) as exc:
+        build_sql(csv_path, db, parts_dir)
+    assert any(
+        "does not exist" in e and "found Lamson-Liquid-S.webp" in e
+        for e in exc.value.errors
+    ), exc.value.errors
+
+
+def test_find_missing_lists_rod_with_link_but_no_image(db, make_part, make_brand):
+    from app.parts.models import Rod
+
+    brand = make_brand("Zed Rods")
+    make_part(Rod, name="LinkOnly", brand=brand, purchase_url="https://x")
+    assert "Zed Rods LinkOnly" in find_missing(db)["rod"]
+
+
 def test_find_missing(db, make_part, make_brand):
     brand = make_brand("Zed Missing")
     make_part(

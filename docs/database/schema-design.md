@@ -141,7 +141,7 @@ Each row is one purchasable size.
 - **`purchase_url`** has `CHECK (purchase_url LIKE 'https://%')`, so a `javascript:` or plain `http:` link can't be stored.
 - **`image_path`** has `CHECK (REGEXP_LIKE(image_path, '^(rods|reels)/[a-z0-9-]+\\.webp$', 'c'))` (each table allows its own folder), so a path can't point outside `public/parts/`. The `'c'` flag makes the match case-sensitive; plain `REGEXP` is case-insensitive under the default collation and would accept `rods/X.webp`.
 - A CHECK passes on NULL, so parts without data are always valid. A rejected value raises MySQL error 3819.
-- The API turns `image_path` into `imageUrl` (`/parts/<path>`) and drops any stored value that fails the same rules.
+- The API turns `image_path` into `imageUrl` (`/parts/<path>`) and drops any stored value that fails the same or stricter rules (the API helpers are case-sensitive and use a full match).
 - Rationale: `docs/superpowers/specs/2026-11-18-part-details-design.md`. The data is loaded by `app/part_details.py` (see `docs/database/seed-data-notes.md`).
 
 **Integrity choices:**

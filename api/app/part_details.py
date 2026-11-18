@@ -87,8 +87,20 @@ def _check_row(db: Session, row: dict[str, str], parts_dir: Path) -> list[str]:
             errors.append(
                 f"image_file {image!r} must be {component}s/<lowercase-name>.webp"
             )
-        elif not (parts_dir / image).is_file():
-            errors.append(f"image_file {image!r} does not exist under {parts_dir}")
+        else:
+            # Compare against the real listing: APFS is case-insensitive but
+            # Vercel's Linux is not, so is_file() would pass a wrongly cased file.
+            folder, _, name = image.partition("/")
+            try:
+                names = {p.name for p in (parts_dir / folder).iterdir()}
+            except OSError:
+                names = set()
+            if name not in names:
+                found = next((n for n in sorted(names) if n.lower() == name), None)
+                hint = f" (found {found}; rename it to lowercase)" if found else ""
+                errors.append(
+                    f"image file {image} does not exist under {parts_dir}{hint}"
+                )
 
     if not url and not image:
         errors.append("nothing to set: purchase_url and image_file are both empty")
