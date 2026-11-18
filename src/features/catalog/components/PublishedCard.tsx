@@ -1,7 +1,9 @@
 import { Link } from 'react-router'
+import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 import type { PublishedSummary } from '../types'
-import { formatDate } from '../utils/formatDate'
+
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }
 
 export function PublishedCard({ build }: { build: PublishedSummary }) {
   return (
@@ -12,7 +14,7 @@ export function PublishedCard({ build }: { build: PublishedSummary }) {
       >
         <span className="text-lg font-semibold text-te-papa-green">{build.title}</span>
         <span className="text-sm text-muted-foreground">
-          by {build.author} · {formatDate(build.publishedAt)}
+          by {build.author} · {formatApiDate(build.publishedAt, DATE_OPTIONS)}
         </span>
         <span className="mt-2 text-sm">
           {build.rod ? `${build.rod.brand} ${build.rod.name} · ${build.rod.lineWeight}wt` : 'Rod no longer available'}

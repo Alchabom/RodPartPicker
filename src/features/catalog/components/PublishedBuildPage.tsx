@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ApiError } from '@/lib/api'
 import { publishedKeys } from '@/lib/publishedKeys'
+import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 import { getPublished } from '../api/published'
 import type { Slot } from '../types'
-import { formatDate } from '../utils/formatDate'
 
 const SLOTS: { slot: Slot; label: string }[] = [
   { slot: 'rod', label: 'Rod' },
@@ -19,6 +19,8 @@ const SLOTS: { slot: Slot; label: string }[] = [
 ]
 
 const notFound = <NotFound message="Build not found" backTo="/builds" backLabel="Completed Builds" />
+
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }
 
 export function PublishedBuildPage() {
   const { id: rawId } = useParams()
@@ -51,7 +53,7 @@ export function PublishedBuildPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <h1 className="text-3xl font-bold text-te-papa-green">{data.title}</h1>
       <p className="mt-2 text-muted-foreground">
-        by {data.author} · {formatDate(data.publishedAt)}
+        by {data.author} · {formatApiDate(data.publishedAt, DATE_OPTIONS)}
       </p>
 
       <Table className="mt-8">

@@ -56,7 +56,11 @@ export function PublishedListPage() {
         {data.items.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-muted-foreground">
-              {hasFilters ? 'No builds match these filters' : 'No builds published yet'}
+              {hasFilters
+                ? 'No builds match these filters'
+                : data.total > 0
+                  ? 'No builds on this page'
+                  : 'No builds published yet'}
             </p>
             {hasFilters && (
               <Button className="mt-6" onClick={() => setSearch(new URLSearchParams())}>

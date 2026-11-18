@@ -24,13 +24,11 @@ import {
 import { buildKeys, deleteBuild, listBuilds, toBuild, type SavedBuild } from '../api/builds'
 import { COMPONENTS } from '../api/components'
 import { useCatalog } from '../hooks/useCatalog'
+import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-
-// The API's timestamps are UTC but carry no offset; without one, JS reads them as local time
 const formatEdited = (updatedAt: string) =>
-  dateFormat.format(new Date(/(Z|[+-]\d\d:?\d\d)$/.test(updatedAt) ? updatedAt : `${updatedAt}Z`))
+  formatApiDate(updatedAt, { dateStyle: 'medium', timeStyle: 'short' })
 
 function DeleteBuildButton({ id, name }: { id: number; name: string }) {
   const queryClient = useQueryClient()
