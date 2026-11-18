@@ -58,7 +58,10 @@ function DeleteBuildButton({ id, name }: { id: number; name: string }) {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{`Delete "${name}"?`}</AlertDialogTitle>
-          <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
+          <AlertDialogDescription>
+            This can't be undone. If this build is published, its public copy stays on Completed Builds and can't be
+            unpublished afterwards, so unpublish it first.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         {mutation.isError && (
           <p role="alert" className="text-sm text-destructive">

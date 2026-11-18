@@ -351,3 +351,4 @@ Rulings made during execution:
 - A failed publish-status load shows "Couldn't load publish status" and Try again.
 - An Unpublish that gets a 404 resyncs the controls silently.
 - Dates go through the shared `src/utils/formatApiDate.ts`.
+- Deleting a saved build leaves its public copy up, and the owner can no longer unpublish it. That stays; the delete dialog warns about it ("If this build is published, its public copy stays on Completed Builds and can't be unpublished afterwards, so unpublish it first.").

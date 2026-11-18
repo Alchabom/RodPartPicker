@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -37,16 +37,42 @@ type Props = {
 }
 
 export function PublishDialog({ open, onOpenChange, buildId, initial, mode, onSaved }: Props) {
+  const [busy, setBusy] = useState(false)
+  // Id of the submit allowed to close the dialog; null when none is in flight
+  const activeSubmit = useRef<number | null>(null)
+  const submitCount = useRef(0)
+
+  useEffect(() => {
+    if (!open) activeSubmit.current = null
+  }, [open])
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        // Ignore Escape, outside clicks and the close button while a submit is in flight
+        if (!next && busy) return
+        onOpenChange(next)
+      }}
+    >
       <DialogContent className="sm:max-w-lg">
         {/* Radix unmounts the content when closed, so every open starts from `initial` */}
         <PublishForm
           buildId={buildId}
           initial={initial}
           mode={mode}
+          busy={busy}
+          setBusy={setBusy}
+          beginSubmit={() => {
+            submitCount.current += 1
+            activeSubmit.current = submitCount.current
+            return submitCount.current
+          }}
           onCancel={() => onOpenChange(false)}
-          onDone={() => {
+          onDone={(submitId) => {
+            // A stale submit must not close a dialog that was reopened
+            if (activeSubmit.current !== submitId) return
+            activeSubmit.current = null
             onOpenChange(false)
             onSaved(mode)
           }}
@@ -60,16 +86,24 @@ function PublishForm({
   buildId,
   initial,
   mode,
+  busy,
+  setBusy,
+  beginSubmit,
   onCancel,
   onDone,
-}: Omit<Props, 'open' | 'onOpenChange' | 'onSaved'> & { onCancel: () => void; onDone: () => void }) {
+}: Omit<Props, 'open' | 'onOpenChange' | 'onSaved'> & {
+  busy: boolean
+  setBusy(busy: boolean): void
+  beginSubmit(): number
+  onCancel: () => void
+  onDone: (submitId: number) => void
+}) {
   const buildState = useBuild()
   const queryClient = useQueryClient()
   const [title, setTitle] = useState(initial.title)
   const [writeup, setWriteup] = useState(initial.writeup)
   const [checked, setChecked] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
 
   const titleLength = charCount(title.trim())
   const writeupLength = charCount(writeup.trim())
@@ -85,6 +119,7 @@ function PublishForm({
     if (titleError || writeupError) return
     if (buildState.kind !== 'saved') throw new Error('PublishDialog needs a saved build')
 
+    const submitId = beginSubmit()
     setBusy(true)
     setError(null)
     try {
@@ -96,8 +131,9 @@ function PublishForm({
         return
       }
 
+      let response: Awaited<ReturnType<typeof publishBuild>>
       try {
-        await publishBuild(buildId, { title: title.trim(), writeup: writeup.trim() })
+        response = await publishBuild(buildId, { title: title.trim(), writeup: writeup.trim() })
       } catch (e) {
         if (e instanceof ApiError && e.status === 409 && apiMessage(e) === 'Already published') {
           // Someone else (another tab) published first: the controls switch to update
@@ -107,9 +143,11 @@ function PublishForm({
         return
       }
 
+      // Seed the owner's status first so the controls switch to published without a flash
+      queryClient.setQueryData(buildKeys.published(buildId), response)
       queryClient.invalidateQueries({ queryKey: buildKeys.published(buildId) })
       queryClient.invalidateQueries({ queryKey: publishedKeys.all })
-      onDone()
+      onDone(submitId)
     } finally {
       setBusy(false)
     }
@@ -161,7 +199,7 @@ function PublishForm({
           className={`${INPUT_CLASS} resize-y`}
         />
         <p id="publish-writeup-count" className="text-right text-sm tabular-nums text-muted-foreground">
-          {`${charCount(writeup)} / ${WRITEUP_MAX}`}
+          {`${charCount(writeup.trim())} / ${WRITEUP_MAX}`}
         </p>
         {showWriteupError && (
           <p id="publish-writeup-error" className="text-sm text-destructive">
@@ -177,11 +215,11 @@ function PublishForm({
       )}
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" disabled={busy} onClick={onCancel}>
           Cancel
         </Button>
         <Button type="submit" disabled={busy}>
-          {busy ? 'Publishing…' : mode === 'publish' ? 'Publish' : 'Update'}
+          {busy ? (mode === 'publish' ? 'Publishing…' : 'Updating…') : mode === 'publish' ? 'Publish' : 'Update'}
         </Button>
       </DialogFooter>
     </form>

@@ -123,7 +123,8 @@ other, so the builder handles it the way it handles `save=1`:
    notes. A `useRef` guard makes it happen once under StrictMode.
 5. A 404, or an invalid id, shows a dismissible "That build is no longer
    published" and leaves the draft alone. The query client doesn't retry 4xx
-   errors.
+   errors. Other fetch errors show the dismissible notice "Couldn't load that
+   build" and leave the draft alone.
 
 Once applied it is an ordinary local draft: change it, or save it to an account.
 

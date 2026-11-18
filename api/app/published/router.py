@@ -173,7 +173,7 @@ def _summary_fields(published: PublishedBuild, total: Decimal) -> dict:
 @public_router.get("")
 def list_published(
     db: DbSession,
-    page: Annotated[int, Query(ge=1)] = 1,
+    page: Annotated[int, Query(ge=1, le=10_000)] = 1,
     weight: Annotated[int | None, Query(ge=1, le=15)] = None,
     max_price: Annotated[Decimal | None, Query(alias="maxPrice", ge=0)] = None,
 ) -> PublishedPageOut:
