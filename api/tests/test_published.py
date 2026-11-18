@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import event, func, select
 
 from app.builds.models import Build
 from app.db import get_db
@@ -523,3 +523,27 @@ def test_script_text_is_returned_verbatim(client, named, make_full_build):
     created = client.put(URL.format(build.id), json={**BODY, "writeup": writeup})
 
     assert client.get(f"{LIST}/{created.json()['id']}").json()["writeup"] == writeup
+
+
+def count_statements(engine, client, url):
+    statements = []
+
+    def record(conn, cursor, statement, *args):
+        statements.append(statement)
+
+    event.listen(engine, "before_cursor_execute", record)
+    try:
+        assert client.get(url).status_code == 200
+    finally:
+        event.remove(engine, "before_cursor_execute", record)
+    return len(statements)
+
+
+def test_list_query_count_does_not_grow_with_authors(engine, client, make_published):
+    for _ in range(2):
+        make_published()
+    with_two = count_statements(engine, client, LIST)
+    for _ in range(3):
+        make_published()
+
+    assert count_statements(engine, client, LIST) == with_two

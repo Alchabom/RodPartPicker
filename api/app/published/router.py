@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Path, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import contains_eager, selectinload
 
 from app.auth.deps import CurrentUserId
 from app.auth.models import User
@@ -141,11 +141,11 @@ def _base_select():
         .outerjoin(FlyLine, PublishedBuild.fly_line_id == FlyLine.id)
         .outerjoin(Leader, PublishedBuild.leader_id == Leader.id)
         .outerjoin(Tippet, PublishedBuild.tippet_id == Tippet.id)
-        .options(*LOAD_PARTS)
+        .options(contains_eager(PublishedBuild.user), *LOAD_PARTS)
     )
 
 
-def _part(part) -> PartRefOut | None:
+def _part(part: Rod | Reel | FlyLine | Leader | Tippet | None) -> PartRefOut | None:
     if part is None:
         return None
     return PartRefOut(
