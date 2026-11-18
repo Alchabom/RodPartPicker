@@ -9,6 +9,7 @@ import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 import { getPublished } from '../api/published'
 import type { Slot } from '../types'
+import { PartImage } from './PartImage'
 
 const SLOTS: { slot: Slot; label: string }[] = [
   { slot: 'rod', label: 'Rod' },
@@ -56,12 +57,31 @@ export function PublishedBuildPage() {
         by {data.author} · {formatApiDate(data.publishedAt, DATE_OPTIONS)}
       </p>
 
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {(['rod', 'reel'] as const).map((slot) => {
+          const part = data.parts[slot]
+          const label = slot === 'rod' ? 'Rod' : 'Reel'
+          return (
+            <PartImage
+              key={slot}
+              src={part?.imageUrl ?? null}
+              alt={part ? `${part.brand} ${part.name}` : label}
+              label={label}
+              className="aspect-[4/3] w-full"
+            />
+          )
+        })}
+      </div>
+
       <Table className="mt-8">
         <TableHeader>
           <TableRow>
             <TableHead>Component</TableHead>
             <TableHead>Part</TableHead>
             <TableHead className="text-right">Price</TableHead>
+            <TableHead>
+              <span className="sr-only">Buy</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,9 +96,22 @@ export function PublishedBuildPage() {
                       {part.brand} {part.name}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
+                    <TableCell>
+                      {part.purchaseUrl?.startsWith('https://') && (
+                        <a
+                          href={part.purchaseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Buy ${part.brand} ${part.name}`}
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          Buy
+                        </a>
+                      )}
+                    </TableCell>
                   </>
                 ) : (
-                  <TableCell colSpan={2} className="text-muted-foreground">
+                  <TableCell colSpan={3} className="text-muted-foreground">
                     No longer available
                   </TableCell>
                 )}
@@ -90,6 +123,7 @@ export function PublishedBuildPage() {
               Total
             </TableCell>
             <TableCell className="text-right font-semibold tabular-nums">{formatPrice(data.totalPrice)}</TableCell>
+            <TableCell />
           </TableRow>
         </TableBody>
       </Table>

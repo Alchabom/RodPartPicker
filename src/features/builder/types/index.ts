@@ -14,6 +14,7 @@ export interface Part {
   brandId: string
   name: string
   price: number | null // USD; some catalog rows have no price yet
+  purchaseUrl: string | null // https:// retailer link, when the catalog has one
   specs: Record<string, string> // keys match the component's specColumns
 }
 
