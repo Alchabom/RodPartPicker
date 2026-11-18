@@ -20,6 +20,7 @@ export const buildKeys = {
   all: ['builds'] as const,
   list: () => ['builds', 'list'] as const,
   detail: (id: number) => ['builds', id] as const,
+  published: (id: number) => ['builds', id, 'published'] as const,
 }
 
 const ID_FIELDS: Record<ComponentType, keyof BuildInput> = {

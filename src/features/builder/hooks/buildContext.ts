@@ -18,6 +18,7 @@ export type BuildContextValue = {
       rename: (name: string) => void
       saveStatus: 'saved' | 'saving' | 'error'
       retrySave: () => void
+      flushSave: () => Promise<void>
     }
 )
 
