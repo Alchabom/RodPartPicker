@@ -430,7 +430,35 @@ def test_summary_shape(client, make_part, make_published, make_user):
         "brand": rod.brand.name,
         "name": rod.name,
         "lineWeight": 6,
+        "imageUrl": None,
     }
+
+
+def test_list_rod_has_image_url(client, make_part, make_published):
+    rod = make_part(Rod, image_path="rods/x.webp")
+    make_published(rod_id=rod.id)
+
+    (item,) = client.get(LIST).json()["items"]
+
+    assert item["rod"]["imageUrl"] == "/parts/rods/x.webp"
+
+
+def test_detail_includes_links_and_images(client, make_part, make_published):
+    rod = make_part(
+        Rod, purchase_url="https://shop.example/r", image_path="rods/x.webp"
+    )
+    reel = make_part(Reel, image_path="reels/y.webp")
+    tippet = make_part(Tippet, purchase_url="https://shop.example/t")
+    published = make_published(rod_id=rod.id, reel_id=reel.id, tippet_id=tippet.id)
+
+    parts = client.get(f"{LIST}/{published.id}").json()["parts"]
+
+    assert parts["rod"]["imageUrl"] == "/parts/rods/x.webp"
+    assert parts["rod"]["purchaseUrl"] == "https://shop.example/r"
+    assert parts["reel"]["imageUrl"] == "/parts/reels/y.webp"
+    assert parts["tippet"]["purchaseUrl"] == "https://shop.example/t"
+    assert "imageUrl" not in parts["tippet"]
+    assert parts["line"]["purchaseUrl"] is None
 
 
 def test_detail(client, make_part, make_published):
@@ -456,9 +484,13 @@ def test_detail(client, make_part, make_published):
         "brand": published.fly_line.brand.name,
         "name": published.fly_line.name,
         "price": 25,
+        "purchaseUrl": None,
     }
-    for part in data["parts"].values():
-        assert set(part) == {"id", "brand", "name", "price"}
+    for slot, part in data["parts"].items():
+        keys = {"id", "brand", "name", "price", "purchaseUrl"}
+        if slot in ("rod", "reel"):
+            keys.add("imageUrl")
+        assert set(part) == keys
 
 
 def test_detail_removed_part_is_null(client, db, make_part, make_published):
