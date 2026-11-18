@@ -24,7 +24,7 @@ import {
 import { buildKeys, deleteBuild, listBuilds, toBuild, type SavedBuild } from '../api/builds'
 import { COMPONENTS } from '../api/components'
 import { useCatalog } from '../hooks/useCatalog'
-import { formatPrice } from '../utils/formatPrice'
+import { formatPrice } from '@utils/formatPrice'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 

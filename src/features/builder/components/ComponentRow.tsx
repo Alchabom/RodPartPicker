@@ -5,7 +5,7 @@ import { TableCell, TableRow } from '@/components/ui/table'
 import { useBuild } from '../hooks/useBuild'
 import { useCatalog } from '../hooks/useCatalog'
 import type { ComponentInfo } from '../types'
-import { formatPrice } from '../utils/formatPrice'
+import { formatPrice } from '@utils/formatPrice'
 import { BrandMenu } from './BrandMenu'
 
 export function ComponentRow({ component }: { component: ComponentInfo }) {

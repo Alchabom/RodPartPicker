@@ -19,7 +19,7 @@ import { COMPONENTS, getComponentInfo } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
 import { useBuildQuery } from '../hooks/useBuildQuery'
 import { useCatalog } from '../hooks/useCatalog'
-import { formatPrice } from '../utils/formatPrice'
+import { formatPrice } from '@utils/formatPrice'
 
 export function BrandPartsPage() {
   const params = useParams<{ component: string; brand: string }>()

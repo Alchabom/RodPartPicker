@@ -2,6 +2,7 @@ import { Link, Outlet, Route, Routes } from 'react-router'
 import App from '@/App'
 import { NotFound } from '@components/NotFound'
 import { DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
+import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
 import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
 
 const navLinkClass = 'font-semibold text-tasman transition-colors duration-200 hover:text-sulu'
@@ -16,7 +17,7 @@ function Layout() {
         <div className="flex gap-8">
           <Link to="/builder" className={navLinkClass}>Builder</Link>
           <a href="#products" className={navLinkClass}>Products</a>
-          <a href="#completed-builds" className={navLinkClass}>Completed Builds</a>
+          <Link to="/builds" className={navLinkClass}>Completed Builds</Link>
         </div>
 
         <UserMenu />
@@ -57,6 +58,8 @@ export function AppRoutes() {
             <Route path=":component/:brand" element={<BrandPartsPage />} />
           </Route>
         </Route>
+        <Route path="builds" element={<PublishedListPage />} />
+        <Route path="builds/:id" element={<PublishedBuildPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route
           path="welcome"
