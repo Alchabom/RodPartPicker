@@ -1,7 +1,7 @@
 import { Link, Outlet, Route, Routes } from 'react-router'
 import App from '@/App'
 import { NotFound } from '@components/NotFound'
-import { DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
+import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
 import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
 
 const navLinkClass = 'font-semibold text-tasman transition-colors duration-200 hover:text-sulu'
@@ -63,6 +63,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <DisplayNamePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="account"
+          element={
+            <RequireAuth>
+              <AccountPage />
             </RequireAuth>
           }
         />

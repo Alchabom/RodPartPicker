@@ -83,6 +83,30 @@ def test_display_name_taken_ignoring_case_is_409(client, fake_email, login, make
     assert client.get(URL).json()["displayName"] is None
 
 
+def test_rename_display_name(client, fake_email, login, db):
+    user = login(client, fake_email)
+    client.put(URL, json={"displayName": "TroutBum"})
+
+    response = client.put(URL, json={"displayName": "DryFlyDan"})
+
+    assert response.status_code == 200
+    assert response.json()["displayName"] == "DryFlyDan"
+    db.rollback()  # drop anything the route didn't commit, then re-read
+    stored = db.scalars(select(User).where(User.id == user["id"])).one()
+    assert stored.display_name == "DryFlyDan"
+
+
+def test_rename_to_own_name_in_other_case(client, fake_email, login):
+    # The unique index ignores case, but your own row never counts as taken
+    login(client, fake_email)
+    client.put(URL, json={"displayName": "TroutBum"})
+
+    response = client.put(URL, json={"displayName": "troutbum"})
+
+    assert response.status_code == 200
+    assert client.get(URL).json()["displayName"] == "troutbum"
+
+
 @pytest.mark.parametrize("name", ["ab", "bad name!"])
 def test_bad_display_name_is_422(client, fake_email, login, name):
     login(client, fake_email)
