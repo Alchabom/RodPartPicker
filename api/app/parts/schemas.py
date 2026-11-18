@@ -1,7 +1,8 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import AliasPath, Field
+from pydantic import AfterValidator, AliasPath, Field
 
+from app.parts.links import image_url_for, safe_purchase_url
 from app.schemas import CamelModel
 
 # DECIMAL columns are declared as float: Pydantic writes Decimal as a JSON
@@ -9,6 +10,10 @@ from app.schemas import CamelModel
 
 Water = Literal["fresh", "salt", "both"]
 Material = Literal["nylon", "fluorocarbon"]
+PurchaseUrl = Annotated[str | None, AfterValidator(safe_purchase_url)]
+ImageUrl = Annotated[
+    str | None, Field(validation_alias="image_path"), AfterValidator(image_url_for)
+]
 
 
 class PartOut(CamelModel):
@@ -18,9 +23,11 @@ class PartOut(CamelModel):
     brand: str = Field(validation_alias=AliasPath("brand", "name"))
     model: str = Field(validation_alias="name")
     water: Water
+    purchase_url: PurchaseUrl
 
 
 class RodOut(PartOut):
+    image_url: ImageUrl
     action: Literal["slow", "medium", "medium_fast", "fast"] | None
     line_weight: int
     length_in: int
@@ -29,6 +36,7 @@ class RodOut(PartOut):
 
 
 class ReelOut(PartOut):
+    image_url: ImageUrl
     min_line_weight: int
     max_line_weight: int
     price: float

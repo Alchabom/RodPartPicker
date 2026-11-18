@@ -37,6 +37,8 @@ def test_rod_shape(client, make_brand, make_part):
         "lengthIn": 108,
         "pieces": None,
         "price": 500.0,
+        "purchaseUrl": None,
+        "imageUrl": None,
     }
 
 
@@ -85,3 +87,39 @@ def test_rods_ordered_by_brand_then_name(client, make_brand, make_part):
     ids = [row["id"] for row in client.get("/api/parts/rod").json()]
 
     assert ids.index(a1.id) < ids.index(a2.id) < ids.index(b.id)
+
+
+@pytest.mark.parametrize(("model", "category"), [(Rod, "rod"), (Reel, "reel")])
+def test_rod_and_reel_have_links_and_images(client, make_part, model, category):
+    part = make_part(
+        model,
+        purchase_url="https://shop.example/r",
+        image_path=f"{category}s/x.webp",
+    )
+
+    row = find(client.get(f"/api/parts/{category}").json(), part.id)
+
+    assert row["purchaseUrl"] == "https://shop.example/r"
+    assert row["imageUrl"] == f"/parts/{category}s/x.webp"
+
+
+def test_part_without_details_has_nulls(client, make_part):
+    rod = make_part(Rod)
+
+    row = find(client.get("/api/parts/rod").json(), rod.id)
+
+    assert row["purchaseUrl"] is None
+    assert row["imageUrl"] is None
+
+
+@pytest.mark.parametrize(
+    ("model", "category"),
+    [(FlyLine, "line"), (Leader, "leader"), (Tippet, "tippet")],
+)
+def test_small_parts_have_link_but_no_image_key(client, make_part, model, category):
+    part = make_part(model, purchase_url="https://shop.example/p")
+
+    row = find(client.get(f"/api/parts/{category}").json(), part.id)
+
+    assert row["purchaseUrl"] == "https://shop.example/p"
+    assert "imageUrl" not in row
