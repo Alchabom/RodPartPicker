@@ -32,20 +32,37 @@ type Props = {
   buildId: number
   initial: PublishInput
   mode: 'publish' | 'update'
+  /** Called after a successful publish or update, as the dialog closes */
+  onSaved(mode: 'publish' | 'update'): void
 }
 
-export function PublishDialog({ open, onOpenChange, buildId, initial, mode }: Props) {
+export function PublishDialog({ open, onOpenChange, buildId, initial, mode, onSaved }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         {/* Radix unmounts the content when closed, so every open starts from `initial` */}
-        <PublishForm buildId={buildId} initial={initial} mode={mode} onDone={() => onOpenChange(false)} />
+        <PublishForm
+          buildId={buildId}
+          initial={initial}
+          mode={mode}
+          onCancel={() => onOpenChange(false)}
+          onDone={() => {
+            onOpenChange(false)
+            onSaved(mode)
+          }}
+        />
       </DialogContent>
     </Dialog>
   )
 }
 
-function PublishForm({ buildId, initial, mode, onDone }: Omit<Props, 'open' | 'onOpenChange'> & { onDone: () => void }) {
+function PublishForm({
+  buildId,
+  initial,
+  mode,
+  onCancel,
+  onDone,
+}: Omit<Props, 'open' | 'onOpenChange' | 'onSaved'> & { onCancel: () => void; onDone: () => void }) {
   const buildState = useBuild()
   const queryClient = useQueryClient()
   const [title, setTitle] = useState(initial.title)
@@ -160,7 +177,7 @@ function PublishForm({ buildId, initial, mode, onDone }: Omit<Props, 'open' | 'o
       )}
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onDone}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
         <Button type="submit" disabled={busy}>

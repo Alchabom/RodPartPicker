@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ApiError } from '@/lib/api'
 import { publishedKeys } from '@/lib/publishedKeys'
 import { buildKeys } from '../api/builds'
 import { COMPONENTS } from '../api/components'
@@ -23,13 +24,30 @@ import { PublishDialog } from './PublishDialog'
 // Publish, update or unpublish a saved build. BuildHeader renders this in saved mode only.
 export function PublishControls({ id, name, build }: { id: number; name: string; build: Build }) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const { data: published } = useQuery({
+  // What the last finished publish did; cleared when the next action starts
+  const [notice, setNotice] = useState<'Published' | 'Updated' | null>(null)
+  const { data: published, isError, refetch } = useQuery({
     queryKey: buildKeys.published(id),
     queryFn: ({ signal }) => getMyPublished(id, signal),
   })
 
-  // Until the state loads (or if it fails to), show neither set of controls
-  if (published === undefined) return null
+  const openDialog = () => {
+    setNotice(null)
+    setDialogOpen(true)
+  }
+
+  if (published === undefined) {
+    // Still loading: show nothing rather than flash the wrong controls
+    if (!isError) return null
+    return (
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Couldn't load publish status</span>
+        <Button size="sm" variant="outline" onClick={() => refetch()}>
+          Try again
+        </Button>
+      </div>
+    )
+  }
 
   const complete = COMPONENTS.every((c) => build[c.type])
 
@@ -37,7 +55,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
     <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
       {published === null ? (
         <>
-          <Button size="sm" disabled={!complete} aria-describedby={complete ? undefined : 'publish-hint'} onClick={() => setDialogOpen(true)}>
+          <Button size="sm" disabled={!complete} aria-describedby={complete ? undefined : 'publish-hint'} onClick={openDialog}>
             Publish
           </Button>
           {!complete && (
@@ -51,10 +69,10 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
           <Link to={`/builds/${published.id}`} className="font-semibold text-spectra hover:underline">
             Published · View
           </Link>
-          <Button size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" variant="outline" onClick={openDialog}>
             Update published build
           </Button>
-          <UnpublishButton buildId={id} published={published} />
+          <UnpublishButton buildId={id} published={published} onStart={() => setNotice(null)} />
         </>
       )}
       <PublishDialog
@@ -63,22 +81,41 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         buildId={id}
         initial={published ?? { title: name, writeup: '' }}
         mode={published ? 'update' : 'publish'}
+        onSaved={(mode) => setNotice(mode === 'publish' ? 'Published' : 'Updated')}
       />
+      {/* Always mounted so screen readers announce the text when it appears */}
+      <span role="status" className="font-semibold text-te-papa-green">
+        {notice}
+      </span>
     </div>
   )
 }
 
-function UnpublishButton({ buildId, published }: { buildId: number; published: PublishedRef }) {
+function UnpublishButton({
+  buildId,
+  published,
+  onStart,
+}: {
+  buildId: number
+  published: PublishedRef
+  onStart: () => void
+}) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
+  const resync = () => {
+    setOpen(false)
+    queryClient.invalidateQueries({ queryKey: buildKeys.published(buildId) })
+    queryClient.invalidateQueries({ queryKey: publishedKeys.all })
+  }
   const mutation = useMutation({
     mutationFn: () => unpublishBuild(buildId),
-    onSuccess: () => {
-      setOpen(false)
-      queryClient.invalidateQueries({ queryKey: buildKeys.published(buildId) })
-      queryClient.invalidateQueries({ queryKey: publishedKeys.all })
+    onSuccess: resync,
+    // 404: already unpublished elsewhere, which is the outcome asked for
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 404) resync()
     },
   })
+  const failed = mutation.isError && !(mutation.error instanceof ApiError && mutation.error.status === 404)
 
   return (
     <AlertDialog
@@ -100,7 +137,7 @@ function UnpublishButton({ buildId, published }: { buildId: number; published: P
             It comes off the Builds page. Your saved build stays, and you can publish it again later.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {mutation.isError && (
+        {failed && (
           <p role="alert" className="text-sm text-destructive">
             Couldn't unpublish, try again
           </p>
@@ -112,6 +149,7 @@ function UnpublishButton({ buildId, published }: { buildId: number; published: P
             disabled={mutation.isPending}
             onClick={(e) => {
               e.preventDefault()
+              onStart()
               mutation.mutate()
             }}
           >
