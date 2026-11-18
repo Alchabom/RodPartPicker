@@ -8,6 +8,7 @@ from app.part_details import (
     find_missing,
     next_migration_path,
     sql_str,
+    write_migration,
 )
 from app.parts.models import FlyLine, Reel, Tippet
 
@@ -236,3 +237,35 @@ def test_next_migration_name(tmp_path):
     assert next_migration_path(tmp_path, "batch1").name == "022_part_details_batch1.sql"
     with pytest.raises(ValueError):
         next_migration_path(tmp_path, "Bad Label")
+
+
+def test_build_refuses_control_chars_in_file_name(tmp_path, db, parts_dir):
+    path = tmp_path / "a\nb.csv"
+    path.write_text(HEADER + "\n", encoding="utf-8")
+    with pytest.raises(PartDetailsError) as exc:
+        build_sql(path, db, parts_dir)
+    assert "file name" in exc.value.errors[0]
+
+
+def test_build_refuses_header_only_csv(tmp_path, db, parts_dir):
+    with pytest.raises(PartDetailsError) as exc:
+        build_sql(write_csv(tmp_path), db, parts_dir)
+    assert "no rows" in exc.value.errors[0]
+
+
+def test_write_migration_refuses_existing(tmp_path):
+    path = tmp_path / "022_x.sql"
+    write_migration(path, "A")
+    with pytest.raises(PartDetailsError) as exc:
+        write_migration(path, "B")
+    assert "already exists" in exc.value.errors[0]
+    assert path.read_text() == "A"
+
+
+def test_trailing_backslash_round_trip(tmp_path, db, parts_dir, make_part, make_brand):
+    reel = make_part(Reel, name="Model\\", brand=make_brand("Slash Co"))
+    csv_path = write_csv(tmp_path, "reel,Slash Co,Model\\,https://shop.example/m,")
+    run_sql(db, build_sql(csv_path, db, parts_dir))
+    db.expire_all()
+    assert reel.purchase_url == "https://shop.example/m"
+    assert reel.name == "Model\\"

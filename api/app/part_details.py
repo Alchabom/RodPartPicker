@@ -114,6 +114,8 @@ def _update_sql(row: dict[str, str]) -> str:
 
 def build_sql(csv_path: Path, db: Session, parts_dir: Path) -> str:
     """The migration text for a CSV, or PartDetailsError listing every bad row."""
+    if any(ord(ch) < 32 for ch in csv_path.name):
+        raise PartDetailsError(["file name: control characters are not allowed"])
     # utf-8-sig drops the BOM Excel adds; newline="" lets csv handle CRLF
     with open(csv_path, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
@@ -149,6 +151,8 @@ def build_sql(csv_path: Path, db: Session, parts_dir: Path) -> str:
 
     if errors:
         raise PartDetailsError(errors)
+    if not statements:
+        raise PartDetailsError(["line 1: the CSV has no rows"])
     header_comment = (
         f"-- Part details from {csv_path.name}, generated {date.today().isoformat()}.\n"
         "-- Design: docs/superpowers/specs/2026-11-18-part-details-design.md\n"
@@ -184,6 +188,13 @@ def next_migration_path(migrations_dir: Path, label: str) -> Path:
     )
 
 
+def write_migration(path: Path, sql: str) -> None:
+    """Write the migration, refusing to overwrite anything (applied files included)."""
+    if path.exists():
+        raise PartDetailsError([f"{path} already exists; refusing to overwrite it"])
+    path.write_text(sql, encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="part_details")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -204,16 +215,17 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"  {name}")
                 return 0
             try:
-                out = args.out or next_migration_path(MIGRATIONS_DIR, args.name)
+                default_out = next_migration_path(MIGRATIONS_DIR, args.name)
+                out = args.out or default_out
             except ValueError as e:
                 print(e, file=sys.stderr)
                 return 1
             try:
                 sql = build_sql(args.csv, db, PARTS_DIR)
+                write_migration(out, sql)
             except PartDetailsError as e:
                 print("\n".join(e.errors), file=sys.stderr)
                 return 1
-            out.write_text(sql, encoding="utf-8")
             print(f"Wrote {out}")
             return 0
     finally:
