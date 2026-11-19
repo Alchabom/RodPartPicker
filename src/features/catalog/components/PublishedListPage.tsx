@@ -2,10 +2,10 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { publishedKeys } from '@/lib/publishedKeys'
-import { listPublished } from '../api/published'
+import { listPublished } from '@/lib/published'
 import { parseCatalogParams } from '../utils/params'
 import { CatalogFilters } from './CatalogFilters'
-import { PublishedCard } from './PublishedCard'
+import { BuildCard, BuildCardSkeleton, Loading } from '@components/shop'
 
 export function PublishedListPage() {
   const [search, setSearch] = useSearchParams()
@@ -40,7 +40,15 @@ export function PublishedListPage() {
 
   let body
   if (!data && (!error || isFetching)) {
-    body = <p className="py-16 text-center text-muted-foreground">Loading builds…</p>
+    body = (
+      <Loading label="Loading builds">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <BuildCardSkeleton key={i} />
+          ))}
+        </div>
+      </Loading>
+    )
   } else if (!data) {
     body = (
       <div className="py-16 text-center">
@@ -71,18 +79,18 @@ export function PublishedListPage() {
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map((build) => (
-              <PublishedCard key={build.id} build={build} />
+              <BuildCard key={build.id} build={build} />
             ))}
           </ul>
         )}
         <nav aria-label="Pagination" className="mt-8 flex items-center justify-center gap-4">
-          <Button variant="outline" disabled={params.page <= 1} onClick={() => goToPage(Math.min(params.page - 1, pages))}>
+          <Button variant="secondary" disabled={params.page <= 1} onClick={() => goToPage(Math.min(params.page - 1, pages))}>
             Previous
           </Button>
           <span className="text-sm tabular-nums">
             Page {params.page} of {pages}
           </span>
-          <Button variant="outline" disabled={params.page >= pages} onClick={() => goToPage(params.page + 1)}>
+          <Button variant="secondary" disabled={params.page >= pages} onClick={() => goToPage(params.page + 1)}>
             Next
           </Button>
         </nav>

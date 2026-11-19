@@ -12,8 +12,9 @@ Capstone(rodpartpicker)/
 ├── src/
 │   ├── assets/             # Static assets (images, icons, vectors)
 │   ├── components/         # Shared, domain-agnostic UI components (Button, Modal, Input)
-│   │   └── ui/             # shadcn/ui primitives (generated; edit via the shadcn CLI)
-│   ├── features/           # Feature domain modules
+│   │   ├── shop/           # Shop components built from the primitives and tokens
+│   │   └── ui/             # shadcn/ui primitives (added with the shadcn CLI, then owned: edit their variants)
+│   ├── features/           # Feature domain modules (home/ is the landing page at /)
 │   │   └── userProfile/    # User Profile domain module
 │   │       ├── api/        # Data fetching functions & API calls for this feature
 │   │       ├── components/ # Feature-specific React components
@@ -23,11 +24,10 @@ Capstone(rodpartpicker)/
 │   │       └── index.ts    # Public API export (Barrel file)
 │   ├── hooks/              # Reusable, global React hooks (e.g., useDebounce, useAuth)
 │   ├── lib/                # Third-party SDK configurations & client wrappers (Axios, Firebase)
-│   ├── routes/             # Router setup and page route definitions
+│   ├── routes/             # Router setup and page route definitions (AppRoutes.tsx)
 │   ├── styles/             # index.css: Tailwind entry, palette + theme tokens
 │   ├── types/              # Global TypeScript types and ambient type declarations
 │   ├── utils/              # Global pure helper functions (formatting, calculations)
-│   ├── App.tsx             # Home page
 │   └── main.tsx            # React application entry point
 ├── .gitignore
 ├── .oxlintrc.json
@@ -112,11 +112,16 @@ Keep code as close to where it is used as possible.
 
 ### Rule 4: Styling with Tailwind
 - Style components with **Tailwind utility classes** in `className`. Do not add per-component or per-feature CSS files.
-- Use the palette utilities registered in `src/styles/index.css` (`bg-cod-gray`, `text-sulu`, `border-twine`, …) or the shadcn theme tokens (`bg-primary`, `text-muted-foreground`, …) instead of hex values or `var(--…)` in classes.
+- Use the palette utilities registered in `src/styles/index.css` (`bg-stone-page`, `text-ink-2`, `bg-belly`, `border-hairline`, …) or the shadcn theme tokens (`bg-primary`, `text-muted-foreground`, …) instead of hex values or `var(--…)` in classes.
 - Combine conditional classes with `cn()` from `@/lib/utils`.
 - If a class list repeats within a file, hoist it to a module-level constant; if it repeats across files, make a shared component.
 - Prefer shadcn primitives in `src/components/ui/` for buttons, menus, tables, etc. Add new ones with `pnpm dlx shadcn@latest add <name>`.
 - New design tokens go in `src/styles/index.css` (`:root` variable + `@theme inline` mapping), never inline.
+
+### Components: primitives and shop components
+- `src/components/ui` holds primitives (shadcn-style building blocks). `src/components/shop` holds shop components built from them and from the design tokens, imported as `@components/shop`. Primitives never import from shop.
+
+> Features compose shop components (`@components/shop`) and reach for primitives (`@components/ui`) only when no shop component fits. Features don't change a primitive's color, radius, typography or spacing through `className`. Needing to is a sign of a missing variant or shop component, which gets added there. Layout classes (grid, flex, gap, width, margin between blocks) are fine at call sites.
 
 ---
 

@@ -44,7 +44,7 @@ export function BrandMenu({ component, trigger }: BrandMenuProps) {
         {brands.map((brand) => (
           <DropdownMenuItem key={brand.id} asChild>
             <Link to={`${basePath}/${brand.id}`}>
-              <Badge variant="secondary" className="w-8 justify-center font-semibold">
+              <Badge variant="muted" className="w-8 justify-center font-semibold">
                 {initials(brand.name)}
               </Badge>
               {brand.name}

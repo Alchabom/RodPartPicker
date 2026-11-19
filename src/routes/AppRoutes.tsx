@@ -1,29 +1,19 @@
-import { Link, Outlet, Route, Routes } from 'react-router'
-import App from '@/App'
+import { Outlet, Route, Routes } from 'react-router'
 import { NotFound } from '@components/NotFound'
+import { SiteFooter, SiteHeader } from '@components/shop'
 import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
+import { HomePage } from '@features/home'
 import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
 import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
 
-const navLinkClass = 'font-semibold text-tasman transition-colors duration-200 hover:text-sulu'
-
 function Layout() {
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* NavBar */}
-      <nav className="flex items-center justify-between bg-cod-gray px-12 py-4 text-linen">
-        <Link to="/" className="text-2xl font-extrabold text-sulu">RodPartPicker</Link>
-
-        <div className="flex gap-8">
-          <Link to="/builder" className={navLinkClass}>Builder</Link>
-          <a href="#products" className={navLinkClass}>Products</a>
-          <Link to="/builds" className={navLinkClass}>Completed Builds</Link>
-        </div>
-
-        <UserMenu />
-      </nav>
-
-      <Outlet />
+    <div className="flex min-h-svh flex-col">
+      <SiteHeader account={<UserMenu />} />
+      <div className="flex flex-1 flex-col">
+        <Outlet />
+      </div>
+      <SiteFooter />
     </div>
   )
 }
@@ -32,7 +22,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<App />} />
+        <Route index element={<HomePage />} />
         <Route path="builder" element={<BuilderLayout />}>
           <Route element={<LocalBuildProvider />}>
             <Route index element={<BuilderPage />} />

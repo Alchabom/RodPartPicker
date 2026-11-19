@@ -54,14 +54,14 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
             <BrandMenu
               component={component}
               trigger={
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="secondary">
                   Change <ChevronDown data-icon="inline-end" />
                 </Button>
               }
             />
             <Button
               size="icon-sm"
-              variant="ghost"
+              variant="quiet"
               aria-label={`Remove ${component.label}`}
               onClick={() => removePart(component.type)}
             >
