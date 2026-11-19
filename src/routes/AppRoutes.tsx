@@ -16,7 +16,7 @@ function Layout() {
       <div className="flex flex-1 flex-col">
         <Outlet />
       </div>
-      <SiteFooter />
+      <SiteFooter signedIn={status === 'authenticated'} />
     </div>
   )
 }

@@ -56,6 +56,6 @@ describe('UserMenu when signed in', () => {
     )
     await userEvent.setup().click(screen.getByRole('button', { name: /Ann/ }))
     expect(screen.getByRole('menuitem', { name: 'Account settings' })).toBeInTheDocument()
-    expect(screen.queryByRole('menuitem', { name: 'My Builds' })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: /my builds/i })).toBeNull()
   })
 })

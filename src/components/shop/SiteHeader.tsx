@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { Container } from './Container'
-import { NAV_ITEMS } from './navItems'
+import { visibleNavItems } from './navItems'
 import { Wordmark } from './Wordmark'
 
 const focusRing = 'outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export function SiteHeader({ account, signedIn }: { account: ReactNode; signedIn: boolean }) {
-  const items = NAV_ITEMS.filter((item) => !item.requiresAuth || signedIn)
+  const items = visibleNavItems(signedIn)
   const { pathname } = useLocation()
   // The menu belongs to the page it was opened on, so any navigation
   // (a link, back or forward) closes it without an effect
