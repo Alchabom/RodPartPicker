@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 
+from app.parts.schemas import ImageUrl, PurchaseUrl
 from app.schemas import CamelModel
 
 
@@ -32,6 +33,7 @@ class RodRefOut(CamelModel):
     brand: str
     name: str
     line_weight: int
+    image_url: ImageUrl
 
 
 class PartRefOut(CamelModel):
@@ -39,6 +41,11 @@ class PartRefOut(CamelModel):
     brand: str
     name: str
     price: float | None
+    purchase_url: PurchaseUrl
+
+
+class ImagePartRefOut(PartRefOut):
+    image_url: ImageUrl
 
 
 class PublishedSummaryOut(CamelModel):
@@ -51,8 +58,8 @@ class PublishedSummaryOut(CamelModel):
 
 
 class PublishedPartsOut(CamelModel):
-    rod: PartRefOut | None
-    reel: PartRefOut | None
+    rod: ImagePartRefOut | None
+    reel: ImagePartRefOut | None
     line: PartRefOut | None
     leader: PartRefOut | None
     tippet: PartRefOut | None

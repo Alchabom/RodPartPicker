@@ -30,6 +30,7 @@ class CatalogPart:
     brand_id: Mapped[int] = mapped_column(ForeignKey("brands.id"))
     name: Mapped[str]
     water: Mapped[str]
+    purchase_url: Mapped[str | None]
 
     # Built once per subclass, since each joins from its own table
     @declared_attr
@@ -40,6 +41,7 @@ class CatalogPart:
 class Rod(CatalogPart, Base):
     __tablename__ = "rods"
 
+    image_path: Mapped[str | None]
     action: Mapped[str | None]
     line_weight: Mapped[int]
     length_in: Mapped[int]
@@ -50,6 +52,7 @@ class Rod(CatalogPart, Base):
 class Reel(CatalogPart, Base):
     __tablename__ = "reels"
 
+    image_path: Mapped[str | None]
     min_line_weight: Mapped[int]
     max_line_weight: Mapped[int]
     price: Mapped[Decimal]

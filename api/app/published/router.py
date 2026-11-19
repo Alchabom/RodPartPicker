@@ -15,6 +15,7 @@ from app.db import DbSession
 from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
 from app.published.models import PublishedBuild
 from app.published.schemas import (
+    ImagePartRefOut,
     PartRefOut,
     PublishedBuildOut,
     PublishedPageOut,
@@ -145,18 +146,32 @@ def _base_select():
     )
 
 
-def _part(part: Rod | Reel | FlyLine | Leader | Tippet | None) -> PartRefOut | None:
+def _part(
+    part: Rod | Reel | FlyLine | Leader | Tippet | None,
+) -> PartRefOut | ImagePartRefOut | None:
     if part is None:
         return None
-    return PartRefOut(
-        id=part.id, brand=part.brand.name, name=part.name, price=part.price
-    )
+    fields = {
+        "id": part.id,
+        "brand": part.brand.name,
+        "name": part.name,
+        "price": part.price,
+        "purchase_url": part.purchase_url,
+    }
+    if isinstance(part, Rod | Reel):
+        return ImagePartRefOut(**fields, image_path=part.image_path)
+    return PartRefOut(**fields)
 
 
 def _rod_ref(rod: Rod | None) -> RodRefOut | None:
     if rod is None:
         return None
-    return RodRefOut(brand=rod.brand.name, name=rod.name, line_weight=rod.line_weight)
+    return RodRefOut(
+        brand=rod.brand.name,
+        name=rod.name,
+        line_weight=rod.line_weight,
+        image_path=rod.image_path,
+    )
 
 
 def _summary_fields(published: PublishedBuild, total: Decimal) -> dict:
