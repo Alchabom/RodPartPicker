@@ -40,6 +40,17 @@ export function ComponentRow({ component }: { component: ComponentInfo }) {
               <div className="text-xs text-muted-foreground">{subtitle}</div>
               {note && <p className="mt-1 max-w-prose text-xs whitespace-normal text-muted-foreground">Why: {note}</p>}
             </div>
+            {part.purchaseUrl?.startsWith('https://') && (
+              <a
+                href={part.purchaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Buy ${[getBrand(part.brandId)?.name, part.name].join(' ')}`}
+                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Buy
+              </a>
+            )}
             <BrandMenu
               component={component}
               trigger={

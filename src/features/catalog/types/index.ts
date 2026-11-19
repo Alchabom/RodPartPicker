@@ -5,6 +5,7 @@ export interface PublishedRod {
   brand: string
   name: string
   lineWeight: number
+  imageUrl: string | null
 }
 
 export interface PublishedPart {
@@ -12,6 +13,8 @@ export interface PublishedPart {
   brand: string
   name: string
   price: number | null
+  purchaseUrl: string | null
+  imageUrl?: string | null // rod and reel only
 }
 
 export interface PublishedSummary {

@@ -16,6 +16,7 @@ interface RodRow {
   lengthIn: number
   pieces: number
   price: number | null
+  purchaseUrl: string | null
 }
 
 interface ReelRow {
@@ -26,6 +27,7 @@ interface ReelRow {
   minLineWeight: number
   maxLineWeight: number
   price: number | null
+  purchaseUrl: string | null
 }
 
 interface LineRow {
@@ -37,6 +39,7 @@ interface LineRow {
   lineWeight: number
   headWeightGrains: number | null
   price: number | null
+  purchaseUrl: string | null
 }
 
 interface LeaderRow {
@@ -49,6 +52,7 @@ interface LeaderRow {
   xSize: string | null
   strengthLb: number | null
   price: number | null
+  purchaseUrl: string | null
 }
 
 interface TippetRow {
@@ -61,6 +65,7 @@ interface TippetRow {
   strengthLb: number | null
   spoolYards: number | null
   price: number | null
+  purchaseUrl: string | null
 }
 
 const NONE = '—'
@@ -85,7 +90,7 @@ function formatLength(inches: number): string {
   return `${Math.floor(inches / 12)}'${inches % 12}"`
 }
 
-function basePart(component: ComponentType, row: { id: number; brand: string; model: string; price: number | null }) {
+function basePart(component: ComponentType, row: { id: number; brand: string; model: string; price: number | null; purchaseUrl: string | null }) {
   return {
     id: `${component}-${row.id}`,
     dbId: row.id,
@@ -93,6 +98,7 @@ function basePart(component: ComponentType, row: { id: number; brand: string; mo
     brandId: slugify(row.brand),
     name: row.model,
     price: row.price,
+    purchaseUrl: row.purchaseUrl,
   }
 }
 
