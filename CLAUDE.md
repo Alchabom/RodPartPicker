@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: Builder, Products, Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has no tests yet.
+RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: Builder, Products, Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has Vitest tests.
 
 ## Commands
 
@@ -16,7 +16,10 @@ RodPartPicker is a capstone project: a PCPartPicker-style web app for building f
 - `cd api && uv run python -m app.migrate`: create the database and apply unapplied `api/migrations/*.sql` files (`pnpm db:migrate` runs the same command from the repo root)
 - `cd api && uv run pytest`: run the API tests. They drop, re-migrate and use a separate `TEST_DB_NAME` database, and each test's writes are rolled back.
 
-The frontend has no test runner; `tsc -b` inside `npm run build` is its only type check.
+- `pnpm test`: run the frontend tests once with Vitest (jsdom; files are `src/**/*.test.{ts,tsx}`)
+- `pnpm check:contrast`: run `scripts/check-contrast.mjs`, which checks the text and background color pairs for contrast
+
+The frontend type check is `tsc -b` inside `npm run build`.
 
 Both `package-lock.json` and `pnpm-lock.yaml` are committed, but pnpm is the package manager actually in use (`node_modules/.pnpm`); install with `pnpm add`. `package-lock.json` is stale.
 
@@ -24,7 +27,9 @@ Both `package-lock.json` and `pnpm-lock.yaml` are committed, but pnpm is the pac
 
 - The React Compiler runs through `@rolldown/plugin-babel` with `reactCompilerPreset()` (see `vite.config.ts`). It memoizes automatically, so don't add `useMemo`/`useCallback`/`React.memo` by hand unless profiling shows a need.
 - Path aliases are defined in **two places** that must stay in sync: `resolve.alias` in `vite.config.ts` and `compilerOptions.paths` in `tsconfig.app.json`. The aliases are `@/*`, `@components`, `@features`, `@hooks`, `@styles`, `@utils` and `@types`, each pointing to the matching `src/` subdirectory. Note that `@types/*` can shadow npm `@types/` package names.
-- Global CSS lives in `src/styles/` (`index.css` is imported in `main.tsx`, `App.css` in `App.tsx`). It does not live at the `src/` root, even though the architecture doc's tree shows it there.
+- Global CSS lives in `src/styles/` (`index.css` is imported in `main.tsx`). It does not live at the `src/` root, even though the architecture doc's tree shows it there.
+- Design tokens live in `src/styles/index.css`. The block marked "Deprecated: removed in sub-project 2" holds old color aliases for the existing screens; don't use them in new code.
+- Primitives are in `src/components/ui`. Shop components are in `src/components/shop` and are imported as `@components/shop`. See the layer rule in `docs/architecture_guidelines.md`.
 
 ## Architecture
 
@@ -36,11 +41,13 @@ The project uses a feature-based architecture. `docs/architecture_guidelines.md`
 
 Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 401, refreshes the session once (shared across concurrent requests) and retries. `src/hooks/auth` (`@hooks/auth`: `AuthProvider`, `useAuth`) is the shared session state, wrapped around the app in `main.tsx`. `src/features/auth` holds the screens: `LoginPage` (`/login`), `DisplayNamePage` (`/welcome`), `RequireAuth` (route guard) and the navbar's `UserMenu`.
 
+The landing page is `features/home` (`HomePage`), the index route `/`. The published-build fetchers and types are in `src/lib/published.ts`.
+
 Public catalog: `src/features/catalog` holds the signed-out-friendly pages `/builds` and `/builds/:id` (outside `BuilderLayout`). Its **Open in Builder** link goes to `/builder?copy=<id>`, handled by `CopyPublishedIntent` in the builder (the `save=1` pattern), so the features never import each other. Publish controls live in the builder; shared query keys are in `src/lib/publishedKeys.ts`. See `docs/builds/published-builds.md`.
 
 Builder persistence: the builder keeps a local draft (`LocalBuildProvider`, `localStorage` key `rpp:build:v2`) and saved builds (`SavedBuildProvider`, with debounced autosave). My Builds lives at `/builder/saved`. TanStack Query is the data layer: the client is in `src/lib/queryClient.ts` and query keys live next to their fetchers (e.g. `buildKeys` in `features/builder/api/builds.ts`). See `docs/builds/saved-builds.md`.
 
-Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed. `src/App.tsx` currently holds placeholder layout markup (navbar and sections) that should be split into features as they are built.
+Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed.
 
 ## Agent skills
 

@@ -118,6 +118,11 @@ Keep code as close to where it is used as possible.
 - Prefer shadcn primitives in `src/components/ui/` for buttons, menus, tables, etc. Add new ones with `pnpm dlx shadcn@latest add <name>`.
 - New design tokens go in `src/styles/index.css` (`:root` variable + `@theme inline` mapping), never inline.
 
+### Components: primitives and shop components
+- `src/components/ui` holds primitives (shadcn-style building blocks). `src/components/shop` holds shop components built from them and from the design tokens, imported as `@components/shop`. Primitives never import from shop.
+
+> Features compose shop components (`@components/shop`) and reach for primitives (`@components/ui`) only when no shop component fits. Features don't change a primitive's color, radius, typography or spacing through `className`. Needing to is a sign of a missing variant or shop component, which gets added there. Layout classes (grid, flex, gap, width, margin between blocks) are fine at call sites.
+
 ---
 
 ## 5. Barrel File Example (`src/features/userProfile/index.ts`)
