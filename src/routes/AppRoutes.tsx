@@ -1,8 +1,8 @@
 import { Outlet, Route, Routes } from 'react-router'
-import App from '@/App'
 import { NotFound } from '@components/NotFound'
 import { SiteFooter, SiteHeader } from '@components/shop'
 import { DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
+import { HomePage } from '@features/home'
 import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
 import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
 
@@ -22,7 +22,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<App />} />
+        <Route index element={<HomePage />} />
         <Route path="builder" element={<BuilderLayout />}>
           <Route element={<LocalBuildProvider />}>
             <Route index element={<BuilderPage />} />
