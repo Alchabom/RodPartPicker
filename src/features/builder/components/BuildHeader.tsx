@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { RotateCcw, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBuild } from '../hooks/useBuild'
+import { PublishControls } from './PublishControls'
 import { QuestionnaireDialog } from './QuestionnaireDialog'
 
 const STATUS_TEXT = { saving: 'Saving…', saved: 'Saved', error: "Couldn't save" }
@@ -40,6 +41,7 @@ export function BuildHeader() {
                 </Button>
               )}
             </div>
+            <PublishControls id={buildState.id} name={buildState.name} build={build} />
           </>
         ) : (
           <h1 className="text-3xl font-bold text-te-papa-green">Your Build</h1>

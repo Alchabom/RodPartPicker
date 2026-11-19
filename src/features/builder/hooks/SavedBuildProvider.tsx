@@ -92,7 +92,7 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
   // Set when a save finds the build deleted
   const [gone, setGone] = useState(false)
 
-  const { mutate, isPending, isError } = useMutation({
+  const { mutate, mutateAsync, isPending, isError } = useMutation({
     mutationFn: (input: BuildInput) => updateBuild(saved.id, input),
     // The loader watches this key to wait for in-flight saves before reopening
     mutationKey: buildKeys.detail(saved.id),
@@ -188,6 +188,15 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
     mutate(input)
   }
 
+  // Send the current build now and wait for it (before publishing). PUT is a
+  // full replace and `scope` queues it behind any save in flight, so once it
+  // resolves the server holds the latest build. Rejects if the save fails.
+  const flushSave = async () => {
+    cancelPending()
+    setLastSent(inputJson)
+    await mutateAsync(input)
+  }
+
   if (gone) return <BuildNotFound />
 
   return (
@@ -199,6 +208,7 @@ function SavedBuildEditor({ saved }: { saved: SavedBuild }) {
         rename: setName,
         saveStatus,
         retrySave,
+        flushSave,
         build,
         notes,
         basePath: `/builder/${saved.id}`,
