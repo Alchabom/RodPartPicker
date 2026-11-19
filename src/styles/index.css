@@ -6,57 +6,98 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Dark Greens */
-  --te-papa-green: #223B38;
-  --plantation: #294744;
-  --spectra: #2F5954;
-
-  /* Lights & Accents */
-  --tasman: #C9D9CD;
-  --sulu: #CCEC60;
-
-  /* Neutrals */
-  --cod-gray: #151515;
-  --linen: #F8EEDA;
-  --bone: #E2D6BD;
-  --twine: #C09F6D;
+  /* Brook trout / Blue Ridge tokens */
+  --stone-page: #F3F2EE;
+  --stone-card: #FCFBF9;
+  --stone-raised: #EAE8E2;
+  --ink: #1D1F1B;
+  --ink-2: #545A52;
+  --ink-3: #656A61;
+  --hairline: color-mix(in oklab, var(--ink) 9%, transparent);
+  --belly: #B5491B;
+  --belly-ink: #8F3814;
+  --spot: #C23B2E;
+  --halo: #7FA3C4;
+  --olive: #36402A;
+  --haze-1: #CBD4D6;
+  --haze-2: #A8B8C0;
+  --haze-3: #7C93A1;
+  --haze-4: #4F6677;
+  --haze-5: #33424A;
+  --dawn: #EEE5D6;
+  --negative: #B4322B;
+  --fin-edge: linear-gradient(90deg, var(--stone-card) 0 3px, var(--ink) 3px 6px, var(--belly) 6px);
+  --ease-shop: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* shadcn tokens mapped to the palette */
-  --background: var(--linen);
-  --foreground: var(--cod-gray);
-  --card: var(--linen);
-  --card-foreground: var(--cod-gray);
-  --popover: var(--linen);
-  --popover-foreground: var(--cod-gray);
-  --primary: var(--spectra);
-  --primary-foreground: var(--linen);
-  --secondary: var(--bone);
-  --secondary-foreground: var(--te-papa-green);
-  --muted: var(--bone);
-  --muted-foreground: var(--plantation);
-  --accent: var(--tasman);
-  --accent-foreground: var(--te-papa-green);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: color-mix(in oklab, var(--twine) 40%, transparent);
-  --input: color-mix(in oklab, var(--twine) 40%, transparent);
-  --ring: var(--sulu);
-  --radius: 0.625rem;
+  --background: var(--stone-page);
+  --foreground: var(--ink);
+  --card: var(--stone-card);
+  --card-foreground: var(--ink);
+  --popover: var(--stone-card);
+  --popover-foreground: var(--ink);
+  --primary: var(--belly);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--stone-raised);
+  --secondary-foreground: var(--ink);
+  --muted: var(--stone-raised);
+  --muted-foreground: var(--ink-3);
+  --accent: var(--stone-raised);
+  --accent-foreground: var(--ink);
+  --destructive: var(--negative);
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--belly-ink);
+  --radius: 0.5rem;
 }
 
 @theme inline {
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  --font-heading: var(--font-sans);
+  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
 
-  /* Brand palette as utilities: bg-cod-gray, text-sulu, border-twine, ... */
-  --color-te-papa-green: var(--te-papa-green);
-  --color-plantation: var(--plantation);
-  --color-spectra: var(--spectra);
-  --color-tasman: var(--tasman);
-  --color-sulu: var(--sulu);
-  --color-cod-gray: var(--cod-gray);
-  --color-linen: var(--linen);
-  --color-bone: var(--bone);
-  --color-twine: var(--twine);
+  /* Brand tokens as utilities: bg-stone-page, text-ink-2, bg-belly, fill-haze-3, ... */
+  --color-stone-page: var(--stone-page);
+  --color-stone-card: var(--stone-card);
+  --color-stone-raised: var(--stone-raised);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-hairline: var(--hairline);
+  --color-belly: var(--belly);
+  --color-belly-ink: var(--belly-ink);
+  --color-spot: var(--spot);
+  --color-halo: var(--halo);
+  --color-olive: var(--olive);
+  --color-haze-1: var(--haze-1);
+  --color-haze-2: var(--haze-2);
+  --color-haze-3: var(--haze-3);
+  --color-haze-4: var(--haze-4);
+  --color-haze-5: var(--haze-5);
+  --color-dawn: var(--dawn);
+  --color-negative: var(--negative);
+
+  /* Deprecated: removed in sub-project 2 */
+  --color-te-papa-green: var(--olive);
+  --color-plantation: var(--olive);
+  --color-spectra: var(--belly);
+  --color-tasman: var(--ink-2);
+  --color-sulu: color-mix(in oklab, var(--belly) 20%, transparent);
+  --color-cod-gray: var(--ink);
+  --color-linen: var(--stone-page);
+  --color-bone: var(--stone-raised);
+  --color-twine: var(--ink-3);
+
+  --animate-rise: rise 400ms var(--ease-shop) both;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
   --color-ring: var(--ring);
   --color-input: var(--input);
