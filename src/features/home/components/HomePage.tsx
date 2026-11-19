@@ -9,8 +9,8 @@ import { SampleRig } from './SampleRig'
 export function HomePage() {
   return (
     <main className="flex flex-1 flex-col">
-      {/* Fills the first screen under the 56px header, up to 760px */}
-      <section className="relative flex min-h-[min(calc(100svh-56px),760px)] flex-col">
+      {/* Fills the first screen under the 56px header, up to 960px */}
+      <section className="relative flex min-h-[min(calc(100svh-56px),960px)] flex-col">
         <RidgeScene />
         <Container className="relative flex flex-1 flex-col gap-10">
           <div className="max-w-[600px] pt-10 md:pt-14">
@@ -25,7 +25,7 @@ export function HomePage() {
               <Button asChild size="lg">
                 <Link to="/builder">Start a build</Link>
               </Button>
-              <Button asChild variant="link" className="px-0 text-[15px]">
+              <Button asChild variant="link" size="lg">
                 <Link to="/builds">See completed builds</Link>
               </Button>
             </div>

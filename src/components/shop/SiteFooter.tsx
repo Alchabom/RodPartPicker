@@ -14,11 +14,11 @@ export function SiteFooter() {
       >
         <path
           className="fill-haze-4"
-          d="M0 48V30l90-12 110 10 130-22 140 24 150-20 120 16 140-24 120 20 100-8v34z"
+          d="M0 48V28C150 14 260 30 400 20S640 8 780 22S1040 10 1200 18V48Z"
         />
         <path
           className="fill-haze-5"
-          d="M0 48V38l120-8 140 8 160-14 150 14 140-10 170 12 130-10 190 8v20z"
+          d="M0 48V38C140 30 280 40 440 32S700 26 860 34S1060 28 1200 34V48Z"
         />
       </svg>
       <div className="bg-haze-5 py-8 text-stone-page">
