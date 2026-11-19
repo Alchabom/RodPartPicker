@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { NavLink } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { NavLink, useLocation } from 'react-router'
 import { MenuIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -12,6 +12,10 @@ const focusRing = 'outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export function SiteHeader({ account }: { account: ReactNode }) {
   const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
+
+  // Back/forward navigation also closes the menu.
+  useEffect(() => setOpen(false), [pathname])
 
   return (
     <header className="border-b border-hairline bg-stone-page">

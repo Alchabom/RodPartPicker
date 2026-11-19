@@ -1,7 +1,7 @@
 import { useEffect, useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { BuildCard, Container, EmptyState } from '@components/shop'
+import { BuildCard, Container, EmptyState, SectionHeading } from '@components/shop'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { listPublished } from '@/lib/published'
@@ -21,20 +21,18 @@ export function RecentBuilds() {
     if (error) console.error('Could not load recent builds', error)
   }, [error])
 
-  if (error) return null
+  if (error && !data) return null
 
   const items = data?.items.slice(0, SHOWN) ?? []
 
   return (
     <Container as="section" className="pt-8 pb-24">
-      <h2 id={headingId} className="text-[28px] leading-9 font-medium text-olive">
-        Recently rigged
-      </h2>
+      <SectionHeading id={headingId}>Recently rigged</SectionHeading>
       <div className="mt-10">
         {isPending ? (
           <div className="grid gap-4 md:grid-cols-3">
             {Array.from({ length: SHOWN }, (_, i) => (
-              <Skeleton key={i} data-testid="build-skeleton" className="h-64 rounded-[14px]" />
+              <Skeleton key={i} data-testid="build-skeleton" className="h-64 rounded-card" />
             ))}
           </div>
         ) : items.length === 0 ? (
@@ -54,7 +52,7 @@ export function RecentBuilds() {
                 <BuildCard key={build.id} build={build} />
               ))}
             </ul>
-            <Button asChild variant="link" className="mt-8 px-0">
+            <Button asChild variant="link" className="mt-8">
               <Link to="/builds">See all completed builds</Link>
             </Button>
           </>

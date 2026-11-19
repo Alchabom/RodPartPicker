@@ -15,7 +15,7 @@ export function BuildCard({ build }: { build: PublishedSummary }) {
     <li>
       <Link
         to={`/builds/${build.id}`}
-        className="flex h-full flex-col gap-1 rounded-[14px] border border-hairline bg-stone-card p-4 transition-colors hover:bg-stone-raised"
+        className="flex h-full flex-col gap-1 rounded-card border border-hairline bg-stone-card p-4 transition-colors hover:bg-stone-raised"
       >
         <PartImage
           src={build.rod?.imageUrl ?? null}

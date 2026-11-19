@@ -1,6 +1,6 @@
 import { useId, type CSSProperties } from 'react'
 import { Link } from 'react-router'
-import { Container } from '@components/shop'
+import { Container, SectionHeading } from '@components/shop'
 import { Button } from '@/components/ui/button'
 
 // The step lines mirror the rules in api/app/compatibility/rules.py.
@@ -21,9 +21,7 @@ export function RigSteps() {
   const headingId = useId()
   return (
     <Container as="section" className="pt-24 pb-16">
-      <h2 id={headingId} className="text-[28px] leading-9 font-medium text-olive">
-        How a rig goes together
-      </h2>
+      <SectionHeading id={headingId}>How a rig goes together</SectionHeading>
       <ol aria-labelledby={headingId} className="mt-10 grid lg:grid-cols-5">
         {STEPS.map((step, i) => (
           <li key={step.name} className="relative pb-8 pl-10 last:pb-0 lg:pt-8 lg:pr-6 lg:pb-0 lg:pl-0">
@@ -41,7 +39,7 @@ export function RigSteps() {
           </li>
         ))}
       </ol>
-      <Button asChild variant="link" className="mt-10 px-0">
+      <Button asChild variant="link" className="mt-10">
         <Link to="/builder">Start a build</Link>
       </Button>
     </Container>

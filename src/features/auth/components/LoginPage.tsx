@@ -156,7 +156,6 @@ export function LoginPage() {
             <Button
               type="button"
               variant="link"
-              className="px-0"
               disabled={busy || resendIn > 0}
               onClick={sendCode}
             >
@@ -165,7 +164,6 @@ export function LoginPage() {
             <Button
               type="button"
               variant="link"
-              className="px-0"
               onClick={() => {
                 setStep('email')
                 setError(null)

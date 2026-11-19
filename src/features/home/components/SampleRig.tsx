@@ -7,13 +7,13 @@ export function SampleRig({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'rounded-[14px] border border-hairline bg-stone-card p-2 shadow-[0_8px_24px_rgb(0_0_0/0.08)]',
+        'rounded-card border border-hairline bg-stone-card p-2 shadow-[0_8px_24px_rgb(0_0_0/0.08)]',
         className,
       )}
     >
       <div className="flex items-baseline justify-between gap-4 px-3 pt-3 pb-2">
         <p className="text-[15px] font-medium text-ink">{SAMPLE_RIG.title}</p>
-        <p className="text-[13px] text-ink-3 tabular-nums">3 of 5 parts</p>
+        <p className="text-[13px] text-ink-3 tabular-nums">{SAMPLE_RIG.parts.length} of 5 parts</p>
       </div>
       {SAMPLE_RIG.parts.map((part, i) => {
         const active = part.type === 'line'

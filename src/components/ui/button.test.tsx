@@ -23,4 +23,11 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Add' }).className).toContain('pl-[calc(--spacing(3.5)+6px)]')
     expect(screen.getByRole('button', { name: 'Icon' }).className).not.toContain('+6px')
   })
+  it('shows a full-opacity, offset focus ring', () => {
+    render(<Button>Focus</Button>)
+    const cls = screen.getByRole('button').className
+    expect(cls).toContain('focus-visible:ring-ring')
+    expect(cls).toContain('focus-visible:ring-offset-2')
+    expect(cls).not.toContain('ring-ring/50')
+  })
 })

@@ -43,7 +43,6 @@ export interface PublishedList {
   total: number
 }
 
-
 export function listPublished(params: CatalogParams, signal?: AbortSignal): Promise<PublishedList> {
   const query = new URLSearchParams({ page: String(params.page) })
   if (params.weight !== undefined) query.set('weight', String(params.weight))

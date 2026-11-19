@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { listPublished, type PublishedList, type PublishedSummary } from '@/lib/published'
@@ -22,8 +22,7 @@ const list = (n: number): PublishedList => ({
   total: n,
 })
 
-function renderRecent() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+function renderRecent(queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
@@ -69,5 +68,17 @@ describe('RecentBuilds', () => {
     const { container } = renderRecent()
     await waitFor(() => expect(log).toHaveBeenCalledWith('Could not load recent builds', expect.any(Error)))
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('keeps loaded cards when a background refetch fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    vi.mocked(listPublished).mockResolvedValueOnce(list(2))
+    renderRecent(queryClient)
+    expect(await screen.findAllByRole('listitem')).toHaveLength(2)
+    vi.mocked(listPublished).mockRejectedValueOnce(new Error('down'))
+    await act(() => queryClient.refetchQueries())
+    await waitFor(() => expect(console.error).toHaveBeenCalled())
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
   })
 })
