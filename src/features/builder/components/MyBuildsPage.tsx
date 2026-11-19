@@ -51,7 +51,7 @@ function DeleteBuildButton({ id, name }: { id: number; name: string }) {
       }}
     >
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="secondary" size="sm">
           Delete
         </Button>
       </AlertDialogTrigger>

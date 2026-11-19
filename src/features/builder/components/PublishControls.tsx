@@ -42,7 +42,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
     return (
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">Couldn't load publish status</span>
-        <Button size="sm" variant="outline" onClick={() => refetch()}>
+        <Button size="sm" variant="secondary" onClick={() => refetch()}>
           Try again
         </Button>
       </div>
@@ -69,7 +69,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
           <Link to={`/builds/${published.id}`} className="font-semibold text-spectra hover:underline">
             Published · View
           </Link>
-          <Button size="sm" variant="outline" onClick={openDialog}>
+          <Button size="sm" variant="secondary" onClick={openDialog}>
             Update published build
           </Button>
           <UnpublishButton buildId={id} published={published} onStart={() => setNotice(null)} />
@@ -126,7 +126,7 @@ function UnpublishButton({
       }}
     >
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="secondary">
           Unpublish
         </Button>
       </AlertDialogTrigger>

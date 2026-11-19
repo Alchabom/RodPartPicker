@@ -76,13 +76,13 @@ export function PublishedListPage() {
           </ul>
         )}
         <nav aria-label="Pagination" className="mt-8 flex items-center justify-center gap-4">
-          <Button variant="outline" disabled={params.page <= 1} onClick={() => goToPage(Math.min(params.page - 1, pages))}>
+          <Button variant="secondary" disabled={params.page <= 1} onClick={() => goToPage(Math.min(params.page - 1, pages))}>
             Previous
           </Button>
           <span className="text-sm tabular-nums">
             Page {params.page} of {pages}
           </span>
-          <Button variant="outline" disabled={params.page >= pages} onClick={() => goToPage(params.page + 1)}>
+          <Button variant="secondary" disabled={params.page >= pages} onClick={() => goToPage(params.page + 1)}>
             Next
           </Button>
         </nav>

@@ -108,14 +108,14 @@ function QuestionnaireSteps({ onDone }: { onDone: () => void }) {
         {question.options.map((option) => (
           <Button
             key={option.value}
-            variant="outline"
+            variant="secondary"
             disabled={option.comingSoon}
             onClick={() => answer(option.value)}
             className="h-auto flex-col items-start gap-0.5 py-2.5 text-left whitespace-normal"
           >
             <span className="flex w-full items-center justify-between gap-2">
               {option.label}
-              {option.comingSoon && <Badge variant="secondary">Coming soon</Badge>}
+              {option.comingSoon && <Badge variant="muted">Coming soon</Badge>}
             </span>
             {option.description && (
               <span className="text-xs font-normal text-muted-foreground">{option.description}</span>
@@ -125,7 +125,7 @@ function QuestionnaireSteps({ onDone }: { onDone: () => void }) {
       </div>
 
       {step > 0 && (
-        <Button variant="ghost" className="justify-self-start" onClick={() => setStep(step - 1)}>
+        <Button variant="quiet" className="justify-self-start" onClick={() => setStep(step - 1)}>
           <ArrowLeft data-icon="inline-start" /> Back
         </Button>
       )}

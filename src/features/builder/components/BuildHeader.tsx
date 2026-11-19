@@ -36,7 +36,7 @@ export function BuildHeader() {
                 <span>{STATUS_TEXT[buildState.saveStatus]}</span>
               </span>
               {buildState.saveStatus === 'error' && (
-                <Button variant="outline" size="sm" onClick={buildState.retrySave}>
+                <Button variant="secondary" size="sm" onClick={buildState.retrySave}>
                   Retry
                 </Button>
               )}
@@ -57,7 +57,7 @@ export function BuildHeader() {
         >
           <Sparkles data-icon="inline-start" /> Click here to get a setup tailored to you
         </Button>
-        <Button variant="outline" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
+        <Button variant="secondary" onClick={clearBuild} disabled={Object.keys(build).length === 0}>
           <RotateCcw data-icon="inline-start" /> Clear build
         </Button>
       </div>

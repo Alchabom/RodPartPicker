@@ -109,12 +109,12 @@ export function BrandPartsPage() {
               <TableCell className="font-medium">
                 {part.name}
                 {fits && (
-                  <Badge className="ml-2 bg-te-papa-green text-sulu">
+                  <Badge variant="fit" className="ml-2">
                     <Check data-icon="inline-start" /> Fits build
                   </Badge>
                 )}
                 {recommended && (
-                  <Badge className="ml-2 bg-sulu text-te-papa-green">
+                  <Badge variant="recommended" className="ml-2">
                     <Star data-icon="inline-start" /> Recommended
                   </Badge>
                 )}
@@ -177,7 +177,7 @@ export function BrandPartsPage() {
       {unmatched.length > 0 && (
         <section className="mt-8">
           <Button
-            variant="outline"
+            variant="secondary"
             aria-expanded={showUnmatched}
             onClick={() => setShowUnmatched((open) => !open)}
           >

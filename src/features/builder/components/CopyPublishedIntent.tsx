@@ -84,7 +84,7 @@ export function CopyPublishedIntent() {
             {gone ? 'That build is no longer published' : "Couldn't load that build"}
           </AlertDescription>
           <AlertAction>
-            <Button size="icon-sm" variant="ghost" aria-label="Dismiss" onClick={() => setDismissed(true)}>
+            <Button size="icon-sm" variant="quiet" aria-label="Dismiss" onClick={() => setDismissed(true)}>
               <X aria-hidden />
             </Button>
           </AlertAction>
