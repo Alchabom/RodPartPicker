@@ -74,6 +74,35 @@ version in the name. Price and head weight are the sheet row's, shared by every 
 
 - **Avid Trout-Gold 7wt: 270 gr.** The rest of that line sits at the AFTMA maximum, which would be 193 for a 7wt.
 
+## Links and images
+
+Purchase links (all five part types) and images (rods and reels) are loaded in
+batches. Each batch is a numbered migration generated from a CSV by
+`api/app/part_details.py`, so it is reviewed in git and applied by `pnpm db:migrate`.
+
+**Workflow**
+
+1. Copy `api/part_details_template.csv` to `api/part_details_<label>.csv` and fill it in. The header is `component,brand,model,purchase_url,image_file`. `component` is `rod`, `reel`, `line`, `leader` or `tippet`. `image_file` is optional and only for rods and reels.
+2. Put the `.webp` files in `public/parts/rods/` and `public/parts/reels/`.
+3. From `api/`, run `uv run python -m app.part_details build part_details_<label>.csv --name <label>`. It writes `api/migrations/<next number>_part_details_<label>.sql`, or lists every bad row (with its line number) and writes nothing.
+4. Read the generated SQL.
+5. Run `pnpm db:migrate`.
+6. Run `uv run python -m app.part_details missing` to see what is still empty.
+
+A statement matches every size row of that model, and can be repeated, so a later batch can replace an earlier link or image, but it cannot clear one. Clearing a value (for example a dead link) needs a hand-written migration with `UPDATE ... SET purchase_url = NULL ...`. Fully blank rows in the CSV are skipped. Never edit an applied batch; add a new one. Cells are trimmed, the CSV may come from Excel (UTF-8 BOM, CRLF), and brand and model match the catalog without regard to case.
+
+**Image rules**
+
+- WebP, 800x600, under 100 KB.
+- Named `<brand>-<model>.webp`, lowercase, with every run of other characters turned into one hyphen: `Lamson` + `Liquid S` is `reels/lamson-liquid-s.webp`. The folder must match the component (`rods/` or `reels/`).
+- One file can serve several rows (every size of a rod model can share one image).
+- Only use images the team may use, and record where each came from in the table below.
+
+**Batches**
+
+| Batch | Migration | Sources | Image credits |
+|---|---|---|---|
+
 ## Changing the data
 
 Data typed into TablePlus lives only in that computer's database. Teammates

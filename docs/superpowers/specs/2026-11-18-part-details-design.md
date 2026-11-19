@@ -243,7 +243,7 @@ API (`api/tests/test_part_details.py`, plus new cases in `test_parts.py` and `te
 
 Frontend: there's no test runner, so `npm run build` and `npm run lint` must pass, plus this manual script:
 1. `/builds` shows a card with a rod image, and another card with the dashed placeholder.
-2. Point a part's image at a file that doesn't exist (in a dev-only SQL `UPDATE`). The card shows the placeholder, and the Network tab shows a single failed request.
+2. Point a part's image at a file that doesn't exist (in a dev-only SQL `UPDATE`). The card shows the placeholder. In dev, Vite's SPA fallback answers a missing `/parts/...` file with `index.html` (200, text/html), so the Network tab shows the image request returning HTML (or failing), not a decoded image.
 3. A build page shows the rod and reel images and a Buy column. Buy opens the product page in a new tab, and `window.opener` there is `null`.
 4. A part with no link has no Buy button.
 5. The builder shows Buy on a selected part that has a link.
@@ -264,3 +264,11 @@ All on `oa-part-details`, stacked on `oa-published-builds`. If `oa-published-bui
 1. **Schema and API:** migration 021, the model fields, `links.py`, the schema fields and the API tests.
 2. **Frontend:** `PartImage`, the card banner, the build page's images and Buy column, and the builder's Buy link.
 3. **Data tool and batch 1:** `part_details.py` with its tests, the template, the batch 1 CSV and migration, the image files, and the docs.
+
+## Changes during implementation
+
+1. **`sql_str` doubles backslashes as well as single quotes.** MySQL's default `sql_mode` treats `\` as an escape character, so a value ending in `\` would otherwise swallow its closing quote.
+2. **Invalid stored values are logged with the value and field, not the table and id.** `safe_purchase_url` and `image_url_for` only see the value, so that is what the warning names.
+3. **The generator takes `--name <label>`** and writes `api/migrations/<next>_part_details_<label>.sql`, where `<next>` is the highest existing number plus one. `--out` overrides the path. The label must match `^[a-z0-9_]+$`.
+4. **The generator also refuses** URLs over 500 characters (the column is `VARCHAR(500)`), duplicate rows (same component, brand and model, compared without regard to case), and an `image_file` whose folder doesn't match its component. It accepts Excel CSVs (UTF-8 BOM and CRLF) and trims every cell.
+5. **Migration 021's image-path CHECKs use `REGEXP_LIKE(image_path, '<pattern>', 'c')`.** MySQL's `REGEXP` is case-insensitive under the default collation, so the plain-`REGEXP` SQL in "Data model" would have accepted uppercase paths such as `rods/X.webp`. (Controller ruling from Task 1.)

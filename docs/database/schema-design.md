@@ -136,6 +136,14 @@ Each row is one purchasable size.
 - **`published_at`** is set once; "newest first" uses `idx_published_newest (published_at, id)`, so an update doesn't move a build up the list.
 - Rationale: `docs/superpowers/specs/2026-11-18-published-builds-design.md`.
 
+**Links and images (migration 021):** every part table has a nullable `purchase_url VARCHAR(500)`, and `rods` and `reels` also have a nullable `image_path VARCHAR(255)`. Both stay NULL until a seed batch fills them in.
+
+- **`purchase_url`** has `CHECK (purchase_url LIKE 'https://%')`, so a `javascript:` or plain `http:` link can't be stored.
+- **`image_path`** has `CHECK (REGEXP_LIKE(image_path, '^(rods|reels)/[a-z0-9-]+\\.webp$', 'c'))` (each table allows its own folder), so a path can't point outside `public/parts/`. The `'c'` flag makes the match case-sensitive; plain `REGEXP` is case-insensitive under the default collation and would accept `rods/X.webp`.
+- A CHECK passes on NULL, so parts without data are always valid. A rejected value raises MySQL error 3819.
+- The API turns `image_path` into `imageUrl` (`/parts/<path>`) and drops any stored value that fails the same or stricter rules (the API helpers are case-sensitive and use a full match).
+- Rationale: `docs/superpowers/specs/2026-11-18-part-details-design.md`. The data is loaded by `app/part_details.py` (see `docs/database/seed-data-notes.md`).
+
 **Integrity choices:**
 
 - **Money** is `DECIMAL(8,2)` with `CHECK (price >= 0)`. Floating point would introduce rounding errors.
