@@ -18,4 +18,9 @@ describe('Button', () => {
     render(<Button variant="quiet">Menu</Button>)
     expect(screen.getByRole('button').className).not.toContain('transition-all')
   })
+  it('adds the fin-edge left padding to primary buttons, not icon ones', () => {
+    render(<><Button>Add</Button><Button size="icon" aria-label="Icon">x</Button></>)
+    expect(screen.getByRole('button', { name: 'Add' }).className).toContain('pl-[calc(--spacing(3.5)+6px)]')
+    expect(screen.getByRole('button', { name: 'Icon' }).className).not.toContain('+6px')
+  })
 })

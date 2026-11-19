@@ -26,6 +26,26 @@ const buttonVariants = cva(
         "icon-lg": "size-11",
       },
     },
+    compoundVariants: [
+      {
+        variant: "primary",
+        size: "sm",
+        className:
+          "pl-[calc(--spacing(3)+6px)] has-data-[icon=inline-start]:pl-[calc(--spacing(2)+6px)]",
+      },
+      {
+        variant: "primary",
+        size: "md",
+        className:
+          "pl-[calc(--spacing(3.5)+6px)] has-data-[icon=inline-start]:pl-[calc(--spacing(2.5)+6px)]",
+      },
+      {
+        variant: "primary",
+        size: "lg",
+        className:
+          "pl-[calc(--spacing(5)+6px)] has-data-[icon=inline-start]:pl-[calc(--spacing(3.5)+6px)]",
+      },
+    ],
     defaultVariants: {
       variant: "primary",
       size: "md",

@@ -145,13 +145,6 @@
   [data-slot="button"][data-variant="primary"]:not([data-size^="icon"]) {
     position: relative;
     overflow: hidden;
-    padding-left: calc(var(--spacing) * 3.5 + 6px);
-  }
-  [data-slot="button"][data-variant="primary"][data-size="sm"] {
-    padding-left: calc(var(--spacing) * 3 + 6px);
-  }
-  [data-slot="button"][data-variant="primary"][data-size="lg"] {
-    padding-left: calc(var(--spacing) * 5 + 6px);
   }
   [data-slot="button"][data-variant="primary"]:not([data-size^="icon"])::before {
     content: "";
