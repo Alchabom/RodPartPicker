@@ -50,7 +50,7 @@ export function SiteHeader({ account }: { account: ReactNode }) {
               <SheetHeader>
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
-              <nav aria-label="Mobile" className="flex flex-col gap-1 px-4">
+              <nav aria-label="Menu" className="flex flex-col gap-1 px-4">
                 {NAV_ITEMS.map((item) => (
                   <NavLink
                     key={item.to}

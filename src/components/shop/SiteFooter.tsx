@@ -24,7 +24,7 @@ export function SiteFooter() {
       <div className="bg-haze-5 py-8 text-stone-page">
         <Container className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <Wordmark />
+            <Wordmark className="focus-visible:ring-stone-page" />
             <nav aria-label="Footer" className="flex gap-6">
               {NAV_ITEMS.map((item) => (
                 <NavLink
