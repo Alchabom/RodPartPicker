@@ -19,6 +19,9 @@ from app.db import get_db, make_engine
 from app.main import app
 from app.migrate import migrate
 from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, Tippet
+from app.published.models import PublishedBuild
+
+PART_COLUMNS = ["rod_id", "reel_id", "fly_line_id", "leader_id", "tippet_id"]
 
 
 @pytest.fixture(scope="session")
@@ -179,6 +182,30 @@ def make_build(db, make_user):
         db.add(build)
         db.flush()
         return build
+
+    return make
+
+
+@pytest.fixture
+def make_published(db, make_user, make_part):
+    count = 0
+
+    def make(**columns):
+        nonlocal count
+        count += 1
+        if "user_id" not in columns and "user" not in columns:
+            columns["user_id"] = make_user(display_name=f"Author {count}").id
+        for column, model in zip(
+            PART_COLUMNS, [Rod, Reel, FlyLine, Leader, Tippet], strict=True
+        ):
+            if column not in columns:
+                columns[column] = make_part(model).id
+        published = PublishedBuild(
+            **{"title": f"Test Publish {count}", "writeup": "Write-up", **columns}
+        )
+        db.add(published)
+        db.flush()
+        return published
 
     return make
 

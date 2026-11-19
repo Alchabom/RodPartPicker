@@ -9,9 +9,9 @@ from app.db import get_db
 from app.main import app
 from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
 from app.published.models import PublishedBuild
+from tests.conftest import PART_COLUMNS
 
 URL = "/api/builds/{}/published"
-PART_COLUMNS = ["rod_id", "reel_id", "fly_line_id", "leader_id", "tippet_id"]
 BODY = {"title": "Creek setup", "writeup": "Small water."}
 
 
@@ -35,30 +35,6 @@ def make_full_build(make_build, make_part):
             "tippet_id": make_part(Tippet).id,
         }
         return make_build(user_id=user_id, **{**parts, **overrides})
-
-    return make
-
-
-@pytest.fixture
-def make_published(db, make_user, make_part):
-    count = 0
-
-    def make(**columns):
-        nonlocal count
-        count += 1
-        if "user_id" not in columns and "user" not in columns:
-            columns["user_id"] = make_user(display_name=f"Author {count}").id
-        for column, model in zip(
-            PART_COLUMNS, [Rod, Reel, FlyLine, Leader, Tippet], strict=True
-        ):
-            if column not in columns:
-                columns[column] = make_part(model).id
-        published = PublishedBuild(
-            **{"title": f"Test Publish {count}", "writeup": "Write-up", **columns}
-        )
-        db.add(published)
-        db.flush()
-        return published
 
     return make
 

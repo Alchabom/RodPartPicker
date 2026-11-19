@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from app.auth.deps import CurrentUserId
 from app.builds.models import Build
 from app.builds.ownership import get_owned_build
-from app.builds.schemas import BuildIn, BuildOut
+from app.builds.schemas import BuildIn, BuildListItem, BuildOut
 from app.db import DbSession
+from app.published.models import PublishedBuild
 
 BuildId = Annotated[int, Path(gt=0)]
 router = APIRouter(prefix="/builds", tags=["builds"])
@@ -28,13 +29,17 @@ def _commit(db: Session) -> None:
 
 
 @router.get("")
-def list_builds(db: DbSession, user_id: CurrentUserId) -> list[BuildOut]:
+def list_builds(db: DbSession, user_id: CurrentUserId) -> list[BuildListItem]:
     stmt = (
-        select(Build)
+        select(Build, PublishedBuild.id)
+        .outerjoin(PublishedBuild, PublishedBuild.source_build_id == Build.id)
         .where(Build.user_id == user_id)
         .order_by(Build.updated_at.desc(), Build.id.desc())
     )
-    return db.scalars(stmt).all()
+    return [
+        BuildListItem.model_validate(build).model_copy(update={"published_id": pid})
+        for build, pid in db.execute(stmt)
+    ]
 
 
 @router.get("/{build_id}")
