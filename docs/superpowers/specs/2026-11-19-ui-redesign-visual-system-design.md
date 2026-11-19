@@ -136,7 +136,9 @@ Shared compositions built only from Layer 1 and tokens, with an `index.ts` barre
 
 | Component | Does |
 |---|---|
-| `FinEdge` | The white / black / orange stripe from `--fin-edge`, as an element for active rows and the logo mark |
+| `FinEdge` | The white / black / orange stripe from `--fin-edge`, as an element for active rows (sub-project 2) |
+| `DorsalFin` | The logo mark: a brook trout dorsal fin (`--dorsal` with `--dorsal-band` bands) |
+| `Loading`, `BuildCardSkeleton`, `PageSkeleton` | Loading states: a labelled `status` wrapper, the build card's exact box, and a generic page placeholder |
 | `FitSpot` | Red spot with blue halo. Has an accessible label ("Fits your build") unless `decorative` |
 | `PriceTag` | A price through `formatPrice`, `tabular-nums`, with "—" for no price |
 | `SpecLine` | Joins specs with " · " ("8′6″ · 4 wt · Medium · 4 pc"), muted |
@@ -162,7 +164,7 @@ Sub-project 1 applies the rule to the new code. Sub-project 2 applies it to the 
 ### SiteHeader
 
 - 56px tall, `stone-page` background, a hairline underneath.
-- Left: a small vertical `FinEdge` mark and the "RodPartPicker" wordmark (Public Sans 600, 17px), linking to `/`.
+- Left: the `DorsalFin` mark (a brook trout dorsal fin, olive-gold `--dorsal` #A39246 with dark wavy `--dorsal-band` #2C3522 bands; also the favicon) and the "RodPartPicker" wordmark (Public Sans 600, 17px), linking to `/`.
 - Center: **Builder** (`/builder`) and **Completed builds** (`/builds`), using react-router's `NavLink`. The current link gets `aria-current="page"`, `ink` text and a 2px `belly` underline. Other links are `ink-2`, turning `ink` on hover.
 - Right: an `account` slot. `AppRoutes` passes `<UserMenu />` (`<SiteHeader account={<UserMenu />} />`), so the shared header never imports a feature.
 - Under `md`, the links move into a `Sheet` that slides in from the right, opened by a `quiet` icon button labeled "Menu". The `Sheet` closes on navigation.
@@ -181,10 +183,8 @@ Sub-project 1 applies the rule to the new code. Sub-project 2 applies it to the 
 src/features/home/
   components/HomePage.tsx
   components/RidgeScene.tsx
-  components/SampleRig.tsx
   components/RigSteps.tsx
   components/RecentBuilds.tsx
-  utils/sampleRig.ts
   index.ts
 ```
 
@@ -195,9 +195,8 @@ src/features/home/
   - Headline (`h1`, `olive`): **Rig a fly rod where every part fits**
   - Subhead (`ink-2`, 18px): **Pick a rod, reel, line, leader and tippet. We check each part against the rest of your rig and tell you why it fits.**
   - **Start a build** (`Button` `primary` `lg`, → `/builder`) and **See completed builds** (`link`, → `/builds`).
-- `SampleRig` is a static card rising out of the nearest ridge on the right: a title, "3 of 5 parts", and rod, reel and line rows with `SpecLine`, `PriceTag` and `FitSpot`. The line row is active (`stone-raised` and a vertical `FinEdge`).
-  - Its data (`utils/sampleRig.ts`) is three real catalog parts, copied with their real names, specs and prices from the seed migrations. The plan picks them. They must pass `check_build` with no warnings. The mockup's names and prices were illustrative and are not used.
-  - Under `md` the card stacks below the buttons and shows the rod and reel rows only.
+- A fly-line cast runs through the scene, between the far ridges (`haze-1`–`haze-3`) and the near ones (`haze-4`, `haze-5`): the rod leg rises out of the valley in a gentle sag, turns over in a tight loop, and the fly leg lies back above it, thinning line → leader → tippet (1.7px to 0.6px, `belly` at 90%) to a small `olive` fly. Hidden below `md`, where the slice crop would leave a stray diagonal.
+- *(Revised 2026-11-19: the earlier `SampleRig` build card in the hero was removed after review; the scene carries the hero on its own.)*
 
 ### RigSteps: "How a rig goes together"
 
@@ -219,13 +218,17 @@ If the rules change, this copy changes with them. A comment in `RigSteps.tsx` po
 - It uses `publishedKeys.list({ page: 1 })`, the same key as `/builds` page 1, so the two share a cache.
 - `listPublished`, `getPublished` and their response types move from `features/catalog` to `src/lib/published.ts`, next to `publishedKeys`. `features/catalog` then imports them from there.
 - States:
-  - Loading: three `Skeleton` cards of the card's size.
+  - Loading: three `BuildCardSkeleton`s (the card's exact box) inside a `Loading` status.
   - Error: the section doesn't render. The landing page works without it, as the builder does without warnings. The error is logged with `console.error`.
   - No builds: `EmptyState`, "No builds published yet", "Publish yours from the builder.", action **Start a build**.
 
 ### Motion
 
-The headline, subhead and actions fade in and rise 8px over 400ms with a 50ms stagger, on first load only. Nothing else on the page animates. `prefers-reduced-motion: reduce` turns the entrance off.
+The headline, subhead and actions fade in and rise 8px over 400ms with a 50ms stagger, and the cast draws itself in (a mask's dash offset, 1200ms after a 300ms delay). Both play on the first visit to `/` per page load only, not when coming back to it inside the app. Nothing else on the page animates. `prefers-reduced-motion: reduce` turns the entrance off.
+
+### Loading states
+
+Every screen that waits on data shows a skeleton of its own layout instead of a "Loading…" line: the builder (`BuilderSkeleton`, title and one row per component), My Builds, `/builds` (six `BuildCardSkeleton`s), a published build and Recently rigged. Skeletons sit inside the shop `Loading` component (`role="status"` with a text label; the shapes are hidden from assistive technology) and pulse only with `motion-safe`. While the session loads, the header's account slot holds the width of "Log in", and `RequireAuth` shows `PageSkeleton`. A local `Public Sans Fallback` face (Arial, `size-adjust: 104.34%`, `ascent-override: 91.05%`, `descent-override: 22.04%`) keeps text from reflowing when the web font arrives.
 
 ## Testing and verification
 
@@ -241,7 +244,8 @@ Tests for this sub-project:
 | `RecentBuilds.test.tsx` | Skeletons while loading; at most 3 cards for a longer list; the empty state for no items; nothing rendered on an error (with `apiFetch` mocked) |
 | `button.test.tsx` | `primary` sets `data-variant="primary"` (which the fin-edge CSS targets); `asChild` still works with a `Link` |
 | `FitSpot.test.tsx` | Has the "Fits your build" label by default; `decorative` hides it from assistive technology |
-| `sampleRig.test.ts` | The sample rig's weights and water satisfy the same rules as `check_build` (rod weight = line weight, reel range includes both, water tags compatible) |
+| `Loading.test.tsx` and the page tests | Each loading state shows a labelled `status` skeleton and no "Loading…" text; skeletons pulse only with `motion-safe` |
+| `HomePage.test.tsx` | No build card in the hero; the entrance plays once per visit |
 
 ### Other checks
 
