@@ -2,10 +2,10 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { publishedKeys } from '@/lib/publishedKeys'
-import { listPublished } from '../api/published'
+import { listPublished } from '@/lib/published'
 import { parseCatalogParams } from '../utils/params'
 import { CatalogFilters } from './CatalogFilters'
-import { PublishedCard } from './PublishedCard'
+import { BuildCard } from '@components/shop'
 
 export function PublishedListPage() {
   const [search, setSearch] = useSearchParams()
@@ -71,7 +71,7 @@ export function PublishedListPage() {
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map((build) => (
-              <PublishedCard key={build.id} build={build} />
+              <BuildCard key={build.id} build={build} />
             ))}
           </ul>
         )}

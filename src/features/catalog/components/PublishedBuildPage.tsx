@@ -7,9 +7,8 @@ import { ApiError } from '@/lib/api'
 import { publishedKeys } from '@/lib/publishedKeys'
 import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
-import { getPublished } from '../api/published'
-import type { Slot } from '../types'
-import { PartImage } from './PartImage'
+import { getPublished, type Slot } from '@/lib/published'
+import { PartImage } from '@components/shop'
 
 const SLOTS: { slot: Slot; label: string }[] = [
   { slot: 'rod', label: 'Rod' },

@@ -21,7 +21,7 @@ export function PartImage({ src, alt, label, className = '' }: PartImageProps) {
       <div
         role="img"
         aria-label={label}
-        className={`flex items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground ${className}`}
+        className={`flex items-center justify-center rounded-md border border-dashed border-hairline text-sm text-ink-3 ${className}`}
       >
         {label}
       </div>
