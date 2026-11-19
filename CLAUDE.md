@@ -39,7 +39,7 @@ The project uses a feature-based architecture. `docs/architecture_guidelines.md`
 - Features must not import from other features. Code that two or more features share moves to the global `src/components`, `src/hooks`, `src/utils`, `src/lib` (configured third-party clients), `src/types` or `src/routes`.
 - Co-location comes first. Keep code in the file that uses it, then in the feature that uses it, and promote it to global only when two or more features need it.
 
-Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 401, refreshes the session once (shared across concurrent requests) and retries. `src/hooks/auth` (`@hooks/auth`: `AuthProvider`, `useAuth`) is the shared session state, wrapped around the app in `main.tsx`. `src/features/auth` holds the screens: `LoginPage` (`/login`), `DisplayNamePage` (`/welcome`), `RequireAuth` (route guard) and the navbar's `UserMenu`.
+Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 401, refreshes the session once (shared across concurrent requests) and retries. `src/hooks/auth` (`@hooks/auth`: `AuthProvider`, `useAuth`) is the shared session state, wrapped around the app in `main.tsx`. `src/features/auth` holds the screens: `LoginPage` (`/login`), `DisplayNamePage` (`/welcome`, first name only), `AccountPage` (`/account`, renames), `RequireAuth` (route guard) and the navbar's `UserMenu`.
 
 The landing page is `features/home` (`HomePage`), the index route `/`. The published-build fetchers and types are in `src/lib/published.ts`.
 

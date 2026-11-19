@@ -214,11 +214,12 @@ def read_me(user_id: CurrentUserId, db: DbSession) -> UserOut:
 
 @router.put("/me")
 def update_me(body: DisplayNameIn, user_id: CurrentUserId, db: DbSession) -> UserOut:
-    """Task 3.3. Load the user as in read_me, set display_name, commit.
+    """Set the user's display name: the first time (/welcome) or a rename (/account).
 
     The unique index decides "taken" (ignoring case, via the column's
-    collation), so don't pre-check with a SELECT; two requests could race past
-    it. Catch IntegrityError: db.rollback(), then HTTPException(409, "Display name taken").
+    collation), so there's no pre-check SELECT; two requests could race past
+    it. The user's own row never conflicts, so a case-only rename succeeds.
+    An IntegrityError is a 409 "Display name taken".
     """
     user = db.get(User, user_id)
     if user is None:

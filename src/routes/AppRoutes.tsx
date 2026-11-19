@@ -1,7 +1,7 @@
 import { Outlet, Route, Routes } from 'react-router'
 import { NotFound } from '@components/NotFound'
 import { SiteFooter, SiteHeader } from '@components/shop'
-import { DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
+import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
 import { HomePage } from '@features/home'
 import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
 import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
@@ -56,6 +56,14 @@ export function AppRoutes() {
           element={
             <RequireAuth>
               <DisplayNamePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="account"
+          element={
+            <RequireAuth>
+              <AccountPage />
             </RequireAuth>
           }
         />
