@@ -12,7 +12,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Loading } from '@components/shop'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -86,6 +88,25 @@ function DeleteBuildButton({ id, name }: { id: number; name: string }) {
   )
 }
 
+// The page's shape (title, New build, a few rows) while the list loads
+function MyBuildsSkeleton() {
+  return (
+    <Loading label="Loading your builds" className="mx-auto w-full max-w-5xl px-4 py-10">
+      <div className="mb-8 flex items-center justify-between">
+        <Skeleton className="h-9 w-40" />
+        <Skeleton className="h-9 w-28" />
+      </div>
+      {Array.from({ length: 3 }, (_, i) => (
+        <div key={i} className="flex h-14 items-center gap-6 border-b border-hairline">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="ml-auto h-5 w-20" />
+        </div>
+      ))}
+    </Loading>
+  )
+}
+
 export function MyBuildsPage() {
   const { getPart } = useCatalog()
   const { data, error, isFetching, refetch } = useQuery({
@@ -94,7 +115,7 @@ export function MyBuildsPage() {
   })
 
   if (!data && (!error || isFetching)) {
-    return <p className="mx-auto max-w-5xl px-4 py-16 text-center text-muted-foreground">Loading builds…</p>
+    return <MyBuildsSkeleton />
   }
 
   if (!data) {

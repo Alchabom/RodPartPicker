@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router'
 import { UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +17,8 @@ export function UserMenu() {
   const { status, user, signOut } = useAuth()
   const location = useLocation()
 
-  // Keep the space while the session loads, so the navbar doesn't jump
-  if (status === 'loading') return <span className="size-5" aria-hidden />
+  // Hold the space of "Log in" while the session loads, so the header doesn't shift
+  if (status === 'loading') return <Skeleton data-testid="account-skeleton" aria-hidden="true" className="h-5 w-14" />
 
   if (status === 'anonymous' || !user) {
     // Come back to this page after logging in (but not to /login itself)

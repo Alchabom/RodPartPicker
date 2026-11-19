@@ -3,6 +3,7 @@ import { Outlet } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { catalogKey, fetchCatalog } from '../api/parts'
 import { CatalogContext } from '../hooks/catalogContext'
+import { BuilderSkeleton } from './BuilderSkeleton'
 
 // Route layout for /builder/*: loads the parts catalog once, then renders
 // the child route with the catalog available through useCatalog().
@@ -14,7 +15,7 @@ export function BuilderLayout() {
   })
 
   if (!catalog && (!error || isFetching)) {
-    return <p className="mx-auto max-w-5xl px-4 py-16 text-center text-muted-foreground">Loading parts…</p>
+    return <BuilderSkeleton label="Loading parts" />
   }
 
   if (!catalog) {

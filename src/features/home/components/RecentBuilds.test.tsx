@@ -38,7 +38,7 @@ describe('RecentBuilds', () => {
   it('shows skeletons while loading', () => {
     vi.mocked(listPublished).mockReturnValue(new Promise(() => {}))
     renderRecent()
-    expect(screen.getAllByTestId('build-skeleton')).toHaveLength(3)
+    expect(screen.getAllByTestId('build-card-skeleton')).toHaveLength(3)
   })
 
   it('shows at most 3 builds', async () => {

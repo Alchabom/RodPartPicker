@@ -8,7 +8,8 @@ import { publishedKeys } from '@/lib/publishedKeys'
 import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 import { getPublished, type Slot } from '@/lib/published'
-import { PartImage } from '@components/shop'
+import { Loading, PartImage } from '@components/shop'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const SLOTS: { slot: Slot; label: string }[] = [
   { slot: 'rod', label: 'Rod' },
@@ -17,6 +18,29 @@ const SLOTS: { slot: Slot; label: string }[] = [
   { slot: 'leader', label: 'Leader' },
   { slot: 'tippet', label: 'Tippet' },
 ]
+
+// The page's shape (title, byline, rod and reel images, parts table) while it loads
+function PublishedBuildSkeleton() {
+  return (
+    <Loading label="Loading build" className="mx-auto w-full max-w-5xl px-4 py-10">
+      <Skeleton className="h-9 w-72 max-w-full" />
+      <Skeleton className="mt-2 h-6 w-56" />
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <Skeleton className="aspect-[4/3] w-full" />
+        <Skeleton className="aspect-[4/3] w-full" />
+      </div>
+      <div className="mt-8">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="flex h-12 items-center gap-6 border-b border-hairline">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-5 w-56" />
+            <Skeleton className="ml-auto h-5 w-16" />
+          </div>
+        ))}
+      </div>
+    </Loading>
+  )
+}
 
 const notFound = <NotFound message="Build not found" backTo="/builds" backLabel="Completed Builds" />
 
@@ -35,7 +59,7 @@ export function PublishedBuildPage() {
   if (!valid || (error instanceof ApiError && error.status === 404)) return notFound
 
   if (!data && (!error || isFetching)) {
-    return <p className="mx-auto max-w-5xl px-4 py-16 text-center text-muted-foreground">Loading build…</p>
+    return <PublishedBuildSkeleton />
   }
 
   if (!data) {

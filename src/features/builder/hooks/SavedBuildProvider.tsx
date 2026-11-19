@@ -4,6 +4,7 @@ import { Outlet, useParams } from 'react-router'
 import { ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { NotFound } from '@components/NotFound'
+import { BuilderSkeleton } from '../components/BuilderSkeleton'
 import { buildKeys, getBuild, toBuild, toBuildIn, updateBuild, type BuildInput, type SavedBuild } from '../api/builds'
 import type { Build, BuildNotes, ComponentType, RecommendedPart } from '../types'
 import { BuildContext } from './buildContext'
@@ -58,7 +59,7 @@ function SavedBuildLoader({ id }: { id: number }) {
   if (seed) return <SavedBuildEditor saved={seed} />
 
   if (saving || isFetching || !error) {
-    return <p className="mx-auto max-w-5xl px-4 py-16 text-center text-muted-foreground">Loading build…</p>
+    return <BuilderSkeleton label="Loading build" />
   }
 
   // Another user's build is a 404 too, so it looks the same as a missing one

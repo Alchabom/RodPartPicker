@@ -5,7 +5,7 @@ import { publishedKeys } from '@/lib/publishedKeys'
 import { listPublished } from '@/lib/published'
 import { parseCatalogParams } from '../utils/params'
 import { CatalogFilters } from './CatalogFilters'
-import { BuildCard } from '@components/shop'
+import { BuildCard, BuildCardSkeleton, Loading } from '@components/shop'
 
 export function PublishedListPage() {
   const [search, setSearch] = useSearchParams()
@@ -40,7 +40,15 @@ export function PublishedListPage() {
 
   let body
   if (!data && (!error || isFetching)) {
-    body = <p className="py-16 text-center text-muted-foreground">Loading builds…</p>
+    body = (
+      <Loading label="Loading builds">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <BuildCardSkeleton key={i} />
+          ))}
+        </div>
+      </Loading>
+    )
   } else if (!data) {
     body = (
       <div className="py-16 text-center">

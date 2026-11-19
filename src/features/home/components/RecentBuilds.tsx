@@ -1,9 +1,8 @@
 import { useEffect, useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { BuildCard, Container, EmptyState, SectionHeading } from '@components/shop'
+import { BuildCard, BuildCardSkeleton, Container, EmptyState, Loading, SectionHeading } from '@components/shop'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { listPublished } from '@/lib/published'
 import { publishedKeys } from '@/lib/publishedKeys'
 
@@ -30,11 +29,13 @@ export function RecentBuilds() {
       <SectionHeading id={headingId}>Recently rigged</SectionHeading>
       <div className="mt-10">
         {isPending ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: SHOWN }, (_, i) => (
-              <Skeleton key={i} data-testid="build-skeleton" className="h-64 rounded-card" />
-            ))}
-          </div>
+          <Loading label="Loading recent builds">
+            <div className="grid gap-4 md:grid-cols-3">
+              {Array.from({ length: SHOWN }, (_, i) => (
+                <BuildCardSkeleton key={i} />
+              ))}
+            </div>
+          </Loading>
         ) : items.length === 0 ? (
           <EmptyState
             title="No builds published yet"
