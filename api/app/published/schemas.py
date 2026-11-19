@@ -26,3 +26,46 @@ class PublishedRefOut(CamelModel):
     title: str
     writeup: str
     updated_at: datetime
+
+
+class RodRefOut(CamelModel):
+    brand: str
+    name: str
+    line_weight: int
+
+
+class PartRefOut(CamelModel):
+    id: int
+    brand: str
+    name: str
+    price: float | None
+
+
+class PublishedSummaryOut(CamelModel):
+    id: int
+    title: str
+    author: str
+    rod: RodRefOut | None
+    total_price: float
+    published_at: datetime
+
+
+class PublishedPartsOut(CamelModel):
+    rod: PartRefOut | None
+    reel: PartRefOut | None
+    line: PartRefOut | None
+    leader: PartRefOut | None
+    tippet: PartRefOut | None
+
+
+class PublishedBuildOut(PublishedSummaryOut):
+    writeup: str
+    updated_at: datetime
+    parts: PublishedPartsOut
+
+
+class PublishedPageOut(CamelModel):
+    items: list[PublishedSummaryOut]
+    page: int
+    page_size: int
+    total: int
