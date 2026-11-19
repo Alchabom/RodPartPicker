@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.deps import CurrentUserId
 from app.builds.models import Build
+from app.builds.ownership import get_owned_build
 from app.builds.schemas import BuildIn, BuildOut
 from app.db import DbSession
 
@@ -26,13 +27,6 @@ def _commit(db: Session) -> None:
         raise
 
 
-def _get_owned_build(db: Session, build_id: int, user_id: int) -> Build:
-    build = db.get(Build, build_id)
-    if build is None or build.user_id != user_id:
-        raise HTTPException(status_code=404, detail="Build not found")
-    return build
-
-
 @router.get("")
 def list_builds(db: DbSession, user_id: CurrentUserId) -> list[BuildOut]:
     stmt = (
@@ -45,7 +39,7 @@ def list_builds(db: DbSession, user_id: CurrentUserId) -> list[BuildOut]:
 
 @router.get("/{build_id}")
 def get_build(build_id: BuildId, db: DbSession, user_id: CurrentUserId) -> BuildOut:
-    return _get_owned_build(db, build_id, user_id)
+    return get_owned_build(db, build_id, user_id)
 
 
 @router.post("", status_code=201)
@@ -69,7 +63,7 @@ def create_build(build: BuildIn, db: DbSession, user_id: CurrentUserId) -> Build
 def update_build(
     build_id: BuildId, build: BuildIn, db: DbSession, user_id: CurrentUserId
 ) -> None:
-    existing_build = _get_owned_build(db, build_id, user_id)
+    existing_build = get_owned_build(db, build_id, user_id)
 
     existing_build.name = build.name
     existing_build.rod_id = build.rod_id
@@ -82,6 +76,6 @@ def update_build(
 
 @router.delete("/{build_id}", status_code=204)
 def delete_build(build_id: BuildId, db: DbSession, user_id: CurrentUserId) -> None:
-    existing_build = _get_owned_build(db, build_id, user_id)
+    existing_build = get_owned_build(db, build_id, user_id)
     db.delete(existing_build)
     _commit(db)

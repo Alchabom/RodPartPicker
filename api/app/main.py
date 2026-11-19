@@ -9,6 +9,8 @@ from app.compatibility.router import router as compatibility_router
 from app.config import settings
 from app.db import DbSession
 from app.parts.router import router as parts_router
+from app.published.router import owner_router as published_owner_router
+from app.published.router import public_router as published_public_router
 from app.questionnaire.router import router as questionnaire_router
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
@@ -41,6 +43,8 @@ def health(response: Response, db: DbSession):
 
 api.include_router(parts_router)
 api.include_router(builds_router)
+api.include_router(published_owner_router)
+api.include_router(published_public_router)
 api.include_router(compatibility_router)
 api.include_router(auth_router)
 api.include_router(questionnaire_router)
