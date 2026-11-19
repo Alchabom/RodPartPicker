@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Container } from '@components/shop'
 import { Button } from '@/components/ui/button'
 import { RidgeScene } from './RidgeScene'
+import { RecentBuilds } from './RecentBuilds'
 import { RigSteps } from './RigSteps'
 import { SampleRig } from './SampleRig'
 
@@ -34,6 +35,7 @@ export function HomePage() {
         </Container>
       </section>
       <RigSteps />
+      <RecentBuilds />
     </main>
   )
 }
