@@ -190,7 +190,7 @@ src/features/home/
 
 ### Hero
 
-- `RidgeScene` is an inline SVG: a `stone-page` → `dawn` sky, a pale sun disc, and five ridge paths in `haze-1` … `haze-5`, far to near. It is `aria-hidden`, scales with `preserveAspectRatio="xMidYMid slice"`, and fills the first screen below the header (`min-h-[calc(100svh-56px)]`, capped at 760px) with no empty band underneath.
+- `RidgeScene` is an inline SVG: a `stone-page` → `dawn` sky, a pale sun disc, and five ridge paths in `haze-1` … `haze-5`, far to near. It is `aria-hidden`, scales with `preserveAspectRatio="xMidYMid slice"`, and fills the first screen below the header (`min-h-[calc(100svh-56px)]`, capped at 960px) with no empty band underneath.
 - Text sits in the open sky, top left, at most 600px wide:
   - Headline (`h1`, `olive`): **Rig a fly rod where every part fits**
   - Subhead (`ink-2`, 18px): **Pick a rod, reel, line, leader and tippet. We check each part against the rest of your rig and tell you why it fits.**
