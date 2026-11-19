@@ -5,6 +5,7 @@ import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '
 import { HomePage } from '@features/home'
 import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
 import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
+import { RedirectToMyBuilds, RedirectToRack, RedirectToRackBuild } from './redirects'
 
 function Layout() {
   return (
@@ -28,14 +29,7 @@ export function AppRoutes() {
             <Route index element={<BuilderPage />} />
             <Route path=":component/:brand" element={<BrandPartsPage />} />
           </Route>
-          <Route
-            path="saved"
-            element={
-              <RequireAuth>
-                <MyBuildsPage />
-              </RequireAuth>
-            }
-          />
+          <Route path="saved" element={<RedirectToMyBuilds />} />
           <Route
             path=":buildId"
             element={
@@ -48,8 +42,20 @@ export function AppRoutes() {
             <Route path=":component/:brand" element={<BrandPartsPage />} />
           </Route>
         </Route>
-        <Route path="builds" element={<PublishedListPage />} />
-        <Route path="builds/:id" element={<PublishedBuildPage />} />
+        <Route path="rack" element={<PublishedListPage />} />
+        <Route path="rack/:id" element={<PublishedBuildPage />} />
+        <Route path="builds" element={<RedirectToRack />} />
+        <Route path="builds/:id" element={<RedirectToRackBuild />} />
+        <Route element={<BuilderLayout />}>
+          <Route
+            path="my-builds"
+            element={
+              <RequireAuth>
+                <MyBuildsPage />
+              </RequireAuth>
+            }
+          />
+        </Route>
         <Route path="login" element={<LoginPage />} />
         <Route
           path="welcome"

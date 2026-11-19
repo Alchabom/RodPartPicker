@@ -54,7 +54,7 @@ export function RecentBuilds() {
               ))}
             </ul>
             <Button asChild variant="link" className="mt-8">
-              <Link to="/builds">See all completed builds</Link>
+              <Link to="/rack">See all completed builds</Link>
             </Button>
           </>
         )}

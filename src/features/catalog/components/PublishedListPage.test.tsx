@@ -13,7 +13,7 @@ describe('PublishedListPage', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/builds']}>
+        <MemoryRouter initialEntries={['/rack']}>
           <PublishedListPage />
         </MemoryRouter>
       </QueryClientProvider>,

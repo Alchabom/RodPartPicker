@@ -66,7 +66,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         </>
       ) : (
         <>
-          <Link to={`/builds/${published.id}`} className="font-semibold text-spectra hover:underline">
+          <Link to={`/rack/${published.id}`} className="font-semibold text-spectra hover:underline">
             Published · View
           </Link>
           <Button size="sm" variant="secondary" onClick={openDialog}>

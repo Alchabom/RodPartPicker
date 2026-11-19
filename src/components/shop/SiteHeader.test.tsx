@@ -16,10 +16,9 @@ function renderAt(path: string, account: ReactNode = <span>Log in</span>) {
 describe('SiteHeader', () => {
   it.each([
     ['/builder', 'Builder'],
-    ['/builder/saved', 'Builder'],
     ['/builder/12/rod/all', 'Builder'],
-    ['/builds', 'Completed builds'],
-    ['/builds/5', 'Completed builds'],
+    ['/rack', 'Completed builds'],
+    ['/rack/5', 'Completed builds'],
   ])('marks the link for %s as current', (path, label) => {
     renderAt(path)
     const nav = screen.getByRole('navigation', { name: 'Main' })

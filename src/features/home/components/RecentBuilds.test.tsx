@@ -45,7 +45,7 @@ describe('RecentBuilds', () => {
     vi.mocked(listPublished).mockResolvedValue(list(5))
     renderRecent()
     expect(await screen.findAllByRole('listitem')).toHaveLength(3)
-    expect(screen.getByRole('link', { name: 'See all completed builds' })).toHaveAttribute('href', '/builds')
+    expect(screen.getByRole('link', { name: 'See all completed builds' })).toHaveAttribute('href', '/rack')
   })
 
   it.each([1, 2])('shows exactly %i builds when that is all there is', async (n) => {

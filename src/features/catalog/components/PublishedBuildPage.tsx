@@ -42,7 +42,7 @@ function PublishedBuildSkeleton() {
   )
 }
 
-const notFound = <NotFound message="Build not found" backTo="/builds" backLabel="Completed Builds" />
+const notFound = <NotFound message="Build not found" backTo="/rack" backLabel="Completed Builds" />
 
 const DATE_OPTIONS: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }
 

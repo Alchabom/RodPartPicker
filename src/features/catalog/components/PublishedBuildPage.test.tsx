@@ -13,9 +13,9 @@ describe('PublishedBuildPage', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/builds/5']}>
+        <MemoryRouter initialEntries={['/rack/5']}>
           <Routes>
-            <Route path="/builds/:id" element={<PublishedBuildPage />} />
+            <Route path="/rack/:id" element={<PublishedBuildPage />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,

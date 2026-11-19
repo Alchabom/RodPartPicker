@@ -21,7 +21,7 @@ const isValidName = (name: string) => {
 }
 
 function BuildNotFound() {
-  return <NotFound message="Build not found" backTo="/builder/saved" backLabel="My Builds" />
+  return <NotFound message="Build not found" backTo="/my-builds" backLabel="My Builds" />
 }
 
 // Route layout for /builder/:buildId/*: loads a saved build and provides it

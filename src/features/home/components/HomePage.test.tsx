@@ -29,7 +29,7 @@ describe('HomePage', () => {
     await renderHome()
     expect(screen.getByRole('heading', { level: 1, name: 'Rig a fly rod where every part fits' })).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'Start a build' })[0]).toHaveAttribute('href', '/builder')
-    expect(screen.getByRole('link', { name: 'See completed builds' })).toHaveAttribute('href', '/builds')
+    expect(screen.getByRole('link', { name: 'See completed builds' })).toHaveAttribute('href', '/rack')
   })
 
   it('lists the five rig steps in order', async () => {
