@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: Builder, Products, Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has Vitest tests.
+RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: the landing page, Builder and Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has Vitest tests.
 
 ## Commands
 

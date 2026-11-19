@@ -13,7 +13,7 @@ Capstone(rodpartpicker)/
 │   ├── assets/             # Static assets (images, icons, vectors)
 │   ├── components/         # Shared, domain-agnostic UI components (Button, Modal, Input)
 │   │   └── ui/             # shadcn/ui primitives (generated; edit via the shadcn CLI)
-│   ├── features/           # Feature domain modules
+│   ├── features/           # Feature domain modules (home/ is the landing page at /)
 │   │   └── userProfile/    # User Profile domain module
 │   │       ├── api/        # Data fetching functions & API calls for this feature
 │   │       ├── components/ # Feature-specific React components
@@ -23,11 +23,10 @@ Capstone(rodpartpicker)/
 │   │       └── index.ts    # Public API export (Barrel file)
 │   ├── hooks/              # Reusable, global React hooks (e.g., useDebounce, useAuth)
 │   ├── lib/                # Third-party SDK configurations & client wrappers (Axios, Firebase)
-│   ├── routes/             # Router setup and page route definitions
+│   ├── routes/             # Router setup and page route definitions (AppRoutes.tsx)
 │   ├── styles/             # index.css: Tailwind entry, palette + theme tokens
 │   ├── types/              # Global TypeScript types and ambient type declarations
 │   ├── utils/              # Global pure helper functions (formatting, calculations)
-│   ├── App.tsx             # Home page
 │   └── main.tsx            # React application entry point
 ├── .gitignore
 ├── .oxlintrc.json
