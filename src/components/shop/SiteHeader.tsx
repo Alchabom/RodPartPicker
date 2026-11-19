@@ -10,7 +10,8 @@ import { Wordmark } from './Wordmark'
 
 const focusRing = 'outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
-export function SiteHeader({ account }: { account: ReactNode }) {
+export function SiteHeader({ account, signedIn }: { account: ReactNode; signedIn: boolean }) {
+  const items = NAV_ITEMS.filter((item) => !item.requiresAuth || signedIn)
   const { pathname } = useLocation()
   // The menu belongs to the page it was opened on, so any navigation
   // (a link, back or forward) closes it without an effect
@@ -24,7 +25,7 @@ export function SiteHeader({ account }: { account: ReactNode }) {
         <Wordmark className="text-ink" />
 
         <nav aria-label="Main" className="hidden h-full items-stretch gap-6 md:flex">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -56,7 +57,7 @@ export function SiteHeader({ account }: { account: ReactNode }) {
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
               <nav aria-label="Menu" className="flex flex-col gap-1 px-4">
-                {NAV_ITEMS.map((item) => (
+                {items.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}

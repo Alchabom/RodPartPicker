@@ -1,4 +1,5 @@
 import { Outlet, Route, Routes } from 'react-router'
+import { useAuth } from '@hooks/auth'
 import { NotFound } from '@components/NotFound'
 import { SiteFooter, SiteHeader } from '@components/shop'
 import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
@@ -8,9 +9,10 @@ import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuild
 import { RedirectToMyBuilds, RedirectToRack, RedirectToRackBuild } from './redirects'
 
 function Layout() {
+  const { status } = useAuth()
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader account={<UserMenu />} />
+      <SiteHeader account={<UserMenu />} signedIn={status === 'authenticated'} />
       <div className="flex flex-1 flex-col">
         <Outlet />
       </div>

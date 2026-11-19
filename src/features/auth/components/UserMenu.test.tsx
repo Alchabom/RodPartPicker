@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { useAuth } from '@hooks/auth'
@@ -38,5 +39,23 @@ describe('RequireAuth while the session loads', () => {
     )
     expect(screen.getByRole('status')).toHaveTextContent('Loading')
     expect(screen.queryByText('Secret')).toBeNull()
+  })
+})
+
+describe('UserMenu when signed in', () => {
+  it('has no My Builds item (it lives in the main nav)', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      status: 'authenticated',
+      user: { email: 'a@b.co', displayName: 'Ann' },
+      signOut: vi.fn(),
+    } as unknown as ReturnType<typeof useAuth>)
+    render(
+      <MemoryRouter>
+        <UserMenu />
+      </MemoryRouter>,
+    )
+    await userEvent.setup().click(screen.getByRole('button', { name: /Ann/ }))
+    expect(screen.getByRole('menuitem', { name: 'Account settings' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'My Builds' })).toBeNull()
   })
 })
