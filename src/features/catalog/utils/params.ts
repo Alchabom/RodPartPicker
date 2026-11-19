@@ -8,7 +8,7 @@ export function parseCatalogParams(search: URLSearchParams): CatalogParams {
   const maxPrice = rawPrice === null || rawPrice.trim() === '' ? NaN : Number(rawPrice)
 
   return {
-    page: Number.isInteger(page) && page >= 1 ? page : 1,
+    page: Number.isInteger(page) && page >= 1 && page <= 10000 ? page : 1,
     weight: Number.isInteger(weight) && weight >= 1 && weight <= 15 ? weight : undefined,
     maxPrice: Number.isFinite(maxPrice) && maxPrice >= 0 ? maxPrice : undefined,
   }

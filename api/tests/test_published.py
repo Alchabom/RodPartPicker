@@ -397,6 +397,8 @@ def test_total_counts_missing_part_as_zero(client, db, make_part, make_published
     "params",
     [
         {"page": 0},
+        {"page": 10001},
+        {"page": 10000000000000000000},
         {"weight": 0},
         {"weight": 16},
         {"weight": "abc"},

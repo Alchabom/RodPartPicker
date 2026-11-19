@@ -104,6 +104,13 @@ erDiagram
   leaders |o--o{ builds : in
   tippets |o--o{ builds : in
   users ||--o{ refresh_tokens : "signed in with"
+  users ||--o{ published_builds : publishes
+  builds |o--o| published_builds : "snapshot of"
+  rods |o--o{ published_builds : in
+  reels |o--o{ published_builds : in
+  fly_lines |o--o{ published_builds : in
+  leaders |o--o{ published_builds : in
+  tippets |o--o{ published_builds : in
 ```
 
 **What lives where:**
@@ -122,6 +129,13 @@ Each row is one purchasable size.
 
 **Auth (migration 016):** `users`, `refresh_tokens`, and `login_codes` (keyed by email, so it has no FK to `users`).
 
+**Published builds (migration 020):** `published_builds` is the public catalog. It holds its own copy of the five part ids (a snapshot, not a view of the saved build), plus `title`, `writeup`, `published_at` and `updated_at`.
+
+- **`source_build_id`** is `UNIQUE` (at most one published build per saved build) and `ON DELETE SET NULL`, so deleting the saved build leaves the published one public. MySQL allows many NULLs under a unique key.
+- **`user_id`** is `ON DELETE CASCADE`, like `builds`. The part columns are `ON DELETE SET NULL`, like `builds`, so a removed part becomes an empty slot.
+- **`published_at`** is set once; "newest first" uses `idx_published_newest (published_at, id)`, so an update doesn't move a build up the list.
+- Rationale: `docs/superpowers/specs/2026-11-18-published-builds-design.md`.
+
 **Integrity choices:**
 
 - **Money** is `DECIMAL(8,2)` with `CHECK (price >= 0)`. Floating point would introduce rounding errors.
@@ -133,7 +147,8 @@ Each row is one purchasable size.
   |---|---|---|
   | A part used in a build | The build stays; that part slot becomes empty | `SET NULL` |
   | A brand or lookup row still in use | The delete is refused | default (`RESTRICT`) |
-  | A user | Their builds are deleted too (migration 019) | `CASCADE` |
+  | A user | Their builds are deleted too (migration 019), and so are their published builds (migration 020) | `CASCADE` |
+  | A saved build that was published | The published build stays; `source_build_id` becomes NULL | `SET NULL` |
 
 - **`min_line_weight <= max_line_weight` on reels is validated in the API.**
   MySQL restricts `CHECK` constraints on columns that are also foreign keys.
