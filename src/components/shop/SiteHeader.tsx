@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { MenuIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,11 +11,12 @@ import { Wordmark } from './Wordmark'
 const focusRing = 'outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export function SiteHeader({ account }: { account: ReactNode }) {
-  const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
-
-  // Back/forward navigation also closes the menu.
-  useEffect(() => setOpen(false), [pathname])
+  // The menu belongs to the page it was opened on, so any navigation
+  // (a link, back or forward) closes it without an effect
+  const [openOn, setOpenOn] = useState<string | null>(null)
+  const open = openOn === pathname
+  const setOpen = (next: boolean) => setOpenOn(next ? pathname : null)
 
   return (
     <header className="border-b border-hairline bg-stone-page">

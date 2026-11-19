@@ -2,6 +2,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* A local fallback sized to Public Sans (measured against Arial: 4.34% wider,
+   ascent 0.95em, descent 0.23em), so text doesn't reflow when the web font arrives */
+@font-face {
+  font-family: 'Public Sans Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica');
+  size-adjust: 104.34%;
+  ascent-override: 91.05%;
+  descent-override: 22.04%;
+  line-gap-override: 0%;
+}
+
 /* Keep shadcn's dark: classes tied to a .dark class (unused), not the OS setting */
 @custom-variant dark (&:is(.dark *));
 
@@ -19,6 +30,9 @@
   --spot: #C23B2E;
   --halo: #7FA3C4;
   --olive: #36402A;
+  /* The logo's brook trout dorsal fin: olive-gold with dark wavy bands */
+  --dorsal: #A39246;
+  --dorsal-band: #2C3522;
   --haze-1: #CBD4D6;
   --haze-2: #A8B8C0;
   --haze-3: #7C93A1;
@@ -52,8 +66,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Public Sans', 'Public Sans Fallback', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Public Sans', 'Public Sans Fallback', ui-sans-serif, system-ui, sans-serif;
 
   /* Brand tokens as utilities: bg-stone-page, text-ink-2, bg-belly, fill-haze-3, ... */
   --color-stone-page: var(--stone-page);
@@ -68,6 +82,8 @@
   --color-spot: var(--spot);
   --color-halo: var(--halo);
   --color-olive: var(--olive);
+  --color-dorsal: var(--dorsal);
+  --color-dorsal-band: var(--dorsal-band);
   --color-haze-1: var(--haze-1);
   --color-haze-2: var(--haze-2);
   --color-haze-3: var(--haze-3);
@@ -86,6 +102,17 @@
   --color-linen: var(--stone-page);
   --color-bone: var(--stone-raised);
   --color-twine: var(--ink-3);
+
+  /* The hero's fly line draws itself in once (a mask's dash offset, 1 → 0) */
+  --animate-cast: cast 1200ms var(--ease-shop) 300ms both;
+  @keyframes cast {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
 
   --animate-rise: rise 400ms var(--ease-shop) both;
   @keyframes rise {

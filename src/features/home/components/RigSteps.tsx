@@ -20,7 +20,7 @@ const STEPS = [
 export function RigSteps() {
   const headingId = useId()
   return (
-    <Container as="section" className="pt-24 pb-16">
+    <Container as="section" className="pt-20 pb-16">
       <SectionHeading id={headingId}>How a rig goes together</SectionHeading>
       <ol aria-labelledby={headingId} className="mt-10 grid lg:grid-cols-5">
         {STEPS.map((step, i) => (
