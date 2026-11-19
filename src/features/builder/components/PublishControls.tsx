@@ -21,11 +21,11 @@ import { getMyPublished, unpublishBuild, type PublishedRef } from '../api/publis
 import type { Build } from '../types'
 import { PublishDialog } from './PublishDialog'
 
-// Publish, update or unpublish a saved build. BuildHeader renders this in saved mode only.
+// Post to the Rack, update there, or take off a saved build. BuildHeader renders this in saved mode only.
 export function PublishControls({ id, name, build }: { id: number; name: string; build: Build }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   // What the last finished publish did; cleared when the next action starts
-  const [notice, setNotice] = useState<'Published' | 'Updated' | null>(null)
+  const [notice, setNotice] = useState<'Posted' | 'Updated' | null>(null)
   const { data: published, isError, refetch } = useQuery({
     queryKey: buildKeys.published(id),
     queryFn: ({ signal }) => getMyPublished(id, signal),
@@ -41,7 +41,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
     if (!isError) return null
     return (
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-muted-foreground">Couldn't load publish status</span>
+        <span className="text-muted-foreground">Couldn't load Rack status</span>
         <Button size="sm" variant="secondary" onClick={() => refetch()}>
           Try again
         </Button>
@@ -56,21 +56,22 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
       {published === null ? (
         <>
           <Button size="sm" disabled={!complete} aria-describedby={complete ? undefined : 'publish-hint'} onClick={openDialog}>
-            Publish
+            Post to the Rack
           </Button>
           {!complete && (
             <span id="publish-hint" className="text-muted-foreground">
-              Add all five parts to publish
+              Add all five parts to post
             </span>
           )}
         </>
       ) : (
         <>
           <Link to={`/rack/${published.id}`} className="font-semibold text-spectra hover:underline">
-            Published · View
+            On the Community Rack · View
           </Link>
+          {/* ShareButton: Task 7 */}
           <Button size="sm" variant="secondary" onClick={openDialog}>
-            Update published build
+            Update on the Rack
           </Button>
           <UnpublishButton buildId={id} published={published} onStart={() => setNotice(null)} />
         </>
@@ -81,11 +82,11 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         buildId={id}
         initial={published ?? { title: name, writeup: '' }}
         mode={published ? 'update' : 'publish'}
-        onSaved={(mode) => setNotice(mode === 'publish' ? 'Published' : 'Updated')}
+        onSaved={(mode) => setNotice(mode === 'publish' ? 'Posted' : 'Updated')}
       />
       {/* Always mounted so screen readers announce the text when it appears */}
       <span role="status" className="font-semibold text-te-papa-green">
-        {notice}
+        {notice && `${notice} ${notice === 'Posted' ? 'to' : 'on'} the Rack`}
       </span>
     </div>
   )
@@ -106,6 +107,7 @@ function UnpublishButton({
     setOpen(false)
     queryClient.invalidateQueries({ queryKey: buildKeys.published(buildId) })
     queryClient.invalidateQueries({ queryKey: publishedKeys.all })
+    queryClient.invalidateQueries({ queryKey: buildKeys.list() })
   }
   const mutation = useMutation({
     mutationFn: () => unpublishBuild(buildId),
@@ -127,19 +129,19 @@ function UnpublishButton({
     >
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="secondary">
-          Unpublish
+          Take off the Rack
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{`Unpublish "${published.title}"?`}</AlertDialogTitle>
+          <AlertDialogTitle>{`Take "${published.title}" off the Rack?`}</AlertDialogTitle>
           <AlertDialogDescription>
-            It comes off the Builds page. Your saved build stays, and you can publish it again later.
+            It comes off the Community Rack. Your saved build stays in My builds, and you can post it again later.
           </AlertDialogDescription>
         </AlertDialogHeader>
         {failed && (
           <p role="alert" className="text-sm text-destructive">
-            Couldn't unpublish, try again
+            Couldn't take it off the Rack, try again
           </p>
         )}
         <AlertDialogFooter>
@@ -153,7 +155,7 @@ function UnpublishButton({
               mutation.mutate()
             }}
           >
-            Unpublish
+            Take off the Rack
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
