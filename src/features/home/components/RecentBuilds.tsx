@@ -38,8 +38,8 @@ export function RecentBuilds() {
           </Loading>
         ) : items.length === 0 ? (
           <EmptyState
-            title="No builds published yet"
-            description="Publish yours from the builder."
+            title="Nothing on the Rack yet"
+            description="Post yours from the Builder."
             action={
               <Button asChild>
                 <Link to="/builder">Start a build</Link>
@@ -54,7 +54,7 @@ export function RecentBuilds() {
               ))}
             </ul>
             <Button asChild variant="link" className="mt-8">
-              <Link to="/rack">See all completed builds</Link>
+              <Link to="/rack">See all of the Community Rack</Link>
             </Button>
           </>
         )}

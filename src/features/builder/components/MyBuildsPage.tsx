@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Loading } from '@components/shop'
+import { Loading, PageHeader } from '@components/shop'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -138,11 +138,16 @@ export function MyBuildsPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-te-papa-green">My Builds</h1>
-        <Button asChild>
-          <Link to="/builder">New build</Link>
-        </Button>
+      <div className="mb-8">
+        <PageHeader
+          title="My builds"
+          description="Only you can see these. Post one to the Rack to share it."
+          actions={
+            <Button asChild>
+              <Link to="/builder">New build</Link>
+            </Button>
+          }
+        />
       </div>
 
       {rows.length === 0 ? (

@@ -38,7 +38,7 @@ export function HomePage() {
                 <Link to="/builder">Start a build</Link>
               </Button>
               <Button asChild variant="link" size="lg">
-                <Link to="/rack">See completed builds</Link>
+                <Link to="/rack">See the Community Rack</Link>
               </Button>
             </div>
           </div>
