@@ -38,6 +38,15 @@
   --haze-3: #7C93A1;
   --haze-4: #4F6677;
   --haze-5: #33424A;
+  /* Part highlights: stream blue marks parts that fit the build, brook-trout
+     gold marks recommended ones. The washes are the badge backgrounds (35% and
+     32% over stone-card), kept as hex so check:contrast can test them */
+  --fit: var(--halo);
+  --fit-ink: var(--haze-5);
+  --fit-wash: #D0DCE6;
+  --recommended: var(--dorsal);
+  --recommended-ink: var(--dorsal-band);
+  --recommended-wash: #E0D9C0;
   --dawn: #EEE5D6;
   --negative: #B4322B;
   --fin-edge: linear-gradient(90deg, var(--stone-card) 0 3px, var(--ink) 3px 6px, var(--belly) 6px);
@@ -91,6 +100,12 @@
   --color-haze-5: var(--haze-5);
   --color-dawn: var(--dawn);
   --color-negative: var(--negative);
+  --color-fit: var(--fit);
+  --color-fit-ink: var(--fit-ink);
+  --color-fit-wash: var(--fit-wash);
+  --color-recommended: var(--recommended);
+  --color-recommended-ink: var(--recommended-ink);
+  --color-recommended-wash: var(--recommended-wash);
 
   /* Deprecated: removed in sub-project 2 */
   --color-te-papa-green: var(--olive);

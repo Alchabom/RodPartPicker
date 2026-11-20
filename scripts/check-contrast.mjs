@@ -27,6 +27,8 @@ const pairs = [
   ['belly-ink', 'stone-raised'],
   ['#FFFFFF', 'negative'],
   ['negative', 'stone-page'],
+  ['haze-5', 'fit-wash'],
+  ['dorsal-band', 'recommended-wash'],
 ]
 
 const resolve = (ref) => (ref.startsWith('#') ? ref : tokens[ref])

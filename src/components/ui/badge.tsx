@@ -8,9 +8,8 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        fit: "bg-stone-raised text-ink",
-        recommended:
-          "bg-[color-mix(in_oklab,var(--belly)_14%,transparent)] text-belly-ink",
+        fit: "bg-fit-wash text-fit-ink",
+        recommended: "bg-recommended-wash text-recommended-ink",
         muted: "bg-stone-raised text-ink-2",
       },
     },
