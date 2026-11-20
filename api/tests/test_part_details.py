@@ -2,12 +2,13 @@ import pytest
 from sqlalchemy.exc import DBAPIError
 
 from app.parts.links import image_url_for, safe_purchase_url
-from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
+from app.parts.models import FlyLine, Leader, Reel, Tippet
 
 CHECK_VIOLATED = 3819
 
 
-@pytest.mark.parametrize("model", [Rod, Reel, FlyLine, Leader, Tippet])
+# Rod links and images live on rod_series; test_rod_series.py checks those
+@pytest.mark.parametrize("model", [Reel, FlyLine, Leader, Tippet])
 @pytest.mark.parametrize("bad", ["javascript:alert(1)", "http://example.com"])
 def test_purchase_url_check_rejects(make_part, model, bad):
     with pytest.raises(DBAPIError) as e:
@@ -19,10 +20,10 @@ def test_purchase_url_check_rejects(make_part, model, bad):
 @pytest.mark.parametrize(
     ("model", "bad"),
     [
-        (Rod, "../x.webp"),
-        (Rod, "rods/x.png"),
-        (Rod, "rods/X.webp"),
-        (Rod, "https://evil.example/x.webp"),
+        (Reel, "../x.webp"),
+        (Reel, "reels/x.png"),
+        (Reel, "reels/X.webp"),
+        (Reel, "https://evil.example/x.webp"),
         (Reel, "rods/x.webp"),
     ],
 )
@@ -33,14 +34,19 @@ def test_image_path_check_rejects(make_part, model, bad):
     assert e.value.orig.args[0] == CHECK_VIOLATED
 
 
-def test_valid_values_are_accepted(make_part):
-    rod = make_part(
-        Rod,
+def test_valid_values_are_accepted(make_part, make_rod_series):
+    reel = make_part(
+        Reel,
         purchase_url="https://shop.example/r",
+        image_path="reels/lamson-liquid-s.webp",
+    )
+    series = make_rod_series(
+        purchase_url="https://shop.example/s",
         image_path="rods/lamson-liquid.webp",
     )
 
-    assert rod.id is not None
+    assert reel.id is not None
+    assert series.id is not None
 
 
 def test_safe_purchase_url():

@@ -27,7 +27,19 @@ class PartOut(CamelModel):
 
 
 class RodOut(PartOut):
-    image_url: ImageUrl
+    # A rod's link and image belong to its series
+    purchase_url: Annotated[
+        str | None,
+        Field(validation_alias=AliasPath("series", "purchase_url")),
+        AfterValidator(safe_purchase_url),
+    ]
+    image_url: Annotated[
+        str | None,
+        Field(validation_alias=AliasPath("series", "image_path")),
+        AfterValidator(image_url_for),
+    ]
+    series_id: int
+    size_code: str | None
     action: Literal["slow", "medium", "medium_fast", "fast"] | None
     line_weight: int
     length_in: int

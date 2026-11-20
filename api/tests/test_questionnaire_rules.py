@@ -118,7 +118,7 @@ def test_every_combination_gets_the_same_leader_and_tippet(combo):
     }
     assert picks["tippet"].key == {
         "brand": "RIO",
-        "name": "Powerflex Plus",
+        "name": "Powerflex Strong",
         "x_size": "5X",
     }
 

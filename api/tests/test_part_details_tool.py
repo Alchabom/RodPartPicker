@@ -225,12 +225,19 @@ def test_build_refuses_wrong_case_image_file(
     ), exc.value.errors
 
 
-def test_find_missing_lists_rod_with_link_but_no_image(db, make_part, make_brand):
-    from app.parts.models import Rod
-
+def test_find_missing_lists_rod_series_with_link_but_no_image(
+    db, make_brand, make_rod_series
+):
     brand = make_brand("Zed Rods")
-    make_part(Rod, name="LinkOnly", brand=brand, purchase_url="https://x")
-    assert "Zed Rods LinkOnly" in find_missing(db)["rod"]
+    make_rod_series(brand=brand, name="LinkOnly", purchase_url="https://x")
+    make_rod_series(
+        brand=brand, name="Full", purchase_url="https://x", image_path="rods/f.webp"
+    )
+
+    rods = find_missing(db)["rod"]
+
+    assert "Zed Rods LinkOnly" in rods
+    assert "Zed Rods Full" not in rods
 
 
 def test_find_missing(db, make_part, make_brand):
@@ -291,3 +298,37 @@ def test_trailing_backslash_round_trip(tmp_path, db, parts_dir, make_part, make_
     db.expire_all()
     assert reel.purchase_url == "https://shop.example/m"
     assert reel.name == "Model\\"
+
+
+def test_build_updates_rod_series_by_series_name(
+    tmp_path, db, parts_dir, make_brand, make_rod_series, make_part
+):
+    brand = make_brand("Seriesco")
+    make_rod_series(brand=brand, name="Big Stick")
+    csv_path = write_csv(
+        tmp_path, "rod,Seriesco,Big Stick,https://shop.example/bs,rods/a.webp"
+    )
+
+    sql = build_sql(csv_path, db, parts_dir)
+
+    assert (
+        "UPDATE rod_series SET purchase_url = 'https://shop.example/bs', "
+        "image_path = 'rods/a.webp' WHERE brand_id = "
+        "(SELECT id FROM brands WHERE name = 'Seriesco') AND name = 'Big Stick';"
+    ) in sql
+
+
+def test_build_refuses_rod_size_names(
+    tmp_path, db, parts_dir, make_brand, make_rod_series, make_part
+):
+    from app.parts.models import Rod
+
+    brand = make_brand("Sizeco")
+    series = make_rod_series(brand=brand, name="Big Stick")
+    make_part(Rod, name="Big Stick 590-4", series=series)
+    csv_path = write_csv(tmp_path, "rod,Sizeco,Big Stick 590-4,https://shop.example/x,")
+
+    with pytest.raises(PartDetailsError) as exc:
+        build_sql(csv_path, db, parts_dir)
+
+    assert "Big Stick 590-4 is not in the catalog for rod" in exc.value.errors[0]

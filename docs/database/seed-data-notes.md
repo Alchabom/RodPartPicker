@@ -82,7 +82,7 @@ batches. Each batch is a numbered migration generated from a CSV by
 
 **Workflow**
 
-1. Copy `api/part_details_template.csv` to `api/part_details_<label>.csv` and fill it in. The header is `component,brand,model,purchase_url,image_file`. `component` is `rod`, `reel`, `line`, `leader` or `tippet`. `image_file` is optional and only for rods and reels.
+1. Copy `api/part_details_template.csv` to `api/part_details_<label>.csv` and fill it in. The header is `component,brand,model,purchase_url,image_file`. `component` is `rod`, `reel`, `line`, `leader` or `tippet`. For rods, `model` is the **series name** (`R8 Core`, `Liquid Max`), since rod links and images live on `rod_series` (migration 024). `image_file` is optional and only for rods and reels.
 2. Put the `.webp` files in `public/parts/rods/` and `public/parts/reels/`.
 3. From `api/`, run `uv run python -m app.part_details build part_details_<label>.csv --name <label>`. It writes `api/migrations/<next number>_part_details_<label>.sql`, or lists every bad row (with its line number) and writes nothing.
 4. Read the generated SQL.
@@ -95,13 +95,21 @@ A statement matches every size row of that model, and can be repeated, so a late
 
 - WebP, 800x600, under 100 KB.
 - Named `<brand>-<model>.webp`, lowercase, with every run of other characters turned into one hyphen: `Lamson` + `Liquid S` is `reels/lamson-liquid-s.webp`. The folder must match the component (`rods/` or `reels/`).
-- One file can serve several rows (every size of a rod model can share one image).
+- Rod images are named after the series slug: `rods/<brand>-<series slug>.webp`, such as `rods/sage-r8-core.webp` and `rods/orvis-superfine-graphite.webp`. One image covers every size of the series.
+- One reel file can serve several rows (every size of a reel model can share one image).
 - Only use images the team may use, and record where each came from in the table below.
 
 **Batches**
 
 | Batch | Migration | Sources | Image credits |
 |---|---|---|---|
+| `links` (2026-11-19) | `022_part_details_links.sql` | Manufacturer product pages only: farbank.com (Sage, Redington, RIO), orvis.com, lamsonflyfishing.com, scientificanglers.com, umpqua.com. Every URL was listed in that site's own sitemap (robots.txt allowed it). All sizes of a series share the series page | No images |
+
+Notes on the `links` batch:
+
+- RIO Powerflex Plus tippet had no link: RIO discontinued it and replaced it with Powerflex Strong ([Far Bank's RIO FAQ](https://farbank.com/pages/rio-product-faq)). Migration `023_powerflex_strong.sql` updates the eight rows in place, so builds that chose a Powerflex Plus size now hold Powerflex Strong. It sets the new name, the 30 yd spool, $8.49 (Far Bank's price), the Far Bank link, and these strengths from The Fly Stop's and Tailwaters' spec charts: 0X 16.2, 1X 14.0, 2X 11.2, 3X 9.1, 4X 7.5, 5X 5.5, 6X 3.6, 7X 2.5 lb. Strong's half sizes (4.5X, 5.5X, 6.5X) were not added. The questionnaire's tippet pick (`app/questionnaire/rules.py`) follows the rename.
+- Lamson `Remix S` and `Remix S (sealed)` both link to the Remix S page, and `speedster` and `speedster with fighting butt` both link to the Speedster rod page. Lamson sells those variants from one page.
+- Scientific Anglers' `absolute-trout` page is the Trout *Tippet*. The Absolute Trout Leader is `absolute-trout-1-pack`, and the Absolute Fluorocarbon Trout Leader is `absolute-fluorocarbon` (page title "Absolute Fluorocarbon Leaders").
 
 ## Changing the data
 
