@@ -2,8 +2,7 @@
 // and maps each row into the UI's Part shape.
 import { apiFetch } from '@/lib/api'
 import type { Brand, Catalog, ComponentType, Part } from '../types'
-
-type Water = 'fresh' | 'salt' | 'both'
+import { NONE, WATER_LABELS, capitalize, formatLength, type Water } from '../utils/format'
 
 // Row shapes returned by api/app/parts/schemas.py
 interface RodRow {
@@ -68,26 +67,13 @@ interface TippetRow {
   purchaseUrl: string | null
 }
 
-const NONE = '—'
-
-const WATER_LABELS: Record<Water, string> = { fresh: 'Fresh', salt: 'Salt', both: 'Fresh & salt' }
-
 // "Scientific Anglers" -> "scientific-anglers"
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-function capitalize(value: string | null): string {
-  return value ? value[0].toUpperCase() + value.slice(1) : NONE
-}
-
 function orNone(value: number | string | null): string {
   return value === null ? NONE : String(value)
-}
-
-// 108 -> 9'0"
-function formatLength(inches: number): string {
-  return `${Math.floor(inches / 12)}'${inches % 12}"`
 }
 
 function basePart(component: ComponentType, row: { id: number; brand: string; model: string; price: number | null; purchaseUrl: string | null }) {

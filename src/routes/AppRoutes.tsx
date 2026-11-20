@@ -5,7 +5,15 @@ import { SiteFooter, SiteHeader } from '@components/shop'
 import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '@features/auth'
 import { HomePage } from '@features/home'
 import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
-import { BrandPartsPage, BuilderLayout, BuilderPage, LocalBuildProvider, MyBuildsPage, SavedBuildProvider } from '@features/builder'
+import {
+  BrandPartsPage,
+  BuilderLayout,
+  BuilderPage,
+  LocalBuildProvider,
+  MyBuildsPage,
+  RodSeriesPage,
+  SavedBuildProvider,
+} from '@features/builder'
 import { RedirectToMyBuilds, RedirectToRack, RedirectToRackBuild } from './redirects'
 
 function Layout() {
@@ -30,6 +38,7 @@ export function AppRoutes() {
         <Route path="builder" element={<BuilderLayout />}>
           <Route element={<LocalBuildProvider />}>
             <Route index element={<BuilderPage />} />
+            <Route path="rod/:brand" element={<RodSeriesPage />} />
             <Route path=":component/:brand" element={<BrandPartsPage />} />
           </Route>
           <Route
@@ -41,6 +50,7 @@ export function AppRoutes() {
             }
           >
             <Route index element={<BuilderPage />} />
+            <Route path="rod/:brand" element={<RodSeriesPage />} />
             <Route path=":component/:brand" element={<BrandPartsPage />} />
           </Route>
         </Route>
