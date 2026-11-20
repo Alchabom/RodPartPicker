@@ -12,6 +12,7 @@ from app.parts.router import router as parts_router
 from app.published.router import owner_router as published_owner_router
 from app.published.router import public_router as published_public_router
 from app.questionnaire.router import router as questionnaire_router
+from app.rods.router import router as rods_router
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -42,6 +43,7 @@ def health(response: Response, db: DbSession):
 
 
 api.include_router(parts_router)
+api.include_router(rods_router)
 api.include_router(builds_router)
 api.include_router(published_owner_router)
 api.include_router(published_public_router)

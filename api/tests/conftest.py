@@ -18,7 +18,7 @@ from app.db import engine as app_engine
 from app.db import get_db, make_engine
 from app.main import app
 from app.migrate import migrate
-from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, Tippet
+from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, RodSeries, Tippet
 from app.published.models import PublishedBuild
 
 PART_COLUMNS = ["rod_id", "reel_id", "fly_line_id", "leader_id", "tippet_id"]
@@ -157,10 +157,32 @@ def make_brand(db):
 
 
 @pytest.fixture
-def make_part(db, make_brand):
+def make_rod_series(db, make_brand):
+    count = 0
+
+    def make(brand=None, **columns):
+        nonlocal count
+        count += 1
+        defaults = {"name": f"Test Series {count}", "slug": f"test-series-{count}"}
+        series = RodSeries(brand=brand or make_brand(), **{**defaults, **columns})
+        db.add(series)
+        db.flush()
+        return series
+
+    return make
+
+
+@pytest.fixture
+def make_part(db, make_brand, make_rod_series):
     def make(model, **columns):
         if "brand" not in columns and "brand_id" not in columns:
-            columns["brand"] = make_brand()
+            # A rod made for a given series belongs to that series' brand
+            series = columns.get("series")
+            columns["brand"] = series.brand if series else make_brand()
+        # A rod needs a series; by default each rod gets its own in its brand
+        if model is Rod and "series" not in columns and "series_id" not in columns:
+            brand = columns.get("brand") or db.get(Brand, columns["brand_id"])
+            columns["series"] = make_rod_series(brand=brand)
         part = model(**{**PART_DEFAULTS[model], **columns})
         db.add(part)
         db.flush()

@@ -82,11 +82,14 @@ The database and API replace it.
 | D9 | Where do compatibility rules live? | DB constraints; application code | **Application code** | A builder should *warn* about a mismatch and still let the user save |
 | D10 | Which fly line specs are stored? | Type, taper, sink rate | **Type and sink rate** (migrations 003, 004) | `taper` dropped as not needed for compatibility. `sink_rate_ips` is NULL exactly when `type` is floating |
 | D11 | Which framework serves the API? | Express; FastAPI | **FastAPI + SQLAlchemy**, replacing D7's Express server | The team wanted the experience of building its own API in Python, with a pytest suite against real MySQL |
+| D12 | How are a rod model's sizes grouped? | Parse rod names; a `series` text column; a `rod_series` table | **`rod_series` table** (migration 024), with `rods.series_id` NOT NULL | The builder picks a rod by brand, then series, then size. Orvis and Lamson names carry no size code, so names can't be parsed. A table gives each series an id, slug and display name, and owns the purchase link and image every size shares, so they can't drift between sizes. See `docs/superpowers/specs/2026-11-20-rod-series-design.md` |
 
 ## 6. Final schema
 
 ```mermaid
 erDiagram
+  brands ||--o{ rod_series : makes
+  rod_series ||--o{ rods : "sizes of"
   brands ||--o{ rods : makes
   brands ||--o{ reels : makes
   brands ||--o{ fly_lines : makes
@@ -119,11 +122,13 @@ Each row is one purchasable size.
 
 | Table | Columns (besides `id`, `brand_id`, `name`, `price`) | Unique per |
 |---|---|---|
-| `rods` | action, water, line weight, length (in), pieces | brand, name, line weight, length, pieces |
+| `rods` | series, size code, action, water, line weight, length (in), pieces | brand, name, line weight, length, pieces |
 | `reels` | water, min/max line weight | brand, name, min/max line weight |
 | `fly_lines` | line weight, type, sink rate, water, head weight (grains) | brand, name, line weight |
 | `leaders` | material, water, length (ft), tip X-size, pack count | brand, name, length, X-size, pack count |
 | `tippets` | material, water, X-size, spool yards | brand, name, X-size, spool yards |
+
+**Rod series (migration 024):** `rod_series` holds the 20 rod models (brand, display `name`, URL `slug`, `purchase_url`, `image_path`), unique by brand and name and by brand and slug. Every rod has a `series_id`; `size_code` is the short label that tells sizes apart within a series (`590-4`, `690-4 FB`), or NULL where length and weight already do. The rod's link and image moved here from `rods`.
 
 **Lookups:** `brands`, `line_weights` (seeded with the AFTMA table), `x_sizes` (seeded 03X–8X).
 
@@ -136,7 +141,7 @@ Each row is one purchasable size.
 - **`published_at`** is set once; "newest first" uses `idx_published_newest (published_at, id)`, so an update doesn't move a build up the list.
 - Rationale: `docs/superpowers/specs/2026-11-18-published-builds-design.md`.
 
-**Links and images (migration 021):** every part table has a nullable `purchase_url VARCHAR(500)`, and `rods` and `reels` also have a nullable `image_path VARCHAR(255)`. Both stay NULL until a seed batch fills them in.
+**Links and images (migration 021):** every part table has a nullable `purchase_url VARCHAR(500)`, and `rods` and `reels` also have a nullable `image_path VARCHAR(255)`. Both stay NULL until a seed batch fills them in. Migration 024 moved the rod columns (and their CHECKs, now `rods/` only) onto `rod_series`.
 
 - **`purchase_url`** has `CHECK (purchase_url LIKE 'https://%')`, so a `javascript:` or plain `http:` link can't be stored.
 - **`image_path`** has `CHECK (REGEXP_LIKE(image_path, '^(rods|reels)/[a-z0-9-]+\\.webp$', 'c'))` (each table allows its own folder), so a path can't point outside `public/parts/`. The `'c'` flag makes the match case-sensitive; plain `REGEXP` is case-insensitive under the default collation and would accept `rods/X.webp`.
