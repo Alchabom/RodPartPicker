@@ -17,7 +17,7 @@ describe('BuildCard', () => {
   it('links to the build and shows its details', () => {
     render(<MemoryRouter><ul><BuildCard build={build} /></ul></MemoryRouter>)
     const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', '/builds/5')
+    expect(link).toHaveAttribute('href', '/rack/5')
     expect(screen.getByText(build.title)).toHaveClass('line-clamp-2')
     expect(screen.getByText('Redington Classic Trout 486-4 · 4 wt')).toBeInTheDocument()
     expect(screen.getByText('$417.99')).toBeInTheDocument()

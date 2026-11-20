@@ -1,7 +1,7 @@
-# Published builds: the public catalog
+# Published builds: the Community Rack
 
-How a saved build becomes a public, read-only entry in the Completed Builds
-catalog, and how a visitor copies one back into the Builder. The server side is
+How a saved build becomes a public, read-only entry on the Community Rack,
+and how a visitor copies one back into the Builder. The server side is
 `api/app/published/` (`models.py`, `schemas.py`, `router.py`); the browser side
 is `src/features/catalog/` (the public pages) and
 `src/features/builder/` (`components/PublishControls.tsx`,
@@ -10,14 +10,36 @@ is `src/features/catalog/` (the public pages) and
 (`docs/superpowers/specs/2026-11-18-published-builds-design.md`) records the
 rules and the reasons; this page shows how they play out.
 
+## Words
+
+In code a published build is "published". In the UI it is "on the Rack", so
+the code names (`published_builds`, `PublishControls`, `publishedKeys`) stay
+and only the text the user sees changes.
+
+| Thing | Text the user sees |
+|---|---|
+| The public catalog | Community Rack (short form: "the Rack") |
+| The user's saved builds | My builds |
+| Publish button | Post to the Rack |
+| Update button | Update on the Rack |
+| Unpublish button | Take off the Rack |
+| Status after posting | "Posted to the Rack" |
+| Status after updating | "Updated on the Rack" |
+| Link when posted | "On the Community Rack · View" |
+| My builds marker, posted | "On the Rack" |
+| My builds marker, not posted | "Private" |
+
+The API's error messages keep their old wording. The builder maps them to the
+Rack wording in `src/features/builder/utils/rackMessage.ts`.
+
 ## A published build is a snapshot
 
 `published_builds` (migration 020) holds its own copy of the five part ids, a
 title and a write-up. It is not a view of the saved build.
 
 - Saved builds autosave on every change. If the catalog read through them, a
-  public build would change whenever its owner tinkered. **Update published
-  build** copies the current parts on purpose, and nothing else does.
+  public build would change whenever its owner tinkered. **Update on the
+  Rack** copies the current parts on purpose, and nothing else does.
 - `source_build_id` links back to the saved build, but only so the owner can
   update or unpublish from the builder. It is `UNIQUE`, so a saved build has at
   most one published build. Deleting the saved build sets it to `NULL` and the
@@ -70,9 +92,9 @@ A title or write-up is written by one user and read by everyone.
 
 ### Publish
 
-1. The owner, on `/builder/42` with all five parts, clicks **Publish**
+1. The owner, on `/builder/42` with all five parts, clicks **Post to the Rack**
    (`PublishControls`). The button is disabled with "Add all five parts to
-   publish" until then.
+   post" until then.
 2. `PublishDialog` asks for a title (pre-filled with the build's name) and a
    write-up, with a live counter.
 3. On submit it runs `flushSave()` first. The server copies from the saved row,
@@ -80,30 +102,51 @@ A title or write-up is written by one user and read by everyone.
    that save fails, nothing is published.
 4. `PUT /api/builds/42/published` returns 201. The dialog closes, the
    `['builds', 42, 'published']` and `['published']` queries are invalidated,
-   and the controls show "Published" in a `role="status"` element, then
-   "Published · View", **Update published build** and **Unpublish**.
+   and the controls show "Posted to the Rack" in a `role="status"` element, then
+   "On the Community Rack · View", **Update on the Rack** and
+   **Take off the Rack**.
 
 ### Update, and unpublish
 
-**Update published build** runs the same dialog with the published title and
-write-up and shows "Updated" on success. **Unpublish** confirms in an
-`AlertDialog`, then calls `DELETE`. If that gets a 404 (already unpublished
-elsewhere), the controls resync silently, since it is the outcome asked for. If
-the publish-status load fails, the controls show "Couldn't load publish status"
-and **Try again**.
+**Update on the Rack** runs the same dialog with the published title and
+write-up and shows "Updated on the Rack" on success. **Take off the Rack**
+confirms in an `AlertDialog`, then calls `DELETE`. If that gets a 404 (already
+unpublished elsewhere), the controls resync silently, since it is the outcome
+asked for. If the publish-status load fails, the controls show "Couldn't load
+Rack status" and **Try again**.
 
 ### Browse
 
-`/builds` (`PublishedListPage`) keeps `weight`, `maxPrice` and `page` in the URL,
+`/rack` (`PublishedListPage`) keeps `weight`, `maxPrice` and `page` in the URL,
 so a filtered list can be linked to. A bad value in the URL means "no filter".
 `useQuery` with `keepPreviousData` keeps the current page on screen while the
-next loads. With no filters, an empty first page reads "No builds published yet";
-an empty page past the end (with `total > 0`) reads "No builds on this page".
-`/builds/:id` (`PublishedBuildPage`) shows the parts table, the total, the
+next loads. With no filters, an empty first page reads "Nothing on the Rack
+yet"; an empty page past the end (with `total > 0`) reads "No builds on this
+page".
+`/rack/:id` (`PublishedBuildPage`) shows the parts table, the total, the
 write-up and **Open in Builder**; a 404 renders `NotFound`. Dates go through the
 shared `src/utils/formatApiDate.ts`, because the API's timestamps carry no
 offset. Both routes sit outside `BuilderLayout`, so they don't load the parts
 catalog.
+
+### Old URLs and Share
+
+`src/routes/redirects.tsx` keeps old links working, all with `replace`:
+`/builds` goes to `/rack` (the query string is kept), `/builds/:id` to
+`/rack/:id`, and `/builder/saved` to `/my-builds`.
+
+`ShareButton` (`src/components/shop/ShareButton.tsx`, with
+`src/components/ui/popover.tsx`) shares a Rack URL. On a touch device
+(`(pointer: coarse)` matches) where `navigator.share` exists and
+`navigator.canShare({ url })` is true, it opens the native share sheet; closing
+the sheet does nothing, but any other share error falls back to copying.
+Otherwise it copies the absolute `/rack/:id` link, and the label reads "Link
+copied" for 2 seconds. If copying fails, a popover shows the link in a
+read-only native `<input>` to select by hand, and closing it returns focus to
+the Share button. It appears on `/rack/:id` next to **Open in Builder**, in
+`PublishControls` once the build is posted, and in the Rack column of My
+builds. A post, update or take-down also invalidates `buildKeys.list()`, so My
+builds shows the new status.
 
 ### Open in Builder
 

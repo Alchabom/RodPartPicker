@@ -45,20 +45,21 @@ describe('RecentBuilds', () => {
     vi.mocked(listPublished).mockResolvedValue(list(5))
     renderRecent()
     expect(await screen.findAllByRole('listitem')).toHaveLength(3)
-    expect(screen.getByRole('link', { name: 'See all completed builds' })).toHaveAttribute('href', '/builds')
+    expect(screen.getByRole('link', { name: 'See all of the Community Rack' })).toHaveAttribute('href', '/rack')
   })
 
   it.each([1, 2])('shows exactly %i builds when that is all there is', async (n) => {
     vi.mocked(listPublished).mockResolvedValue(list(n))
     renderRecent()
     expect(await screen.findAllByRole('listitem')).toHaveLength(n)
-    expect(screen.queryByText('No builds published yet')).toBeNull()
+    expect(screen.queryByText('Nothing on the Rack yet')).toBeNull()
   })
 
   it('invites a first build when there are none', async () => {
     vi.mocked(listPublished).mockResolvedValue(list(0))
     renderRecent()
-    expect(await screen.findByText('No builds published yet')).toBeInTheDocument()
+    expect(await screen.findByText('Nothing on the Rack yet')).toBeInTheDocument()
+    expect(screen.getByText('Post yours from the Builder.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Start a build' })).toHaveAttribute('href', '/builder')
   })
 

@@ -81,7 +81,7 @@ export function CopyPublishedIntent() {
       {!dismissed && (gone || failed) && (
         <Alert className="mb-6 pr-10">
           <AlertDescription>
-            {gone ? 'That build is no longer published' : "Couldn't load that build"}
+            {gone ? 'That build is no longer on the Rack' : "Couldn't load that build"}
           </AlertDescription>
           <AlertAction>
             <Button size="icon-sm" variant="quiet" aria-label="Dismiss" onClick={() => setDismissed(true)}>

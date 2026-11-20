@@ -5,7 +5,7 @@ import { publishedKeys } from '@/lib/publishedKeys'
 import { listPublished } from '@/lib/published'
 import { parseCatalogParams } from '../utils/params'
 import { CatalogFilters } from './CatalogFilters'
-import { BuildCard, BuildCardSkeleton, Loading } from '@components/shop'
+import { BuildCard, BuildCardSkeleton, Loading, PageHeader } from '@components/shop'
 
 export function PublishedListPage() {
   const [search, setSearch] = useSearchParams()
@@ -68,7 +68,7 @@ export function PublishedListPage() {
                 ? 'No builds match these filters'
                 : data.total > 0
                   ? 'No builds on this page'
-                  : 'No builds published yet'}
+                  : 'Nothing on the Rack yet'}
             </p>
             {hasFilters && (
               <Button className="mt-6" onClick={() => setSearch(new URLSearchParams())}>
@@ -100,7 +100,12 @@ export function PublishedListPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="mb-8 text-3xl font-bold text-te-papa-green">Completed Builds</h1>
+      <div className="mb-8">
+        <PageHeader
+          title="Community Rack"
+          description="Builds posted by anglers on RodPartPicker. Copy any one into your Builder."
+        />
+      </div>
       <CatalogFilters params={params} onChange={setFilters} />
       {body}
     </main>

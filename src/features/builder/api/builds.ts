@@ -10,6 +10,7 @@ export interface SavedBuild {
   flyLineId: number | null
   leaderId: number | null
   tippetId: number | null
+  publishedId?: number | null
   createdAt: string
   updatedAt: string
 }

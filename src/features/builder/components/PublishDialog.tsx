@@ -7,6 +7,7 @@ import { publishedKeys } from '@/lib/publishedKeys'
 import { buildKeys } from '../api/builds'
 import { publishBuild, type PublishInput } from '../api/publish'
 import { useBuild } from '../hooks/useBuild'
+import { rackMessage } from '../utils/rackMessage'
 
 // Same limits as the API's PublishIn. Spreading counts code points, as Python's
 // len() does, so an emoji is one character.
@@ -127,7 +128,7 @@ function PublishForm({
       try {
         await buildState.flushSave()
       } catch {
-        setError("Couldn't save your latest changes; retry before publishing")
+        setError("Couldn't save your latest changes; retry before posting")
         return
       }
 
@@ -139,7 +140,7 @@ function PublishForm({
           // Someone else (another tab) published first: the controls switch to update
           queryClient.invalidateQueries({ queryKey: buildKeys.published(buildId) })
         }
-        setError(apiMessage(e))
+        setError(rackMessage(apiMessage(e)))
         return
       }
 
@@ -147,6 +148,7 @@ function PublishForm({
       queryClient.setQueryData(buildKeys.published(buildId), response)
       queryClient.invalidateQueries({ queryKey: buildKeys.published(buildId) })
       queryClient.invalidateQueries({ queryKey: publishedKeys.all })
+      queryClient.invalidateQueries({ queryKey: buildKeys.list() })
       onDone(submitId)
     } finally {
       setBusy(false)
@@ -156,11 +158,11 @@ function PublishForm({
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <DialogHeader>
-        <DialogTitle>{mode === 'publish' ? 'Publish build' : 'Update published build'}</DialogTitle>
+        <DialogTitle>{mode === 'publish' ? 'Post to the Community Rack' : 'Update on the Rack'}</DialogTitle>
         <DialogDescription>
           {mode === 'publish'
-            ? 'Anyone can see published builds on the Builds page, with your display name.'
-            : 'The published build gets your current parts, title and write-up.'}
+            ? "Anyone can see this build on the Community Rack, including people who aren't signed in. It shows your display name, these parts, the title and write-up."
+            : 'The Rack copy gets your current parts, title and write-up. Later edits stay private until you update again.'}
         </DialogDescription>
       </DialogHeader>
 
@@ -219,7 +221,7 @@ function PublishForm({
           Cancel
         </Button>
         <Button type="submit" disabled={busy}>
-          {busy ? (mode === 'publish' ? 'Publishing…' : 'Updating…') : mode === 'publish' ? 'Publish' : 'Update'}
+          {busy ? (mode === 'publish' ? 'Posting…' : 'Updating…') : mode === 'publish' ? 'Post to the Rack' : 'Update on the Rack'}
         </Button>
       </DialogFooter>
     </form>

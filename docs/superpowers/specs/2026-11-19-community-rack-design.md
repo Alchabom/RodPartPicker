@@ -78,7 +78,7 @@ The team will present this work, so every choice in "Decisions" records its reas
 | `/my-builds` | `RequireAuth` → `MyBuildsPage` | Inside a pathless `<Route element={<BuilderLayout />}>`, because `MyBuildsPage` reads part prices through `useCatalog()` |
 | `/builds` | redirect → `/rack` | Keeps `location.search` |
 | `/builds/:id` | redirect → `/rack/:id` | |
-| `/builder/saved` | redirect → `/my-builds` | Must stay a route under `builder`, so `:buildId` doesn't match `saved` |
+| `/builder/saved` | redirect → `/my-builds` | Top-level route; the static `saved` segment outranks `:buildId` |
 
 Every redirect is a small `<Navigate replace>` element in `src/routes/`, so Back doesn't bounce to the old path. `/builds/:id` needs a component that reads the param.
 
@@ -157,7 +157,7 @@ Specs 2 and 3 will add a line about what happens to votes and comments.
   `ShareButton` needs a title, and the list doesn't carry the Rack title. So the row uses the saved build's name, which is only the text passed to the share sheet.
 - **Delete confirmation:**
   - **Not posted:** "This can't be undone."
-  - **Posted:** "This build is on the Community Rack. Deleting it leaves the Rack copy up, and you won't be able to take it down. Take it off the Rack first." This is the first sentence, and the confirm button stays **Delete**.
+  - **Posted:** "This build is on the Community Rack. Deleting it leaves the Rack copy up, and you won't be able to take it down. Take it off the Rack first. This can't be undone." The warning comes first and "This can't be undone." is kept at the end, and the confirm button stays **Delete**.
 
 ## Share
 
@@ -285,3 +285,13 @@ Two stacked PRs:
    - the docs above
 
    If this goes over 500 lines, split `ShareButton` and its placements into a third PR.
+
+## Changes during implementation
+
+- Share on `/rack/:id` sits next to **Open in Builder**, because the page has no `PageHeader`.
+- The `ShareButton` copy fallback uses a native `<input>`, not an `Input` primitive.
+- API error text is mapped in the client by `rackMessage`, not changed in the API.
+- `ShareButton`'s `size='default'` maps to Button's `md`, because Button has no `default` size.
+- The posted-build delete warning keeps "This can't be undone." at the end, since the delete is still permanent.
+- `/builder/saved` is a top-level route inside `Layout`, not under `builder`: React Router ranks the static `saved` segment above `:buildId`, and a redirect under `BuilderLayout` waited for the parts catalog to load.
+- `SiteFooter` also filters with `visibleNavItems`, because it renders the same nav items.
