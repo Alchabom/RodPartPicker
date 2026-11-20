@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ShareButton } from '@components/shop'
 import { ApiError } from '@/lib/api'
 import { publishedKeys } from '@/lib/publishedKeys'
 import { buildKeys } from '../api/builds'
@@ -69,7 +70,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
           <Link to={`/rack/${published.id}`} className="font-semibold text-spectra hover:underline">
             On the Community Rack · View
           </Link>
-          {/* ShareButton: Task 7 */}
+          <ShareButton path={`/rack/${published.id}`} title={published.title} />
           <Button size="sm" variant="secondary" onClick={openDialog}>
             Update on the Rack
           </Button>

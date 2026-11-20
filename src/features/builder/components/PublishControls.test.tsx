@@ -52,6 +52,7 @@ describe('PublishControls', () => {
     setup(<PublishControls id={1} name="Mine" build={full} />)
     const link = await screen.findByRole('link', { name: 'On the Community Rack · View' })
     expect(link).toHaveAttribute('href', '/rack/9')
+    expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Update on the Rack' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Take off the Rack' })).toBeInTheDocument()
   })
