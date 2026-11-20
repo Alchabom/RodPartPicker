@@ -297,3 +297,12 @@ New `tests/test_rod_series.py`, plus changes in `test_parts.py`, `test_published
 
 1. **Data and API:** migration 024, the models, `app/rods/`, the `/parts/rod` and published changes, the `part_details` change, fixtures and API tests, and the docs.
 2. **Frontend:** `rodSeries.ts`, the route, `RodSeriesPage`, `RodSeriesRow`, the moved formatters, and the Vitest tests.
+
+## Changes during implementation
+
+1. **Published builds gain one fixed query.** Preloading each rod's series adds one `selectinload` query to the published list and detail. It doesn't grow with the number of builds, and the existing query-count test (which compares counts as authors are added) still passes. "No extra queries" in this spec means none per row.
+2. **`part_details` needed one line for rods:** `MODELS["rod"]` is `RodSeries`. The tool already reads `brand_id`, `name`, `purchase_url` and `image_path` generically.
+3. **`PartImage` was already shared** in `@components/shop`, so nothing moved.
+4. **A series with no rods is left out** of `GET /api/rods/series`, since it has no sizes to pick or summarize. The migration gives every series at least one rod, so this only affects test data.
+5. **`RodSeries` has no `rods` relationship.** The endpoint loads rods with an explicit second query instead, which keeps the query count fixed.
+6. **Test fixtures:** `make_part(Rod, ...)` creates a series in the rod's brand unless one is given, and a rod made for a given series takes that series' brand. The new `make_rod_series` fixture makes series directly.

@@ -124,7 +124,9 @@ TOTAL_PRICE = (
 # Each part relationship, chained to its brand, so a page costs a fixed number
 # of queries however many builds it holds.
 LOAD_PARTS = [
-    selectinload(PublishedBuild.rod).selectinload(Rod.brand),
+    selectinload(PublishedBuild.rod).options(
+        selectinload(Rod.brand), selectinload(Rod.series)
+    ),
     selectinload(PublishedBuild.reel).selectinload(Reel.brand),
     selectinload(PublishedBuild.fly_line).selectinload(FlyLine.brand),
     selectinload(PublishedBuild.leader).selectinload(Leader.brand),
@@ -156,9 +158,16 @@ def _part(
         "brand": part.brand.name,
         "name": part.name,
         "price": part.price,
-        "purchase_url": part.purchase_url,
     }
-    if isinstance(part, Rod | Reel):
+    # A rod's link and image belong to its series
+    if isinstance(part, Rod):
+        return ImagePartRefOut(
+            **fields,
+            purchase_url=part.series.purchase_url,
+            image_path=part.series.image_path,
+        )
+    fields["purchase_url"] = part.purchase_url
+    if isinstance(part, Reel):
         return ImagePartRefOut(**fields, image_path=part.image_path)
     return PartRefOut(**fields)
 
@@ -170,7 +179,7 @@ def _rod_ref(rod: Rod | None) -> RodRefOut | None:
         brand=rod.brand.name,
         name=rod.name,
         line_weight=rod.line_weight,
-        image_path=rod.image_path,
+        image_path=rod.series.image_path,
     )
 
 

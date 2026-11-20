@@ -20,11 +20,12 @@ from app.config import settings
 from app.db import make_engine
 from app.migrate import MIGRATIONS_DIR
 from app.parts.links import PATH_RULE
-from app.parts.models import Brand, FlyLine, Leader, Reel, Rod, Tippet
+from app.parts.models import Brand, FlyLine, Leader, Reel, RodSeries, Tippet
 
 HEADER = ["component", "brand", "model", "purchase_url", "image_file"]
+# Rod links and images live on the series, so rod rows name a series
 MODELS = {
-    "rod": Rod,
+    "rod": RodSeries,
     "reel": Reel,
     "line": FlyLine,
     "leader": Leader,

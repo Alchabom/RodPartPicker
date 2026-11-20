@@ -30,7 +30,6 @@ class CatalogPart:
     brand_id: Mapped[int] = mapped_column(ForeignKey("brands.id"))
     name: Mapped[str]
     water: Mapped[str]
-    purchase_url: Mapped[str | None]
 
     # Built once per subclass, since each joins from its own table
     @declared_attr
@@ -38,20 +37,41 @@ class CatalogPart:
         return relationship()
 
 
+class RodSeries(Base):
+    """A rod model sold in several sizes (Sage R8 Core, Orvis Clearwater)."""
+
+    __tablename__ = "rod_series"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    brand_id: Mapped[int] = mapped_column(ForeignKey("brands.id"))
+    name: Mapped[str]
+    slug: Mapped[str]
+    purchase_url: Mapped[str | None]
+    image_path: Mapped[str | None]
+
+    brand: Mapped[Brand] = relationship()
+
+
 class Rod(CatalogPart, Base):
+    """One size of a rod series. Rods get their link and image from their series."""
+
     __tablename__ = "rods"
 
-    image_path: Mapped[str | None]
+    series_id: Mapped[int] = mapped_column(ForeignKey("rod_series.id"))
+    size_code: Mapped[str | None]
     action: Mapped[str | None]
     line_weight: Mapped[int]
     length_in: Mapped[int]
     pieces: Mapped[int | None]
     price: Mapped[Decimal]
 
+    series: Mapped[RodSeries] = relationship()
+
 
 class Reel(CatalogPart, Base):
     __tablename__ = "reels"
 
+    purchase_url: Mapped[str | None]
     image_path: Mapped[str | None]
     min_line_weight: Mapped[int]
     max_line_weight: Mapped[int]
@@ -61,6 +81,7 @@ class Reel(CatalogPart, Base):
 class FlyLine(CatalogPart, Base):
     __tablename__ = "fly_lines"
 
+    purchase_url: Mapped[str | None]
     line_weight: Mapped[int]
     type: Mapped[str | None]
     sink_rate_ips: Mapped[Decimal | None]
@@ -71,6 +92,7 @@ class FlyLine(CatalogPart, Base):
 class Leader(CatalogPart, Base):
     __tablename__ = "leaders"
 
+    purchase_url: Mapped[str | None]
     material: Mapped[str]
     length_ft: Mapped[Decimal]
     x_size_id: Mapped[int | None] = mapped_column(ForeignKey("x_sizes.id"))
@@ -84,6 +106,7 @@ class Leader(CatalogPart, Base):
 class Tippet(CatalogPart, Base):
     __tablename__ = "tippets"
 
+    purchase_url: Mapped[str | None]
     material: Mapped[str]
     x_size_id: Mapped[int] = mapped_column(ForeignKey("x_sizes.id"))
     strength_lb: Mapped[Decimal | None]

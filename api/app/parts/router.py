@@ -17,7 +17,8 @@ def list_rods(db: DbSession) -> list[RodOut]:
     stmt = (
         select(Rod)
         .join(Rod.brand)
-        .options(contains_eager(Rod.brand))
+        .join(Rod.series)
+        .options(contains_eager(Rod.brand), contains_eager(Rod.series))
         .order_by(Brand.name, Rod.name, Rod.line_weight, Rod.length_in)
     )
     return db.scalars(stmt).all()

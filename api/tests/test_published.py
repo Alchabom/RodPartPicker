@@ -410,8 +410,8 @@ def test_summary_shape(client, make_part, make_published, make_user):
     }
 
 
-def test_list_rod_has_image_url(client, make_part, make_published):
-    rod = make_part(Rod, image_path="rods/x.webp")
+def test_list_rod_has_image_url(client, make_part, make_published, make_rod_series):
+    rod = make_part(Rod, series=make_rod_series(image_path="rods/x.webp"))
     make_published(rod_id=rod.id)
 
     (item,) = client.get(LIST).json()["items"]
@@ -419,10 +419,13 @@ def test_list_rod_has_image_url(client, make_part, make_published):
     assert item["rod"]["imageUrl"] == "/parts/rods/x.webp"
 
 
-def test_detail_includes_links_and_images(client, make_part, make_published):
-    rod = make_part(
-        Rod, purchase_url="https://shop.example/r", image_path="rods/x.webp"
+def test_detail_includes_links_and_images(
+    client, make_part, make_published, make_rod_series
+):
+    series = make_rod_series(
+        purchase_url="https://shop.example/r", image_path="rods/x.webp"
     )
+    rod = make_part(Rod, series=series)
     reel = make_part(Reel, image_path="reels/y.webp")
     tippet = make_part(Tippet, purchase_url="https://shop.example/t")
     published = make_published(rod_id=rod.id, reel_id=reel.id, tippet_id=tippet.id)
