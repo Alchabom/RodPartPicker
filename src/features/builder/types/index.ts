@@ -15,6 +15,7 @@ export interface Part {
   name: string
   price: number | null // USD; some catalog rows have no price yet
   purchaseUrl: string | null // https:// retailer link, when the catalog has one
+  imageUrl: string | null // /parts/... photo; rods and reels only
   specs: Record<string, string> // keys match the component's specColumns
 }
 
