@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ShareButton } from './ShareButton'
@@ -127,5 +127,45 @@ describe('ShareButton', () => {
     coarse(false)
     fireEvent.click(screen.getByRole('button', { name: 'Share' }))
     expect(await screen.findByRole('textbox', { name: 'Link' })).toHaveValue(URL_7)
+  })
+
+  it('returns focus to the Share button when the fallback closes', async () => {
+    const { user } = setup()
+    mockClipboard(() => Promise.reject(new Error('denied')))
+    coarse(false)
+    await click(user)
+    await screen.findByRole('textbox', { name: 'Link' })
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Link' })).toBeNull())
+    expect(screen.getByRole('button', { name: 'Share' })).toHaveFocus()
+  })
+
+  it('copies instead of sharing on a fine pointer even when share exists', async () => {
+    const { user } = setup()
+    const share = mockShare()
+    const writeText = mockClipboard()
+    coarse(false)
+    await click(user)
+    expect(share).not.toHaveBeenCalled()
+    expect(writeText).toHaveBeenCalledWith(URL_7)
+  })
+
+  it('falls back to copying when sharing is rejected for another reason', async () => {
+    const { user } = setup()
+    mockShare(() => Promise.reject(new DOMException('', 'NotAllowedError')))
+    coarse(true)
+    const writeText = mockClipboard()
+    await click(user)
+    expect(writeText).toHaveBeenCalledWith(URL_7)
+  })
+
+  it('does not copy after a successful share', async () => {
+    const { user } = setup()
+    const share = mockShare()
+    coarse(true)
+    const writeText = mockClipboard()
+    await click(user)
+    expect(share).toHaveBeenCalled()
+    expect(writeText).not.toHaveBeenCalled()
   })
 })

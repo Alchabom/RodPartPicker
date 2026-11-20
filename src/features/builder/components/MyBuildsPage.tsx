@@ -62,7 +62,7 @@ function DeleteBuildButton({ id, name, publishedId }: { id: number; name: string
           <AlertDialogTitle>{`Delete "${name}"?`}</AlertDialogTitle>
           <AlertDialogDescription>
             {publishedId !== null
-              ? "This build is on the Community Rack. Deleting it leaves the Rack copy up, and you won't be able to take it down. Take it off the Rack first."
+              ? "This build is on the Community Rack. Deleting it leaves the Rack copy up, and you won't be able to take it down. Take it off the Rack first. This can't be undone."
               : "This can't be undone."}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -185,7 +185,7 @@ export function MyBuildsPage() {
                 <TableCell>
                   {saved.publishedId != null ? (
                     <div className="flex items-center gap-2">
-                      <Link to={`/rack/${saved.publishedId}`} className="font-semibold text-spectra hover:underline">
+                      <Link to={`/rack/${saved.publishedId}`} className="font-semibold text-belly hover:underline">
                         On the Rack
                       </Link>
                       <ShareButton path={`/rack/${saved.publishedId}`} title={saved.name} />

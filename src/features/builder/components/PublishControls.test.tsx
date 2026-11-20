@@ -69,6 +69,29 @@ describe('PublishControls', () => {
   })
 })
 
+describe('PublishControls notice', () => {
+  it('says "Posted to the Rack" after a successful post', async () => {
+    vi.mocked(getMyPublished).mockResolvedValue(null)
+    vi.mocked(publishBuild).mockResolvedValue(ref)
+    setup(<PublishControls id={1} name="Mine" build={full} />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Post to the Rack' }))
+    await userEvent.type(await screen.findByLabelText('Write-up'), 'Light and quick')
+    const buttons = await screen.findAllByRole('button', { name: 'Post to the Rack' })
+    await userEvent.click(buttons[buttons.length - 1])
+    expect(await screen.findByText('Posted to the Rack')).toHaveAttribute('role', 'status')
+  })
+
+  it('says "Updated on the Rack" after a successful update', async () => {
+    vi.mocked(getMyPublished).mockResolvedValue(ref)
+    vi.mocked(publishBuild).mockResolvedValue(ref)
+    setup(<PublishControls id={1} name="Mine" build={full} />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Update on the Rack' }))
+    const buttons = await screen.findAllByRole('button', { name: 'Update on the Rack' })
+    await userEvent.click(buttons[buttons.length - 1])
+    expect(await screen.findByText('Updated on the Rack')).toHaveAttribute('role', 'status')
+  })
+})
+
 describe('PublishDialog wording', () => {
   const props = { onOpenChange: vi.fn(), buildId: 1, initial: { title: 'Creek', writeup: 'x' }, onSaved: vi.fn() }
 

@@ -43,8 +43,8 @@ request without a valid access cookie gets a 401 before any database work.
 shows an "On the Rack" link to `/rack/:publishedId` and a `ShareButton`; any
 other shows "Private". Deleting a posted build warns: "This build is on the
 Community Rack. Deleting it leaves the Rack copy up, and you won't be able to
-take it down. Take it off the Rack first." (the button stays **Delete**). An
-unposted build says "This can't be undone."
+take it down. Take it off the Rack first. This can't be undone." (the button
+stays **Delete**). An unposted build says "This can't be undone."
 
 ## Two providers
 

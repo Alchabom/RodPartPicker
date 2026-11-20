@@ -110,10 +110,10 @@ A title or write-up is written by one user and read by everyone.
 
 **Update on the Rack** runs the same dialog with the published title and
 write-up and shows "Updated on the Rack" on success. **Take off the Rack**
-confirms in an `AlertDialog`, then calls `DELETE`. If that gets a 404 (already unpublished
-elsewhere), the controls resync silently, since it is the outcome asked for. If
-the publish-status load fails, the controls show "Couldn't load Rack status"
-and **Try again**.
+confirms in an `AlertDialog`, then calls `DELETE`. If that gets a 404 (already
+unpublished elsewhere), the controls resync silently, since it is the outcome
+asked for. If the publish-status load fails, the controls show "Couldn't load
+Rack status" and **Try again**.
 
 ### Browse
 
@@ -136,15 +136,17 @@ catalog.
 `/rack/:id`, and `/builder/saved` to `/my-builds`.
 
 `ShareButton` (`src/components/shop/ShareButton.tsx`, with
-`src/components/ui/popover.tsx`) shares a Rack URL. On a touch device (`(pointer: coarse)` matches) where
-`navigator.share` exists and `navigator.canShare({ url })` is true, it opens the
-native share sheet; closing the sheet does nothing. Otherwise it copies the
-absolute `/rack/:id` link, and the label reads "Link copied" for 2 seconds. If
-copying fails, a popover shows the link in a read-only native `<input>` to
-select by hand. It appears on `/rack/:id`
-next to **Open in Builder**, in `PublishControls` once the build is posted, and
-in the Rack column of My builds. A post, update or take-down also invalidates
-`buildKeys.list()`, so My builds shows the new status.
+`src/components/ui/popover.tsx`) shares a Rack URL. On a touch device
+(`(pointer: coarse)` matches) where `navigator.share` exists and
+`navigator.canShare({ url })` is true, it opens the native share sheet; closing
+the sheet does nothing, but any other share error falls back to copying.
+Otherwise it copies the absolute `/rack/:id` link, and the label reads "Link
+copied" for 2 seconds. If copying fails, a popover shows the link in a
+read-only native `<input>` to select by hand, and closing it returns focus to
+the Share button. It appears on `/rack/:id` next to **Open in Builder**, in
+`PublishControls` once the build is posted, and in the Rack column of My
+builds. A post, update or take-down also invalidates `buildKeys.list()`, so My
+builds shows the new status.
 
 ### Open in Builder
 

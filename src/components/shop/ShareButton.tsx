@@ -16,6 +16,7 @@ export function ShareButton({
 }) {
   const [copied, setCopied] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -53,7 +54,7 @@ export function ShareButton({
   return (
     <Popover open={manualOpen} onOpenChange={setManualOpen}>
       <PopoverAnchor asChild>
-        <Button variant="secondary" size={size === 'default' ? 'md' : size} onClick={handleClick}>
+        <Button ref={buttonRef} variant="secondary" size={size === 'default' ? 'md' : size} onClick={handleClick}>
           <Share2 aria-hidden="true" />
           {copied ? 'Link copied' : 'Share'}
         </Button>
@@ -61,7 +62,12 @@ export function ShareButton({
       <span role="status" className="sr-only">
         {copied ? 'Link copied' : ''}
       </span>
-      <PopoverContent>
+      <PopoverContent
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          buttonRef.current?.focus()
+        }}
+      >
         <input
           aria-label="Link"
           readOnly

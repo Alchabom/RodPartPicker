@@ -26,7 +26,7 @@ import { PublishDialog } from './PublishDialog'
 export function PublishControls({ id, name, build }: { id: number; name: string; build: Build }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   // What the last finished publish did; cleared when the next action starts
-  const [notice, setNotice] = useState<'Posted' | 'Updated' | null>(null)
+  const [notice, setNotice] = useState<'Posted to the Rack' | 'Updated on the Rack' | null>(null)
   const { data: published, isError, refetch } = useQuery({
     queryKey: buildKeys.published(id),
     queryFn: ({ signal }) => getMyPublished(id, signal),
@@ -67,7 +67,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         </>
       ) : (
         <>
-          <Link to={`/rack/${published.id}`} className="font-semibold text-spectra hover:underline">
+          <Link to={`/rack/${published.id}`} className="font-semibold text-belly hover:underline">
             On the Community Rack · View
           </Link>
           <ShareButton path={`/rack/${published.id}`} title={published.title} />
@@ -83,11 +83,11 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         buildId={id}
         initial={published ?? { title: name, writeup: '' }}
         mode={published ? 'update' : 'publish'}
-        onSaved={(mode) => setNotice(mode === 'publish' ? 'Posted' : 'Updated')}
+        onSaved={(mode) => setNotice(mode === 'publish' ? 'Posted to the Rack' : 'Updated on the Rack')}
       />
       {/* Always mounted so screen readers announce the text when it appears */}
       <span role="status" className="font-semibold text-te-papa-green">
-        {notice && `${notice} ${notice === 'Posted' ? 'to' : 'on'} the Rack`}
+        {notice}
       </span>
     </div>
   )

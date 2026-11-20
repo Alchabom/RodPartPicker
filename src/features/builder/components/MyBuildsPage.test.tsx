@@ -61,7 +61,11 @@ describe('MyBuildsPage', () => {
   it('words the delete dialog by Rack status', async () => {
     const { creek, lake } = await setup()
     await userEvent.click(within(creek).getByRole('button', { name: 'Delete' }))
-    expect(await screen.findByText(/This build is on the Community Rack\./)).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        "This build is on the Community Rack. Deleting it leaves the Rack copy up, and you won't be able to take it down. Take it off the Rack first. This can't be undone.",
+      ),
+    ).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     await userEvent.click(within(lake).getByRole('button', { name: 'Delete' }))
     expect(await screen.findByText("This can't be undone.")).toBeInTheDocument()

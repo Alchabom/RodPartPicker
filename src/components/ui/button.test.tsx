@@ -11,8 +11,8 @@ describe('Button', () => {
     expect(button).toHaveAttribute('data-size', 'md')
   })
   it('renders a link with asChild', () => {
-    render(<MemoryRouter><Button asChild variant="link"><Link to="/builds">See completed builds</Link></Button></MemoryRouter>)
-    expect(screen.getByRole('link', { name: 'See completed builds' })).toHaveAttribute('href', '/builds')
+    render(<MemoryRouter><Button asChild variant="link"><Link to="/rack">See the Community Rack</Link></Button></MemoryRouter>)
+    expect(screen.getByRole('link', { name: 'See the Community Rack' })).toHaveAttribute('href', '/rack')
   })
   it('never uses transition-all', () => {
     render(<Button variant="quiet">Menu</Button>)
