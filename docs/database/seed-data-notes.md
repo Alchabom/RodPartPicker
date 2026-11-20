@@ -104,6 +104,13 @@ A statement matches every size row of that model, and can be repeated, so a late
 | Batch | Migration | Sources | Image credits |
 |---|---|---|---|
 | `links` (2026-11-19) | `022_part_details_links.sql` | Manufacturer product pages only: farbank.com (Sage, Redington, RIO), orvis.com, lamsonflyfishing.com, scientificanglers.com, umpqua.com. Every URL was listed in that site's own sitemap (robots.txt allowed it). All sizes of a series share the series page | No images |
+| `images` (2026-11-20) | `025_part_details_images.sql` | — (images only; links come from `links`) | Product photos saved by the team from each part's manufacturer page (the `purchase_url` already stored): Far Bank for Sage and Redington rods, orvis.com for Orvis rods and reels, lamsonflyfishing.com for Lamson rods and reels. They're used as product shots for this capstone; check the manufacturers' terms before a public deploy |
+
+Notes on the `images` batch:
+
+- 20 rod images (one per series, in `rod_series`) and 14 reel images covering the 15 reel rows: `Remix S` and `Remix S (sealed)` share `reels/lamson-remix-s.webp`, as they share a Lamson page.
+- The photos were converted with a one-off script (not kept): each was trimmed to the product, fitted into 800×600 on its own studio background (white for Orvis and Lamson, light gray for Sage and Redington) and saved as WebP under 100 KB (the largest is 57 KB).
+- Orvis files were matched by the product code in the file name, which matches the Orvis page id in the stored link (for example `3E7L...` is Helios F).
 
 Notes on the `links` batch:
 
