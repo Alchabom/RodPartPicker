@@ -140,6 +140,23 @@ describe('ShareButton', () => {
     expect(screen.getByRole('button', { name: 'Share' })).toHaveFocus()
   })
 
+  it('leaves focus where the user clicked when the fallback closes from outside', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <ShareButton path="/rack/7" title="Creek" />
+        <input aria-label="Search" />
+      </>,
+    )
+    mockClipboard(() => Promise.reject(new Error('denied')))
+    coarse(false)
+    await click(user)
+    await screen.findByRole('textbox', { name: 'Link' })
+    await user.click(screen.getByRole('textbox', { name: 'Search' }))
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Link' })).toBeNull())
+    expect(screen.getByRole('textbox', { name: 'Search' })).toHaveFocus()
+  })
+
   it('copies instead of sharing on a fine pointer even when share exists', async () => {
     const { user } = setup()
     const share = mockShare()

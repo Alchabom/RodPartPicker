@@ -17,6 +17,8 @@ export function ShareButton({
   const [copied, setCopied] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  // Set when the fallback closes because the user clicked or tabbed elsewhere
+  const closedFromOutside = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -63,9 +65,15 @@ export function ShareButton({
         {copied ? 'Link copied' : ''}
       </span>
       <PopoverContent
+        onInteractOutside={() => {
+          closedFromOutside.current = true
+        }}
         onCloseAutoFocus={(e) => {
+          // There is no PopoverTrigger, so Radix can't restore focus itself.
+          // Escape returns focus to Share; an outside click leaves it where the user put it.
           e.preventDefault()
-          buttonRef.current?.focus()
+          if (!closedFromOutside.current) buttonRef.current?.focus()
+          closedFromOutside.current = false
         }}
       >
         <input
