@@ -16,6 +16,7 @@ interface RodRow {
   pieces: number
   price: number | null
   purchaseUrl: string | null
+  imageUrl: string | null
 }
 
 interface ReelRow {
@@ -27,6 +28,7 @@ interface ReelRow {
   maxLineWeight: number
   price: number | null
   purchaseUrl: string | null
+  imageUrl: string | null
 }
 
 interface LineRow {
@@ -76,7 +78,10 @@ function orNone(value: number | string | null): string {
   return value === null ? NONE : String(value)
 }
 
-function basePart(component: ComponentType, row: { id: number; brand: string; model: string; price: number | null; purchaseUrl: string | null }) {
+function basePart(
+  component: ComponentType,
+  row: { id: number; brand: string; model: string; price: number | null; purchaseUrl: string | null; imageUrl?: string | null },
+) {
   return {
     id: `${component}-${row.id}`,
     dbId: row.id,
@@ -85,6 +90,7 @@ function basePart(component: ComponentType, row: { id: number; brand: string; mo
     name: row.model,
     price: row.price,
     purchaseUrl: row.purchaseUrl,
+    imageUrl: row.imageUrl ?? null, // only rods and reels send one
   }
 }
 

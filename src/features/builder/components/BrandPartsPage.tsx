@@ -20,6 +20,7 @@ import { useBuild } from '../hooks/useBuild'
 import { useBuildQuery } from '../hooks/useBuildQuery'
 import { useCatalog } from '../hooks/useCatalog'
 import { formatPrice } from '@utils/formatPrice'
+import { PartPhotoButton } from './PartPhotoButton'
 
 export function BrandPartsPage() {
   const params = useParams<{ component: string; brand: string }>()
@@ -68,6 +69,8 @@ export function BrandPartsPage() {
   }
 
   const selectedId = build[component.type]
+  // Reels show a photo per row; rods have their own series page
+  const showsPhotos = component.type === 'reel'
   const title = `${brand?.name ?? 'All'} ${component.plural}`
   const matches = compatible?.matches[component.type]
   const matchCount = matches ? parts.filter((p) => matches.has(p.dbId)).length : 0
@@ -91,6 +94,11 @@ export function BrandPartsPage() {
     <Table>
       <TableHeader>
         <TableRow>
+          {showsPhotos && (
+            <TableHead className="w-28">
+              <span className="sr-only">Photo</span>
+            </TableHead>
+          )}
           <TableHead>Name</TableHead>
           {isAll && <TableHead>Brand</TableHead>}
           {component.specColumns.map((col) => (
@@ -105,7 +113,16 @@ export function BrandPartsPage() {
           const fits = matches?.has(part.dbId) ?? false
           const recommended = component.type === 'line' && compatible?.recommendedLines.has(part.dbId)
           return (
-            <TableRow key={part.id} className={cn(fits && 'bg-sulu/25 hover:bg-sulu/40')}>
+            <TableRow key={part.id} className={cn(fits && 'bg-fit/22 hover:bg-fit/35')}>
+              {showsPhotos && (
+                <TableCell>
+                  <PartPhotoButton
+                    src={part.imageUrl}
+                    name={[getBrand(part.brandId)?.name, part.name].join(' ')}
+                    label="Reel"
+                  />
+                </TableCell>
+              )}
               <TableCell className="font-medium">
                 {part.name}
                 {fits && (
@@ -158,7 +175,7 @@ export function BrandPartsPage() {
       <h1 className="mt-4 mb-8 text-3xl font-bold text-te-papa-green">{title}</h1>
 
       {matches && (
-        <p className="mb-6 rounded-md border-l-4 border-sulu bg-sulu/20 px-4 py-3 text-sm text-te-papa-green">
+        <p className="mb-6 rounded-md border-l-4 border-fit bg-fit/22 px-4 py-3 text-sm text-olive">
           <strong>{matchCount}</strong> of {parts.length} {component.plural.toLowerCase()} match your build and are highlighted below.
         </p>
       )}
