@@ -61,7 +61,7 @@ function renderLines() {
 }
 
 describe('BrandPartsPage highlights', () => {
-  it('marks fitting parts in stream blue, not the old orange', async () => {
+  it('tints fitting rows stream blue and gives them a gold badge', async () => {
     renderLines()
 
     const fits = await screen.findAllByText('Fits build')
@@ -69,7 +69,7 @@ describe('BrandPartsPage highlights', () => {
     const row = fits[0].closest('tr')!
     expect(row.className).toMatch(/\bbg-fit\//)
     expect(row.className).not.toMatch(/sulu/)
-    expect(fits[0].closest('[data-slot="badge"]')!.className).toMatch(/bg-fit-wash text-fit-ink/)
+    expect(fits[0].closest('[data-slot="badge"]')!.className).toMatch(/bg-recommended-wash text-recommended-ink/)
 
     const banner = screen.getByText(/match your build/)
     expect(banner.className).toMatch(/border-fit/)

@@ -38,12 +38,10 @@
   --haze-3: #7C93A1;
   --haze-4: #4F6677;
   --haze-5: #33424A;
-  /* Part highlights: stream blue marks parts that fit the build, brook-trout
-     gold marks recommended ones. The washes are the badge backgrounds (35% and
-     32% over stone-card), kept as hex so check:contrast can test them */
+  /* Part highlights: stream blue tints rows that fit the build; the Fits build
+     and Recommended badges are brook-trout gold. The wash is the badge
+     background (32% over stone-card), kept as hex so check:contrast can test it */
   --fit: var(--halo);
-  --fit-ink: var(--haze-5);
-  --fit-wash: #D0DCE6;
   --recommended: var(--dorsal);
   --recommended-ink: var(--dorsal-band);
   --recommended-wash: #E0D9C0;
@@ -101,8 +99,6 @@
   --color-dawn: var(--dawn);
   --color-negative: var(--negative);
   --color-fit: var(--fit);
-  --color-fit-ink: var(--fit-ink);
-  --color-fit-wash: var(--fit-wash);
   --color-recommended: var(--recommended);
   --color-recommended-ink: var(--recommended-ink);
   --color-recommended-wash: var(--recommended-wash);
