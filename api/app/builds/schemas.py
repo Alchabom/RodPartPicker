@@ -27,3 +27,9 @@ class BuildOut(BuildIn):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class BuildListItem(BuildOut):
+    """A build in the owner's list, with its Community Rack copy if posted."""
+
+    published_id: int | None = None

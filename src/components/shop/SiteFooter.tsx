@@ -1,9 +1,9 @@
 import { NavLink } from 'react-router'
 import { Container } from './Container'
-import { NAV_ITEMS } from './navItems'
+import { visibleNavItems } from './navItems'
 import { Wordmark } from './Wordmark'
 
-export function SiteFooter() {
+export function SiteFooter({ signedIn }: { signedIn: boolean }) {
   return (
     <footer className="mt-auto">
       <svg
@@ -26,7 +26,7 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Wordmark className="focus-visible:ring-stone-page" />
             <nav aria-label="Footer" className="flex gap-6">
-              {NAV_ITEMS.map((item) => (
+              {visibleNavItems(signedIn).map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}

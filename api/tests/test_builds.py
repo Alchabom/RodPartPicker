@@ -183,3 +183,55 @@ def test_build_timestamps_are_utc(client, signed_in):
     updated = datetime.fromisoformat(response.json()["updatedAt"])
     assert updated.tzinfo is None  # naive UTC, as the frontend expects
     assert abs(updated - datetime.now(UTC).replace(tzinfo=None)) < timedelta(minutes=1)
+
+
+def test_list_reports_rack_status(client, signed_in, make_build, make_published):
+    posted = make_build(user_id=signed_in["id"])
+    private = make_build(user_id=signed_in["id"])
+    rack = make_published(user_id=signed_in["id"], source_build_id=posted.id)
+    by_id = {b["id"]: b for b in client.get("/api/builds").json()}
+    assert by_id[posted.id]["publishedId"] == rack.id
+    assert by_id[private.id]["publishedId"] is None
+
+
+def test_list_ignores_other_users_rack_builds(
+    client, signed_in, make_build, make_user, make_published
+):
+    mine = make_build(user_id=signed_in["id"])
+    other = make_user()
+    theirs = make_build(user_id=other.id)
+    make_published(user_id=other.id, source_build_id=theirs.id)
+    body = client.get("/api/builds").json()
+    assert [b["id"] for b in body] == [mine.id]
+    assert body[0]["publishedId"] is None
+
+
+def test_list_rack_status_clears_after_take_down(
+    client, signed_in, db, make_build, make_published
+):
+    build = make_build(user_id=signed_in["id"])
+    make_published(user_id=signed_in["id"], source_build_id=build.id)
+    assert client.delete(f"/api/builds/{build.id}/published").status_code == 204
+    db.rollback()
+    assert client.get("/api/builds").json()[0]["publishedId"] is None
+
+
+def test_deleted_build_leaves_rack_copy(
+    client, signed_in, db, make_build, make_published
+):
+    client.put("/api/auth/me", json={"displayName": "TroutBum"})
+    build = make_build(user_id=signed_in["id"])
+    rack = make_published(user_id=signed_in["id"], source_build_id=build.id)
+    assert client.delete(f"/api/builds/{build.id}").status_code == 204
+    db.rollback()
+    assert client.get("/api/builds").json() == []
+    assert client.get(f"/api/published/{rack.id}").status_code == 200
+
+
+def test_list_order_unchanged_by_rack_join(
+    client, signed_in, make_build, make_published
+):
+    old = make_build(user_id=signed_in["id"], updated_at=datetime(2026, 1, 1))
+    new = make_build(user_id=signed_in["id"], updated_at=datetime(2026, 2, 1))
+    make_published(user_id=signed_in["id"], source_build_id=old.id)
+    assert [b["id"] for b in client.get("/api/builds").json()] == [new.id, old.id]
