@@ -102,6 +102,13 @@ A statement matches every size row of that model, and can be repeated, so a late
 
 | Batch | Migration | Sources | Image credits |
 |---|---|---|---|
+| `links` (2026-11-19) | `022_part_details_links.sql` | Manufacturer product pages only: farbank.com (Sage, Redington, RIO), orvis.com, lamsonflyfishing.com, scientificanglers.com, umpqua.com. Every URL was listed in that site's own sitemap (robots.txt allowed it). All sizes of a series share the series page | No images |
+
+Notes on the `links` batch:
+
+- RIO Powerflex Plus tippet had no link: RIO discontinued it and replaced it with Powerflex Strong ([Far Bank's RIO FAQ](https://farbank.com/pages/rio-product-faq)). Migration `023_powerflex_strong.sql` updates the eight rows in place, so builds that chose a Powerflex Plus size now hold Powerflex Strong. It sets the new name, the 30 yd spool, $8.49 (Far Bank's price), the Far Bank link, and these strengths from The Fly Stop's and Tailwaters' spec charts: 0X 16.2, 1X 14.0, 2X 11.2, 3X 9.1, 4X 7.5, 5X 5.5, 6X 3.6, 7X 2.5 lb. Strong's half sizes (4.5X, 5.5X, 6.5X) were not added. The questionnaire's tippet pick (`app/questionnaire/rules.py`) follows the rename.
+- Lamson `Remix S` and `Remix S (sealed)` both link to the Remix S page, and `speedster` and `speedster with fighting butt` both link to the Speedster rod page. Lamson sells those variants from one page.
+- Scientific Anglers' `absolute-trout` page is the Trout *Tippet*. The Absolute Trout Leader is `absolute-trout-1-pack`, and the Absolute Fluorocarbon Trout Leader is `absolute-fluorocarbon` (page title "Absolute Fluorocarbon Leaders").
 
 ## Changing the data
 

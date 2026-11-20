@@ -133,7 +133,7 @@ LEADER_REASON = (
     "easily under trees."
 )
 
-TIPPET = {"brand": "RIO", "name": "Powerflex Plus", "x_size": "5X"}
+TIPPET = {"brand": "RIO", "name": "Powerflex Strong", "x_size": "5X"}
 TIPPET_REASON = (
     "5X tippet matches your leader and is the go-to size for the small flies used "
     "on creeks."
