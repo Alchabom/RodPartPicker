@@ -1,0 +1,23 @@
+component,brand,model,purchase_url,image_file
+line,RIO,Elite Gold,,lines/rio-elite-gold.webp
+line,RIO,Avid Trout-Gold,,lines/rio-avid-trout-gold.webp
+line,RIO,Flats Pro (15ft Int),,lines/rio-flats-pro.webp
+line,RIO,Flats Pro (6ft Int),,lines/rio-flats-pro.webp
+line,RIO,Flats Pro (Float),,lines/rio-flats-pro.webp
+line,RIO,Flats Pro (Int),,lines/rio-flats-pro.webp
+line,RIO,Trop. Outbound Short (Float),,lines/rio-tropical-outbound-short.webp
+line,RIO,Trop. Outbound Short (Int),,lines/rio-tropical-outbound-short.webp
+line,RIO,Trop. Outbound Short (Quick),,lines/rio-tropical-outbound-short.webp
+line,RIO,Trop. Outbound Short (Slow),,lines/rio-tropical-outbound-short.webp
+leader,Orvis,Mirage Big Game Leader,,leaders/orvis-mirage-big-game-leader.webp
+leader,Orvis,SuperStrong Plus Leader,,leaders/orvis-superstrong-plus-leader.webp
+leader,RIO,Fluoroflex Trout Leader,,leaders/rio-fluoroflex-trout-leader.webp
+leader,RIO,Powerflex Plus Trout Leader,,leaders/rio-powerflex-plus-trout-leader.webp
+leader,Scientific Anglers,Absolute Fluorocarbon Trout Leader,,leaders/scientific-anglers-absolute-fluorocarbon-trout-leader.webp
+leader,Scientific Anglers,Absolute Saltwater Leader,,leaders/scientific-anglers-absolute-saltwater-leader.webp
+leader,Scientific Anglers,Absolute Streamer Leader,,leaders/scientific-anglers-absolute-streamer-leader.webp
+leader,Scientific Anglers,Absolute Trout Leader,,leaders/scientific-anglers-absolute-trout-leader.webp
+tippet,Orvis,SuperStrong Plus,,tippets/orvis-superstrong-plus.webp
+tippet,RIO,Powerflex Strong,,tippets/rio-powerflex-strong.webp
+tippet,Scientific Anglers,Absolute Fluorocarbon Trout,,tippets/scientific-anglers-absolute-fluorocarbon-trout.webp
+tippet,Umpqua,Perform X Nylon Trout Tippet,,tippets/umpqua-perform-x-nylon-trout-tippet.webp
