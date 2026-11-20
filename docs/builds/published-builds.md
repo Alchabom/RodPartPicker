@@ -1,6 +1,7 @@
 # Published builds: the Community Rack
 
-How a saved build becomes a public, read-only entry on the Community Rack, and how a visitor copies one back into the Builder. The server side is
+How a saved build becomes a public, read-only entry on the Community Rack,
+and how a visitor copies one back into the Builder. The server side is
 `api/app/published/` (`models.py`, `schemas.py`, `router.py`); the browser side
 is `src/features/catalog/` (the public pages) and
 `src/features/builder/` (`components/PublishControls.tsx`,
@@ -102,13 +103,14 @@ A title or write-up is written by one user and read by everyone.
 4. `PUT /api/builds/42/published` returns 201. The dialog closes, the
    `['builds', 42, 'published']` and `['published']` queries are invalidated,
    and the controls show "Posted to the Rack" in a `role="status"` element, then
-   "On the Community Rack · View", **Update on the Rack** and **Take off the Rack**.
+   "On the Community Rack · View", **Update on the Rack** and
+   **Take off the Rack**.
 
 ### Update, and unpublish
 
 **Update on the Rack** runs the same dialog with the published title and
-write-up and shows "Updated on the Rack" on success. **Take off the Rack** confirms in an
-`AlertDialog`, then calls `DELETE`. If that gets a 404 (already unpublished
+write-up and shows "Updated on the Rack" on success. **Take off the Rack**
+confirms in an `AlertDialog`, then calls `DELETE`. If that gets a 404 (already unpublished
 elsewhere), the controls resync silently, since it is the outcome asked for. If
 the publish-status load fails, the controls show "Couldn't load Rack status"
 and **Try again**.
@@ -118,8 +120,9 @@ and **Try again**.
 `/rack` (`PublishedListPage`) keeps `weight`, `maxPrice` and `page` in the URL,
 so a filtered list can be linked to. A bad value in the URL means "no filter".
 `useQuery` with `keepPreviousData` keeps the current page on screen while the
-next loads. With no filters, an empty first page reads "No builds on the Rack yet";
-an empty page past the end (with `total > 0`) reads "No builds on this page".
+next loads. With no filters, an empty first page reads "Nothing on the Rack
+yet"; an empty page past the end (with `total > 0`) reads "No builds on this
+page".
 `/rack/:id` (`PublishedBuildPage`) shows the parts table, the total, the
 write-up and **Open in Builder**; a 404 renders `NotFound`. Dates go through the
 shared `src/utils/formatApiDate.ts`, because the API's timestamps carry no
@@ -133,7 +136,12 @@ catalog.
 `/rack/:id`, and `/builder/saved` to `/my-builds`.
 
 `ShareButton` (`src/components/shop/ShareButton.tsx`, with
-`src/components/ui/popover.tsx`) shares a Rack URL. It appears on `/rack/:id`
+`src/components/ui/popover.tsx`) shares a Rack URL. On a touch device (`(pointer: coarse)` matches) where
+`navigator.share` exists and `navigator.canShare({ url })` is true, it opens the
+native share sheet; closing the sheet does nothing. Otherwise it copies the
+absolute `/rack/:id` link, and the label reads "Link copied" for 2 seconds. If
+copying fails, a popover shows the link in a read-only native `<input>` to
+select by hand. It appears on `/rack/:id`
 next to **Open in Builder**, in `PublishControls` once the build is posted, and
 in the Rack column of My builds. A post, update or take-down also invalidates
 `buildKeys.list()`, so My builds shows the new status.
