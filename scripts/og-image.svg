@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Source of public/og.png. Colors are the hex values of the tokens in src/styles/index.css.
+       The ridges are the ones in src/features/home/components/RidgeScene.tsx, moved down 170px. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3F2EE"/>
+      <stop offset="0.55" stop-color="#EEE5D6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#F3F2EE"/>
+  <g transform="translate(0 170)">
+    <rect width="1200" height="460" fill="url(#sky)"/>
+    <circle cx="930" cy="230" r="30" fill="#F6E7C9"/>
+    <path fill="#CBD4D6" d="M0 270 C120 240 200 222 300 238 S480 208 560 222 S760 188 860 208 S1060 198 1200 216 V460 H0Z"/>
+    <path fill="#A8B8C0" d="M0 304 C90 282 180 272 260 288 S420 258 520 276 S700 252 800 268 S1000 244 1200 264 V460 H0Z"/>
+    <path fill="#7C93A1" d="M0 342 C110 318 210 320 300 330 S470 300 580 320 S760 304 880 318 S1060 290 1200 308 V460 H0Z"/>
+    <path fill="#4F6677" d="M0 380 C120 360 220 366 320 372 S520 344 640 362 S840 350 960 360 S1110 344 1200 354 V460 H0Z"/>
+    <path fill="#33424A" d="M0 422 C140 406 260 412 380 416 S600 398 720 408 S960 400 1080 408 S1160 402 1200 404 V460 H0Z"/>
+  </g>
+  <text x="80" y="190" font-family="Public Sans, Helvetica, Arial, sans-serif" font-weight="500" font-size="88" fill="#1D1F1B">RodPartPicker</text>
+  <text x="84" y="248" font-family="Public Sans, Helvetica, Arial, sans-serif" font-size="34" fill="#545A52">Build a fly rod setup that fits.</text>
+</svg>

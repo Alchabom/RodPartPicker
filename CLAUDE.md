@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: the landing page, Builder and Completed Builds). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has Vitest tests.
+RodPartPicker is a capstone project: a PCPartPicker-style web app for building fishing rods (current UI sections: the landing page, Builder, My builds and Community Rack). It is an early-stage React 19 + TypeScript + Vite 8 SPA (react-router) backed by MySQL 8. The team built its own REST API with FastAPI in `api/` (for the learning experience). The API has pytest tests; the frontend has Vitest tests.
 
 ## Commands
 
@@ -43,9 +43,9 @@ Auth on the frontend: `src/lib/api.ts` (`apiFetch`) throws `ApiError` and, on a 
 
 The landing page is `features/home` (`HomePage`), the index route `/`. The published-build fetchers and types are in `src/lib/published.ts`.
 
-Public catalog: `src/features/catalog` holds the signed-out-friendly pages `/builds` and `/builds/:id` (outside `BuilderLayout`). Its **Open in Builder** link goes to `/builder?copy=<id>`, handled by `CopyPublishedIntent` in the builder (the `save=1` pattern), so the features never import each other. Publish controls live in the builder; shared query keys are in `src/lib/publishedKeys.ts`. See `docs/builds/published-builds.md`.
+Public catalog: `src/features/catalog` holds the signed-out-friendly pages `/rack` and `/rack/:id` (outside `BuilderLayout`). Its **Open in Builder** link goes to `/builder?copy=<id>`, handled by `CopyPublishedIntent` in the builder (the `save=1` pattern), so the features never import each other. Publish controls live in the builder; shared query keys are in `src/lib/publishedKeys.ts`. See `docs/builds/published-builds.md`.
 
-Builder persistence: the builder keeps a local draft (`LocalBuildProvider`, `localStorage` key `rpp:build:v2`) and saved builds (`SavedBuildProvider`, with debounced autosave). My Builds lives at `/builder/saved`. TanStack Query is the data layer: the client is in `src/lib/queryClient.ts` and query keys live next to their fetchers (e.g. `buildKeys` in `features/builder/api/builds.ts`). See `docs/builds/saved-builds.md`.
+Builder persistence: the builder keeps a local draft (`LocalBuildProvider`, `localStorage` key `rpp:build:v2`) and saved builds (`SavedBuildProvider`, with debounced autosave). My builds lives at `/my-builds`. TanStack Query is the data layer: the client is in `src/lib/queryClient.ts` and query keys live next to their fetchers (e.g. `buildKeys` in `features/builder/api/builds.ts`). See `docs/builds/saved-builds.md`.
 
 Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed.
 

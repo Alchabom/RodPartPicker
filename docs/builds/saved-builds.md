@@ -17,7 +17,7 @@ request without a valid access cookie gets a 401 before any database work.
 
 | Route | Behavior |
 |---|---|
-| `GET /api/builds` | The caller's builds, `ORDER BY updated_at DESC, id DESC` |
+| `GET /api/builds` | The caller's builds, `ORDER BY updated_at DESC, id DESC`. Each is a `BuildListItem`: `BuildOut` plus `publishedId` (the id of its Rack post, or `null`) |
 | `POST /api/builds` | Creates a build owned by the caller. 201 with `BuildOut` |
 | `GET /api/builds/{id}` | The build if the caller owns it, else 404 |
 | `PUT /api/builds/{id}` | Replaces name and parts if the caller owns it, else 404. 204 |
@@ -33,6 +33,18 @@ request without a valid access cookie gets a 401 before any database work.
   reveals nothing. Because every route goes through that one helper, no route
   can forget the ownership check.
 - `BuildOut` doesn't expose `userId`: the client already knows who it is.
+- **`publishedId` is list-only.** `list_builds` outer joins `published_builds`
+  on `source_build_id`, which is `UNIQUE`, so each build appears once. `GET`,
+  `POST` and `PUT` on one build don't include it.
+
+## My builds
+
+`MyBuildsPage` has a Rack column between Total and Last edited. A posted build
+shows an "On the Rack" link to `/rack/:publishedId` and a `ShareButton`; any
+other shows "Private". Deleting a posted build warns: "This build is on the
+Community Rack. Deleting it leaves the Rack copy up, and you won't be able to
+take it down. Take it off the Rack first." (the button stays **Delete**). An
+unposted build says "This can't be undone."
 
 ## Two providers
 
@@ -60,14 +72,13 @@ From `src/routes/AppRoutes.tsx`:
 ├── (LocalBuildProvider)              pathless layout route
 │   ├── index                         BuilderPage
 │   └── :component/:brand             BrandPartsPage
-├── saved                             RequireAuth → MyBuildsPage
 └── :buildId                          RequireAuth → SavedBuildProvider
     ├── index                         BuilderPage
     └── :component/:brand             BrandPartsPage
 ```
 
-- React Router ranks the static `saved` above the dynamic `:buildId`, so
-  `/builder/saved` is the list, never a build id.
+- My builds is `/my-builds` (`RequireAuth` → `MyBuildsPage`, inside a pathless
+  `BuilderLayout` route). `/builder/saved` redirects to it.
 - `SavedBuildProvider` shows "Build not found" for a `:buildId` that isn't a
   positive integer, without calling the API.
 - `BuilderLayout` loads the parts catalog once for both providers, so

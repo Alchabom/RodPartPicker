@@ -285,3 +285,11 @@ Two stacked PRs:
    - the docs above
 
    If this goes over 500 lines, split `ShareButton` and its placements into a third PR.
+
+## Changes during implementation
+
+- Share on `/rack/:id` sits next to **Open in Builder**, because the page has no `PageHeader`.
+- The `ShareButton` copy fallback uses a native `<input>`, not an `Input` primitive.
+- API error text is mapped in the client by `rackMessage`, not changed in the API.
+- `ShareButton`'s `size='default'` maps to Button's `md`, because Button has no `default` size.
+- `SiteFooter` also filters with `visibleNavItems`, because it renders the same nav items.
