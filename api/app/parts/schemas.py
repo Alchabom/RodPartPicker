@@ -55,6 +55,7 @@ class ReelOut(PartOut):
 
 
 class LineOut(PartOut):
+    image_url: ImageUrl
     type: Literal["floating", "intermediate", "sink_tip", "full_sink"] | None
     sink_rate_ips: float | None
     line_weight: int
@@ -63,6 +64,7 @@ class LineOut(PartOut):
 
 
 class LeaderOut(PartOut):
+    image_url: ImageUrl
     material: Material
     length_ft: float
     x_size: str | None = Field(validation_alias=AliasPath("x_size", "label"))
@@ -72,6 +74,7 @@ class LeaderOut(PartOut):
 
 
 class TippetOut(PartOut):
+    image_url: ImageUrl
     material: Material
     x_size: str = Field(validation_alias=AliasPath("x_size", "label"))
     strength_lb: float | None

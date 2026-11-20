@@ -3,7 +3,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
-PATH_RULE = re.compile(r"^(rods|reels)/[a-z0-9-]+\.webp$")
+PATH_RULE = re.compile(r"^(rods|reels|lines|leaders|tippets)/[a-z0-9-]+\.webp$")
 
 
 def safe_purchase_url(url: str | None) -> str | None:

@@ -436,7 +436,8 @@ def test_detail_includes_links_and_images(
     assert parts["rod"]["purchaseUrl"] == "https://shop.example/r"
     assert parts["reel"]["imageUrl"] == "/parts/reels/y.webp"
     assert parts["tippet"]["purchaseUrl"] == "https://shop.example/t"
-    assert "imageUrl" not in parts["tippet"]
+    assert parts["tippet"]["imageUrl"] is None
+    assert parts["line"]["imageUrl"] is None
     assert parts["line"]["purchaseUrl"] is None
 
 
@@ -464,12 +465,10 @@ def test_detail(client, make_part, make_published):
         "name": published.fly_line.name,
         "price": 25,
         "purchaseUrl": None,
+        "imageUrl": None,
     }
-    for slot, part in data["parts"].items():
-        keys = {"id", "brand", "name", "price", "purchaseUrl"}
-        if slot in ("rod", "reel"):
-            keys.add("imageUrl")
-        assert set(part) == keys
+    for part in data["parts"].values():
+        assert set(part) == {"id", "brand", "name", "price", "purchaseUrl", "imageUrl"}
 
 
 def test_detail_removed_part_is_null(client, db, make_part, make_published):

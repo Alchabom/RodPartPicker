@@ -25,6 +25,13 @@ def test_purchase_url_check_rejects(make_part, model, bad):
         (Reel, "reels/X.webp"),
         (Reel, "https://evil.example/x.webp"),
         (Reel, "rods/x.webp"),
+        # Each table accepts only its own folder
+        (FlyLine, "../x.webp"),
+        (FlyLine, "leaders/x.webp"),
+        (Leader, "lines/x.webp"),
+        (Leader, "leaders/X.webp"),
+        (Tippet, "tippets/x.png"),
+        (Tippet, "reels/x.webp"),
     ],
 )
 def test_image_path_check_rejects(make_part, model, bad):
@@ -49,6 +56,18 @@ def test_valid_values_are_accepted(make_part, make_rod_series):
     assert series.id is not None
 
 
+@pytest.mark.parametrize(
+    ("model", "path"),
+    [
+        (FlyLine, "lines/rio-elite-gold.webp"),
+        (Leader, "leaders/rio-fluoroflex-trout-leader.webp"),
+        (Tippet, "tippets/umpqua-perform-x.webp"),
+    ],
+)
+def test_small_part_images_are_accepted(make_part, model, path):
+    assert make_part(model, image_path=path).image_path == path
+
+
 def test_safe_purchase_url():
     assert safe_purchase_url("https://a.example/x") == "https://a.example/x"
     assert safe_purchase_url("javascript:alert(1)") is None
@@ -63,11 +82,13 @@ def test_image_url_for():
         image_url_for("reels/lamson-liquid-s.webp")
         == "/parts/reels/lamson-liquid-s.webp"
     )
+    for folder in ("lines", "leaders", "tippets"):
+        assert image_url_for(f"{folder}/a-b.webp") == f"/parts/{folder}/a-b.webp"
     for bad in [
         "../x.webp",
         "rods/x.png",
         "rods/X.webp",
-        "lines/x.webp",
+        "fish/x.webp",
         "rods/a/b.webp",
     ]:
         assert image_url_for(bad) is None

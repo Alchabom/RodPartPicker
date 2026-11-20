@@ -22,7 +22,8 @@ function part(component: ComponentType, dbId: number, name: string, imageUrl: st
 const PARTS: Part[] = [
   part('reel', 1, 'Liquid S', '/parts/reels/lamson-liquid-s.webp'),
   part('reel', 2, 'Remix S', null),
-  part('leader', 3, 'Trout Leader', null),
+  part('leader', 3, 'Trout Leader', '/parts/leaders/lamson-trout-leader.webp'),
+  part('tippet', 4, 'Bare Tippet', null),
 ]
 
 vi.mock('../hooks/useBuild', () => ({
@@ -57,11 +58,17 @@ describe('BrandPartsPage photos', () => {
     expect(screen.getByRole('img', { name: 'Reel' })).toBeInTheDocument()
   })
 
-  it('has no photo column for other components', () => {
+  it('shows enlargeable photos on leader rows too', () => {
     renderAt('/builder/leader/lamson')
 
-    expect(screen.getByText('Trout Leader')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Enlarge photo of Lamson Trout Leader' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Photo' })).toBeInTheDocument()
+  })
+
+  it("labels a missing photo with the part's kind", () => {
+    renderAt('/builder/tippet/lamson')
+
+    expect(screen.getByRole('img', { name: 'Tippet' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Enlarge photo/ })).toBeNull()
-    expect(screen.queryByRole('columnheader', { name: 'Photo' })).toBeNull()
   })
 })

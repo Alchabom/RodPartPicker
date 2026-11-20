@@ -1,31 +1,20 @@
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
-
-// The cast, as one route: the rod leg rises out of the valley, turns over in a
-// tight loop, and the fly leg lies back above it. Each piece below follows
-// this route and gets thinner, line → leader → tippet.
-const LEGS = {
-  rod: 'M600 470 C680 360 760 262 856 232',
-  loop: 'C870 228 878 224 878 219.5 C878 215.5 870 214 860 214.5',
-  fly: 'C810 216 770 213 735 210',
-  leader: 'C716 209 703 208 692 208',
-  tippet: 'C684 208 679 208.5 675 209',
-}
-// Kept inside x 270–930 so the slice crop shows all of it from 1024px wide,
-// right of and below the hero text
-const CAST_ROUTE = Object.values(LEGS).join(' ')
-
-const CAST_PIECES = [
-  { d: LEGS.rod, width: 1.2 },
-  { d: `M856 232 ${LEGS.loop}`, width: 1.1 },
-  { d: `M860 214.5 ${LEGS.fly}`, width: 0.9 },
-  { d: `M735 210 ${LEGS.leader}`, width: 0.65 },
-  { d: `M692 208 ${LEGS.tippet}`, width: 0.45 },
-]
+import {
+  CAST_ROUTE,
+  FLY,
+  GUIDES,
+  LINE_OUTLINE,
+  ROD_PATH,
+  ROD_WIDTH,
+  guideLegs,
+} from '../utils/castGeometry'
 
 // The Blue Ridge at first light: a stone-page → dawn sky, a pale sun and five
-// ridges fading into haze, far (haze-1) to near (haze-5), with a fly-line cast
-// between the far and near ridges. `drawCast` draws the line in once.
+// ridges fading into haze, far (haze-1) to near (haze-5). A small fly rod rises
+// from behind the second-nearest ridge, and its line runs up through five guides
+// into a cast between the far and near ridges. `drawCast` draws the line in once;
+// the rod and guides are there from the start.
 export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
   const skyId = useId()
   const maskId = useId()
@@ -71,14 +60,30 @@ export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
         className="fill-haze-3"
         d="M0 342 C110 318 210 320 300 330 S470 300 580 320 S760 304 880 318 S1060 290 1200 308 V460 H0Z"
       />
-      {/* Hidden below lg, where the slice crop would leave a stray diagonal */}
+      {/* The rod, line and guides are hidden below lg, where the slice crop would
+          leave a stray diagonal. The line sits between the rod and its guides,
+          so each guide's ring is drawn over it */}
+      <path
+        data-testid="rod"
+        d={ROD_PATH}
+        fill="none"
+        strokeWidth={ROD_WIDTH}
+        strokeLinecap="round"
+        className="hidden stroke-dorsal-band lg:block"
+      />
       <g data-testid="cast" className="hidden lg:block" mask={`url(#${maskId})`}>
-        <g fill="none" strokeLinecap="round" strokeOpacity={0.9} className="stroke-belly">
-          {CAST_PIECES.map((piece) => (
-            <path key={piece.d} d={piece.d} strokeWidth={piece.width} />
-          ))}
-        </g>
-        <circle cx="672.5" cy="209.2" r="1.4" className="fill-olive" />
+        <path d={LINE_OUTLINE} fillOpacity={0.9} className="fill-belly" />
+        <circle cx={FLY.x} cy={FLY.y} r={FLY.r} className="fill-olive" />
+      </g>
+      <g data-testid="guides" fill="none" strokeLinecap="round" className="hidden stroke-dorsal-band lg:block">
+        {GUIDES.map((guide) => (
+          <g key={guide.t}>
+            {guideLegs(guide).map(([foot, edge]) => (
+              <path key={`${foot.x} ${foot.y}`} d={`M${foot.x} ${foot.y} L${edge.x} ${edge.y}`} strokeWidth={0.5} />
+            ))}
+            <circle cx={guide.ring.x} cy={guide.ring.y} r={guide.ring.r} strokeWidth={0.45} />
+          </g>
+        ))}
       </g>
       <path
         className="fill-haze-4"

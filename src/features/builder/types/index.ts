@@ -32,7 +32,7 @@ export interface RecommendedPart {
 
 export interface ComponentInfo {
   type: ComponentType
-  label: string // "Rod"
+  label: 'Rod' | 'Reel' | 'Line' | 'Leader' | 'Tippet'
   plural: string // "Rods"
   article: 'a' | 'an'
   icon: LucideIcon
