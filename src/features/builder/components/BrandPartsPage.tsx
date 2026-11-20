@@ -113,7 +113,7 @@ export function BrandPartsPage() {
           const fits = matches?.has(part.dbId) ?? false
           const recommended = component.type === 'line' && compatible?.recommendedLines.has(part.dbId)
           return (
-            <TableRow key={part.id} className={cn(fits && 'bg-sulu/25 hover:bg-sulu/40')}>
+            <TableRow key={part.id} className={cn(fits && 'bg-fit/22 hover:bg-fit/35')}>
               {showsPhotos && (
                 <TableCell>
                   <PartPhotoButton
@@ -175,7 +175,7 @@ export function BrandPartsPage() {
       <h1 className="mt-4 mb-8 text-3xl font-bold text-te-papa-green">{title}</h1>
 
       {matches && (
-        <p className="mb-6 rounded-md border-l-4 border-sulu bg-sulu/20 px-4 py-3 text-sm text-te-papa-green">
+        <p className="mb-6 rounded-md border-l-4 border-fit bg-fit/22 px-4 py-3 text-sm text-olive">
           <strong>{matchCount}</strong> of {parts.length} {component.plural.toLowerCase()} match your build and are highlighted below.
         </p>
       )}
