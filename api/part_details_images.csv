@@ -1,0 +1,36 @@
+component,brand,model,purchase_url,image_file
+rod,Lamson,E-Series,,rods/lamson-e-series.webp
+rod,Lamson,Liquid,,rods/lamson-liquid.webp
+rod,Lamson,Liquid Max,,rods/lamson-liquid-max.webp
+rod,Lamson,Speedster,,rods/lamson-speedster.webp
+rod,Orvis,Clearwater,,rods/orvis-clearwater.webp
+rod,Orvis,Encounter,,rods/orvis-encounter.webp
+rod,Orvis,Helios D,,rods/orvis-helios-d.webp
+rod,Orvis,Helios F,,rods/orvis-helios-f.webp
+rod,Orvis,Recon Freshwater,,rods/orvis-recon-freshwater.webp
+rod,Orvis,Recon Saltwater,,rods/orvis-recon-saltwater.webp
+rod,Orvis,Superfine Glass,,rods/orvis-superfine-glass.webp
+rod,Orvis,Superfine Graphite,,rods/orvis-superfine-graphite.webp
+rod,Redington,Classic Trout,,rods/redington-classic-trout.webp
+rod,Redington,EDC,,rods/redington-edc.webp
+rod,Sage,Classic R8,,rods/sage-classic-r8.webp
+rod,Sage,Foundation,,rods/sage-foundation.webp
+rod,Sage,Power R8,,rods/sage-power-r8.webp
+rod,Sage,R8 Core,,rods/sage-r8-core.webp
+rod,Sage,Salt R8,,rods/sage-salt-r8.webp
+rod,Sage,Spey R8,,rods/sage-spey-r8.webp
+reel,Lamson,Force SL Series II,,reels/lamson-force-sl-series-ii.webp
+reel,Lamson,Guru X,,reels/lamson-guru-x.webp
+reel,Lamson,Hyperspeed F (sealed),,reels/lamson-hyperspeed-f.webp
+reel,Lamson,HyperSpeed M,,reels/lamson-hyperspeed-m.webp
+reel,Lamson,Liquid S,,reels/lamson-liquid-s.webp
+reel,Lamson,Liquid S HD,,reels/lamson-liquid-s-hd.webp
+reel,Lamson,Litespeed F (sealed),,reels/lamson-litespeed-f.webp
+reel,Lamson,Litespeed M,,reels/lamson-litespeed-m.webp
+reel,Lamson,Remix S,,reels/lamson-remix-s.webp
+reel,Lamson,Remix S (sealed),,reels/lamson-remix-s.webp
+reel,Lamson,Speedster S,,reels/lamson-speedster-s.webp
+reel,Lamson,Speedster S HD,,reels/lamson-speedster-s-hd.webp
+reel,Orvis,Hydros (sealed),,reels/orvis-hydros.webp
+reel,Orvis,Mirage LT (sealed),,reels/orvis-mirage-lt.webp
+reel,Orvis,Ratio (sealed),,reels/orvis-ratio.webp

@@ -306,3 +306,6 @@ New `tests/test_rod_series.py`, plus changes in `test_parts.py`, `test_published
 4. **A series with no rods is left out** of `GET /api/rods/series`, since it has no sizes to pick or summarize. The migration gives every series at least one rod, so this only affects test data.
 5. **`RodSeries` has no `rods` relationship.** The endpoint loads rods with an explicit second query instead, which keeps the query count fixed.
 6. **Test fixtures:** `make_part(Rod, ...)` creates a series in the rod's brand unless one is given, and a rod made for a given series takes that series' brand. The new `make_rod_series` fixture makes series directly.
+7. **Prices in the summary keep cents** (`$1,100.00`, not `$1,100`). The summary reuses the app's `formatPrice`, so prices read the same everywhere in the builder.
+8. **The closed row's photo is hidden from screen readers.** The series name is right beside it, so announcing it would only repeat the name. The open row's large photo keeps its alt text.
+9. **The route test is a separate file** (`src/routes/rodRoute.test.tsx`), because it replaces the builder's pages with markers and the existing `AppRoutes.test.tsx` needs the real ones.
