@@ -141,7 +141,7 @@ Each row is one purchasable size.
 - **`published_at`** is set once; "newest first" uses `idx_published_newest (published_at, id)`, so an update doesn't move a build up the list.
 - Rationale: `docs/superpowers/specs/2026-11-18-published-builds-design.md`.
 
-**Links and images (migration 021):** every part table has a nullable `purchase_url VARCHAR(500)`, and `rods` and `reels` also have a nullable `image_path VARCHAR(255)`. Both stay NULL until a seed batch fills them in. Migration 024 moved the rod columns (and their CHECKs, now `rods/` only) onto `rod_series`.
+**Links and images (migration 021):** every part table has a nullable `purchase_url VARCHAR(500)`, and `rods` and `reels` also have a nullable `image_path VARCHAR(255)`. Both stay NULL until a seed batch fills them in. Migration 024 moved the rod columns (and their CHECKs, now `rods/` only) onto `rod_series`. Migration 026 added `image_path` to `fly_lines`, `leaders` and `tippets` too, each with a CHECK for its own folder (`lines/`, `leaders/`, `tippets/`).
 
 - **`purchase_url`** has `CHECK (purchase_url LIKE 'https://%')`, so a `javascript:` or plain `http:` link can't be stored.
 - **`image_path`** has `CHECK (REGEXP_LIKE(image_path, '^(rods|reels)/[a-z0-9-]+\\.webp$', 'c'))` (each table allows its own folder), so a path can't point outside `public/parts/`. The `'c'` flag makes the match case-sensitive; plain `REGEXP` is case-insensitive under the default collation and would accept `rods/X.webp`.

@@ -3,7 +3,7 @@ import { useState } from 'react'
 interface PartImageProps {
   src: string | null
   alt: string
-  label: 'Rod' | 'Reel'
+  label: 'Rod' | 'Reel' | 'Line' | 'Leader' | 'Tippet'
   className?: string
 }
 

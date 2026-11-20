@@ -10,7 +10,7 @@ from app.part_details import (
     sql_str,
     write_migration,
 )
-from app.parts.models import FlyLine, Reel, Tippet
+from app.parts.models import FlyLine, Leader, Reel, Tippet
 
 HEADER = "component,brand,model,purchase_url,image_file"
 
@@ -104,7 +104,7 @@ def test_build_applies_to_every_size_row(
         ("reel,A,B,https://x,reels/missing.webp", "does not exist"),
         ("reel,A,Nope,https://x,", "not in the catalog"),
         ("spool,A,B,https://x,", "component"),
-        ("tippet,TB,T,https://x,reels/a-b.webp", "only rods and reels"),
+        ("tippet,TB,T,https://x,reels/a-b.webp", "must be tippets/"),
         ("reel,A,B,,", "nothing to set"),
     ],
 )
@@ -256,8 +256,39 @@ def test_find_missing(db, make_part, make_brand):
     assert "Zed Missing LinkOnly" in missing["reel"]
     assert "Zed Missing Full" not in missing["reel"]
     assert "Zed Missing Bare" in missing["tippet"]
-    assert "Zed Missing Linked" not in missing["line"]
+    # Linked, but every part can have an image now, and this one has none
+    assert "Zed Missing Linked" in missing["line"]
     assert missing["reel"] == sorted(missing["reel"])
+
+
+def test_find_missing_lists_small_parts_without_images(db, make_part, make_brand):
+    brand = make_brand("Zed Small")
+    make_part(FlyLine, name="NoImage", brand=brand, purchase_url="https://x")
+    make_part(
+        Leader,
+        name="Both",
+        brand=brand,
+        purchase_url="https://x",
+        image_path="leaders/b.webp",
+    )
+
+    missing = find_missing(db)
+
+    assert "Zed Small NoImage" in missing["line"]
+    assert "Zed Small Both" not in missing["leader"]
+
+
+def test_build_accepts_small_part_images(
+    tmp_path, db, parts_dir, make_part, make_brand
+):
+    (parts_dir / "lines").mkdir()
+    (parts_dir / "lines" / "rio-x.webp").write_bytes(b"x")
+    make_part(FlyLine, name="X", brand=make_brand("RIOX"))
+    csv_path = write_csv(tmp_path, "line,RIOX,X,,lines/rio-x.webp")
+
+    sql = build_sql(csv_path, db, parts_dir)
+
+    assert "UPDATE fly_lines SET image_path = 'lines/rio-x.webp'" in sql
 
 
 def test_next_migration_name(tmp_path):

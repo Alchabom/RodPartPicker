@@ -153,10 +153,16 @@ def test_part_without_details_has_nulls(client, make_part):
     ("model", "category"),
     [(FlyLine, "line"), (Leader, "leader"), (Tippet, "tippet")],
 )
-def test_small_parts_have_link_but_no_image_key(client, make_part, model, category):
-    part = make_part(model, purchase_url="https://shop.example/p")
+def test_small_parts_have_link_and_image(client, make_part, model, category):
+    part = make_part(
+        model,
+        purchase_url="https://shop.example/p",
+        image_path=f"{category}s/x.webp",
+    )
+    bare = make_part(model, name="Bare")
 
-    row = find(client.get(f"/api/parts/{category}").json(), part.id)
+    rows = client.get(f"/api/parts/{category}").json()
 
-    assert row["purchaseUrl"] == "https://shop.example/p"
-    assert "imageUrl" not in row
+    assert find(rows, part.id)["purchaseUrl"] == "https://shop.example/p"
+    assert find(rows, part.id)["imageUrl"] == f"/parts/{category}s/x.webp"
+    assert find(rows, bare.id)["imageUrl"] is None

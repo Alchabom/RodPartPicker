@@ -82,8 +82,8 @@ batches. Each batch is a numbered migration generated from a CSV by
 
 **Workflow**
 
-1. Copy `api/part_details_template.csv` to `api/part_details_<label>.csv` and fill it in. The header is `component,brand,model,purchase_url,image_file`. `component` is `rod`, `reel`, `line`, `leader` or `tippet`. For rods, `model` is the **series name** (`R8 Core`, `Liquid Max`), since rod links and images live on `rod_series` (migration 024). `image_file` is optional and only for rods and reels.
-2. Put the `.webp` files in `public/parts/rods/` and `public/parts/reels/`.
+1. Copy `api/part_details_template.csv` to `api/part_details_<label>.csv` and fill it in. The header is `component,brand,model,purchase_url,image_file`. `component` is `rod`, `reel`, `line`, `leader` or `tippet`. For rods, `model` is the **series name** (`R8 Core`, `Liquid Max`), since rod links and images live on `rod_series` (migration 024). `image_file` is optional, for any component (lines, leaders and tippets since migration 026).
+2. Put the `.webp` files in the component's folder under `public/parts/` (`rods/`, `reels/`, `lines/`, `leaders/` or `tippets/`).
 3. From `api/`, run `uv run python -m app.part_details build part_details_<label>.csv --name <label>`. It writes `api/migrations/<next number>_part_details_<label>.sql`, or lists every bad row (with its line number) and writes nothing.
 4. Read the generated SQL.
 5. Run `pnpm db:migrate`.
@@ -94,7 +94,7 @@ A statement matches every size row of that model, and can be repeated, so a late
 **Image rules**
 
 - WebP, 800x600, under 100 KB.
-- Named `<brand>-<model>.webp`, lowercase, with every run of other characters turned into one hyphen: `Lamson` + `Liquid S` is `reels/lamson-liquid-s.webp`. The folder must match the component (`rods/` or `reels/`).
+- Named `<brand>-<model>.webp`, lowercase, with every run of other characters turned into one hyphen: `Lamson` + `Liquid S` is `reels/lamson-liquid-s.webp`. The folder must match the component (`rods/`, `reels/`, `lines/`, `leaders/` or `tippets/`).
 - Rod images are named after the series slug: `rods/<brand>-<series slug>.webp`, such as `rods/sage-r8-core.webp` and `rods/orvis-superfine-graphite.webp`. One image covers every size of the series.
 - One reel file can serve several rows (every size of a reel model can share one image).
 - Only use images the team may use, and record where each came from in the table below.

@@ -69,8 +69,8 @@ export function BrandPartsPage() {
   }
 
   const selectedId = build[component.type]
-  // Reels show a photo per row; rods have their own series page
-  const showsPhotos = component.type === 'reel'
+  // Every part shows a photo per row; rods have their own series page
+  const showsPhotos = component.type !== 'rod'
   const title = `${brand?.name ?? 'All'} ${component.plural}`
   const matches = compatible?.matches[component.type]
   const matchCount = matches ? parts.filter((p) => matches.has(p.dbId)).length : 0
@@ -119,7 +119,7 @@ export function BrandPartsPage() {
                   <PartPhotoButton
                     src={part.imageUrl}
                     name={[getBrand(part.brandId)?.name, part.name].join(' ')}
-                    label="Reel"
+                    label={component.label}
                   />
                 </TableCell>
               )}

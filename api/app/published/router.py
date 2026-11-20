@@ -16,7 +16,6 @@ from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
 from app.published.models import PublishedBuild
 from app.published.schemas import (
     ImagePartRefOut,
-    PartRefOut,
     PublishedBuildOut,
     PublishedPageOut,
     PublishedPartsOut,
@@ -150,7 +149,7 @@ def _base_select():
 
 def _part(
     part: Rod | Reel | FlyLine | Leader | Tippet | None,
-) -> PartRefOut | ImagePartRefOut | None:
+) -> ImagePartRefOut | None:
     if part is None:
         return None
     fields = {
@@ -166,10 +165,9 @@ def _part(
             purchase_url=part.series.purchase_url,
             image_path=part.series.image_path,
         )
-    fields["purchase_url"] = part.purchase_url
-    if isinstance(part, Reel):
-        return ImagePartRefOut(**fields, image_path=part.image_path)
-    return PartRefOut(**fields)
+    return ImagePartRefOut(
+        **fields, purchase_url=part.purchase_url, image_path=part.image_path
+    )
 
 
 def _rod_ref(rod: Rod | None) -> RodRefOut | None:

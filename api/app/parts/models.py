@@ -82,6 +82,7 @@ class FlyLine(CatalogPart, Base):
     __tablename__ = "fly_lines"
 
     purchase_url: Mapped[str | None]
+    image_path: Mapped[str | None]
     line_weight: Mapped[int]
     type: Mapped[str | None]
     sink_rate_ips: Mapped[Decimal | None]
@@ -93,6 +94,7 @@ class Leader(CatalogPart, Base):
     __tablename__ = "leaders"
 
     purchase_url: Mapped[str | None]
+    image_path: Mapped[str | None]
     material: Mapped[str]
     length_ft: Mapped[Decimal]
     x_size_id: Mapped[int | None] = mapped_column(ForeignKey("x_sizes.id"))
@@ -107,6 +109,7 @@ class Tippet(CatalogPart, Base):
     __tablename__ = "tippets"
 
     purchase_url: Mapped[str | None]
+    image_path: Mapped[str | None]
     material: Mapped[str]
     x_size_id: Mapped[int] = mapped_column(ForeignKey("x_sizes.id"))
     strength_lb: Mapped[Decimal | None]

@@ -1,10 +1,11 @@
+import type { ComponentProps } from 'react'
 import { PartImage } from '@components/shop'
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 interface PartPhotoButtonProps {
   src: string | null
   name: string // "Lamson Liquid S"
-  label: 'Rod' | 'Reel'
+  label: ComponentProps<typeof PartImage>['label']
 }
 
 /** A part's thumbnail that opens the photo full size. Esc, the close button

@@ -60,9 +60,9 @@ class PublishedSummaryOut(CamelModel):
 class PublishedPartsOut(CamelModel):
     rod: ImagePartRefOut | None
     reel: ImagePartRefOut | None
-    line: PartRefOut | None
-    leader: PartRefOut | None
-    tippet: PartRefOut | None
+    line: ImagePartRefOut | None
+    leader: ImagePartRefOut | None
+    tippet: ImagePartRefOut | None
 
 
 class PublishedBuildOut(PublishedSummaryOut):

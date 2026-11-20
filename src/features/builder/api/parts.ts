@@ -41,6 +41,7 @@ interface LineRow {
   headWeightGrains: number | null
   price: number | null
   purchaseUrl: string | null
+  imageUrl: string | null
 }
 
 interface LeaderRow {
@@ -54,6 +55,7 @@ interface LeaderRow {
   strengthLb: number | null
   price: number | null
   purchaseUrl: string | null
+  imageUrl: string | null
 }
 
 interface TippetRow {
@@ -67,6 +69,7 @@ interface TippetRow {
   spoolYards: number | null
   price: number | null
   purchaseUrl: string | null
+  imageUrl: string | null
 }
 
 // "Scientific Anglers" -> "scientific-anglers"
@@ -90,7 +93,7 @@ function basePart(
     name: row.model,
     price: row.price,
     purchaseUrl: row.purchaseUrl,
-    imageUrl: row.imageUrl ?? null, // only rods and reels send one
+    imageUrl: row.imageUrl ?? null,
   }
 }
 

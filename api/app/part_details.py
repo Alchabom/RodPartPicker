@@ -31,7 +31,7 @@ MODELS = {
     "leader": Leader,
     "tippet": Tippet,
 }
-IMAGE_COMPONENTS = ("rod", "reel")
+IMAGE_COMPONENTS = ("rod", "reel", "line", "leader", "tippet")
 MAX_URL_LENGTH = 500  # the purchase_url column is VARCHAR(500)
 LABEL_RULE = re.compile(r"^[a-z0-9_]+$")
 PARTS_DIR = Path(__file__).resolve().parents[2] / "public" / "parts"
@@ -174,7 +174,7 @@ def build_sql(csv_path: Path, db: Session, parts_dir: Path) -> str:
 
 
 def find_missing(db: Session) -> dict[str, list[str]]:
-    """Models still lacking a link (and, for rods and reels, an image)."""
+    """Models still lacking a link or an image."""
     result: dict[str, list[str]] = {}
     for component, model in MODELS.items():
         lacking = model.purchase_url.is_(None)
