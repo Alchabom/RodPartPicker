@@ -26,12 +26,12 @@ export function AppRoutes() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="builder/saved" element={<RedirectToMyBuilds />} />
         <Route path="builder" element={<BuilderLayout />}>
           <Route element={<LocalBuildProvider />}>
             <Route index element={<BuilderPage />} />
             <Route path=":component/:brand" element={<BrandPartsPage />} />
           </Route>
-          <Route path="saved" element={<RedirectToMyBuilds />} />
           <Route
             path=":buildId"
             element={

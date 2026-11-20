@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Loading, PageHeader } from '@components/shop'
+import { Loading, PageHeader, ShareButton } from '@components/shop'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -32,7 +32,7 @@ import { formatPrice } from '@utils/formatPrice'
 const formatEdited = (updatedAt: string) =>
   formatApiDate(updatedAt, { dateStyle: 'medium', timeStyle: 'short' })
 
-function DeleteBuildButton({ id, name }: { id: number; name: string }) {
+function DeleteBuildButton({ id, name, publishedId }: { id: number; name: string; publishedId: number | null }) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const mutation = useMutation({
@@ -61,8 +61,9 @@ function DeleteBuildButton({ id, name }: { id: number; name: string }) {
         <AlertDialogHeader>
           <AlertDialogTitle>{`Delete "${name}"?`}</AlertDialogTitle>
           <AlertDialogDescription>
-            This can't be undone. If this build is published, its public copy stays on Completed Builds and can't be
-            unpublished afterwards, so unpublish it first.
+            {publishedId !== null
+              ? "This build is on the Community Rack. Deleting it leaves the Rack copy up, and you won't be able to take it down. Take it off the Rack first. This can't be undone."
+              : "This can't be undone."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         {mutation.isError && (
@@ -164,6 +165,7 @@ export function MyBuildsPage() {
               <TableHead>Name</TableHead>
               <TableHead>Parts</TableHead>
               <TableHead className="text-right">Total</TableHead>
+              <TableHead>Rack</TableHead>
               <TableHead>Last edited</TableHead>
               <TableHead className="text-right">
                 <span className="sr-only">Actions</span>
@@ -180,9 +182,21 @@ export function MyBuildsPage() {
                 </TableCell>
                 <TableCell className="tabular-nums">{count} / {COMPONENTS.length}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatPrice(total)}</TableCell>
+                <TableCell>
+                  {saved.publishedId != null ? (
+                    <div className="flex items-center gap-2">
+                      <Link to={`/rack/${saved.publishedId}`} className="font-semibold text-belly hover:underline">
+                        On the Rack
+                      </Link>
+                      <ShareButton path={`/rack/${saved.publishedId}`} title={saved.name} />
+                    </div>
+                  ) : (
+                    <span className="text-ink-2">Private</span>
+                  )}
+                </TableCell>
                 <TableCell>{formatEdited(saved.updatedAt)}</TableCell>
                 <TableCell className="text-right">
-                  <DeleteBuildButton id={saved.id} name={saved.name} />
+                  <DeleteBuildButton id={saved.id} name={saved.name} publishedId={saved.publishedId ?? null} />
                 </TableCell>
               </TableRow>
             ))}

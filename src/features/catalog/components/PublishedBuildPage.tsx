@@ -8,7 +8,7 @@ import { publishedKeys } from '@/lib/publishedKeys'
 import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 import { getPublished, type Slot } from '@/lib/published'
-import { Loading, PartImage } from '@components/shop'
+import { Loading, PartImage, ShareButton } from '@components/shop'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const SLOTS: { slot: Slot; label: string }[] = [
@@ -153,9 +153,12 @@ export function PublishedBuildPage() {
 
       <p className="mt-8 whitespace-pre-line">{data.writeup}</p>
 
-      <Button asChild className="mt-8">
-        <Link to={`/builder?copy=${id}`}>Open in Builder</Link>
-      </Button>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Button asChild>
+          <Link to={`/builder?copy=${id}`}>Open in Builder</Link>
+        </Button>
+        <ShareButton path={`/rack/${data.id}`} title={data.title} size="default" />
+      </div>
     </main>
   )
 }

@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ShareButton } from '@components/shop'
 import { ApiError } from '@/lib/api'
 import { publishedKeys } from '@/lib/publishedKeys'
 import { buildKeys } from '../api/builds'
@@ -25,7 +26,7 @@ import { PublishDialog } from './PublishDialog'
 export function PublishControls({ id, name, build }: { id: number; name: string; build: Build }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   // What the last finished publish did; cleared when the next action starts
-  const [notice, setNotice] = useState<'Posted' | 'Updated' | null>(null)
+  const [notice, setNotice] = useState<'Posted to the Rack' | 'Updated on the Rack' | null>(null)
   const { data: published, isError, refetch } = useQuery({
     queryKey: buildKeys.published(id),
     queryFn: ({ signal }) => getMyPublished(id, signal),
@@ -66,10 +67,10 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         </>
       ) : (
         <>
-          <Link to={`/rack/${published.id}`} className="font-semibold text-spectra hover:underline">
+          <Link to={`/rack/${published.id}`} className="font-semibold text-belly hover:underline">
             On the Community Rack · View
           </Link>
-          {/* ShareButton: Task 7 */}
+          <ShareButton path={`/rack/${published.id}`} title={published.title} />
           <Button size="sm" variant="secondary" onClick={openDialog}>
             Update on the Rack
           </Button>
@@ -82,11 +83,11 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         buildId={id}
         initial={published ?? { title: name, writeup: '' }}
         mode={published ? 'update' : 'publish'}
-        onSaved={(mode) => setNotice(mode === 'publish' ? 'Posted' : 'Updated')}
+        onSaved={(mode) => setNotice(mode === 'publish' ? 'Posted to the Rack' : 'Updated on the Rack')}
       />
       {/* Always mounted so screen readers announce the text when it appears */}
       <span role="status" className="font-semibold text-te-papa-green">
-        {notice && `${notice} ${notice === 'Posted' ? 'to' : 'on'} the Rack`}
+        {notice}
       </span>
     </div>
   )
