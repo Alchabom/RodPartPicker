@@ -15,6 +15,7 @@ vi.mock('../api/rodSeries', async (importOriginal) => ({
 const selectPart = vi.fn()
 const clearBuild = vi.fn()
 const loadRecommendation = vi.fn()
+const removePart = vi.fn()
 let buildRod: string | undefined
 vi.mock('../hooks/useBuild', () => ({
   useBuild: () => ({
@@ -24,6 +25,7 @@ vi.mock('../hooks/useBuild', () => ({
     selectPart,
     clearBuild,
     loadRecommendation,
+    removePart,
   }),
 }))
 const BRANDS = [
@@ -213,6 +215,16 @@ describe('RodSeriesPage', () => {
     expect(fetchRodSeries).toHaveBeenCalledWith('all', expect.anything())
     expect(screen.getByRole('heading', { name: 'Orvis' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Sage' })).toBeInTheDocument()
+  })
+
+  it('shows your rod with Remove', async () => {
+    buildRod = 'rod-52'
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt()
+    await screen.findByRole('button', { name: /^R8 Core/ })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    expect(removePart).toHaveBeenCalledWith('rod')
   })
 
   it('explains why it opened when a later step needed a rod', async () => {

@@ -27,8 +27,9 @@ function holdsPart(series: RodSeries, partId: string | undefined): boolean {
  */
 export function RodStep() {
   const buildState = useBuild()
-  const { build, basePath, clearBuild } = buildState
-  const { getBrandsFor } = useCatalog()
+  const { build, basePath, clearBuild, removePart } = buildState
+  const { getBrand, getBrandsFor, getPart } = useCatalog()
+  const picked = getPart(build.rod)
   const choose = useChoose('rod')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -95,6 +96,16 @@ export function RodStep() {
         <p role="status" className="mt-1 text-ink-2">
           Pick a rod first: everything else is matched to it.
         </p>
+      )}
+      {picked && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          <span>
+            Your rod: <span className="font-medium">{[getBrand(picked.brandId)?.name, picked.name].join(' ')}</span>
+          </span>
+          <Button size="sm" variant="quiet" onClick={() => removePart('rod')}>
+            Remove
+          </Button>
+        </div>
       )}
       <Button
         variant="link"

@@ -53,6 +53,8 @@ describe('BuildSteps', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1)
     expect(screen.getByRole('link', { name: 'Rod' })).toBeInTheDocument()
     expect(screen.getByText('Reel').closest('[aria-disabled]')).toHaveAttribute('aria-disabled', 'true')
+    // aria-disabled on a span isn't announced, so the reason is in the text
+    expect(screen.getAllByText('(pick a rod first)')).toHaveLength(4)
   })
 
   it('links each step under the build path', () => {

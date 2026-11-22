@@ -210,6 +210,20 @@ describe('PartStep', () => {
     expect(screen.queryByRole('button', { name: /Enlarge photo/ })).toBeNull()
   })
 
+  it('says so when there are no parts at all', () => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('leader')!} parts={[]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText("We don't have any leaders yet.")).toBeInTheDocument()
+  })
+
+  it('makes the misfit group a heading, like the others', async () => {
+    renderStep('/builder/line')
+    expect(await screen.findByRole('heading', { name: /Doesn't fit your rig/ })).toBeInTheDocument()
+  })
+
   it('shows one plain list when fit does not apply', () => {
     render(
       <MemoryRouter>

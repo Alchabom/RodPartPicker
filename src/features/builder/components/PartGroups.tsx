@@ -77,6 +77,10 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
   }
   const list = (rows: Part[]) => <ul>{rows.map(row)}</ul>
 
+  if (parts.length === 0) {
+    return <p className="text-ink-2">We don't have any {component.plural.toLowerCase()} yet.</p>
+  }
+
   if (status !== 'ready' || !compatible) {
     return (
       <>
@@ -115,16 +119,19 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
       )}
       {misfits.length > 0 && (
         <section>
-          <Button
-            variant="quiet"
-            aria-expanded={showMisfits}
-            aria-controls={misfitsId}
-            onClick={() => setShowMisfits((open) => !open)}
-            className="-ml-3"
-          >
-            Doesn't fit your rig ({misfits.length})
-            <ChevronDown data-icon="inline-end" className={cn('transition-transform', showMisfits && 'rotate-180')} />
-          </Button>
+          {/* A heading like the other groups, so heading navigation finds it */}
+          <h2 className="text-lg font-medium">
+            <Button
+              variant="quiet"
+              aria-expanded={showMisfits}
+              aria-controls={misfitsId}
+              onClick={() => setShowMisfits((open) => !open)}
+              className="-ml-3 text-base"
+            >
+              Doesn't fit your rig ({misfits.length})
+              <ChevronDown data-icon="inline-end" className={cn('transition-transform', showMisfits && 'rotate-180')} />
+            </Button>
+          </h2>
           <div id={misfitsId}>{showMisfits && list(misfits)}</div>
         </section>
       )}

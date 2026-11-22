@@ -85,6 +85,17 @@ describe('builder routes', () => {
     expect(at()).toHaveTextContent(/^\/builder$/)
   })
 
+  it('stays on the summary when the build is emptied there (save, retake, start over)', () => {
+    build = { rod: 'rod-1' }
+    renderAt('/builder')
+    build = {}
+    act(() => {
+      navigate('/builder?again=1', { replace: true })
+    })
+    expect(screen.getByText('Summary')).toBeInTheDocument()
+    expect(at()).toHaveTextContent(/^\/builder\?again=1$/)
+  })
+
   it('sends a later step to the rod step, saying why, when there is no rod', () => {
     renderAt('/builder/reel')
     expect(screen.getByText('Rod step')).toBeInTheDocument()

@@ -24,15 +24,19 @@ export function StepPage({ type }: { type: ComponentType }) {
 
 /**
  * /builder and /builder/:buildId: the summary once there's a rod, else the rod
- * step. A ?copy= or ?save= intent always gets the summary, which runs it: both
- * strip their param straight away, so the choice is made once, on arrival.
+ * step. Decided once, on arrival: the summary itself empties the build (Save
+ * this rig, Retake the questions, Start over) and must stay put while it does,
+ * and a ?copy= or ?save= intent strips its param straight away but needs the
+ * summary to run it.
  */
 export function BuilderIndex() {
   const { build, basePath } = useBuild()
   const { getPart } = useCatalog()
   const [searchParams] = useSearchParams()
-  const [hadIntent] = useState(() => searchParams.has('copy') || searchParams.has('save'))
-  if (!hadIntent && !getPart(build.rod)) return <Navigate to={`${basePath}/rod`} replace />
+  const [startAtRod] = useState(
+    () => !searchParams.has('copy') && !searchParams.has('save') && !getPart(build.rod),
+  )
+  if (startAtRod) return <Navigate to={`${basePath}/rod`} replace />
   return <RigSummary />
 }
 

@@ -66,6 +66,7 @@ export function BuildSteps({ current }: { current: ComponentType | 'summary' }) 
               ) : (
                 <span aria-disabled="true" className={cn(itemClass, 'opacity-50')}>
                   {inner}
+                  <span className="sr-only"> (pick a rod first)</span>
                 </span>
               )}
             </li>
