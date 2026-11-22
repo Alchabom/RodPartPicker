@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { act, fireEvent, render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -5,7 +6,10 @@ import { ScrollManager } from './ScrollManager'
 
 let navigate: NavigateFunction
 function Grab() {
-  navigate = useNavigate()
+  const nav = useNavigate()
+  useEffect(() => {
+    navigate = nav
+  })
   return null
 }
 
