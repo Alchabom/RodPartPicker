@@ -81,6 +81,11 @@ describe('RigSummary', () => {
     expect(screen.queryByRole('link', { name: /^Continue/ })).toBeNull()
   })
 
+  it('ends the line in a hook, hidden from assistive tech', () => {
+    renderSummary()
+    expect(screen.getByTestId('rig-hook').querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+  })
+
   it('counts an incomplete rig and points to the next part', () => {
     build = { rod: FULL.rod, reel: FULL.reel }
     renderSummary()

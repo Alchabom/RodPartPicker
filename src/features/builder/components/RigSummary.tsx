@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { PartImage } from '@components/shop'
+import { FlyHook, PartImage } from '@components/shop'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPrice } from '@utils/formatPrice'
@@ -68,15 +68,23 @@ export function RigSummary() {
       )}
 
       {/* The rig down its line, as on the home page: a guide ring per part */}
-      <ol aria-label="Your rig" className="relative mt-8">
+      <ol aria-label="Your rig" className="relative mt-8 mb-16">
         {parts.map(({ component, part }, i) => {
           const label = component.label.toLowerCase()
           const flagged = flags.byPart[component.type]
           const step = `${basePath}/${component.type}`
           return (
             <li key={component.type} className="relative pb-6 pl-10 last:pb-0">
-              {i < parts.length - 1 && (
+              {i < parts.length - 1 ? (
                 <span aria-hidden="true" className="absolute top-3 -bottom-3 left-2 w-[3px] -translate-x-1/2 bg-belly" />
+              ) : (
+                // Past the tippet the line thins to a tippet and ends in a hook
+                <>
+                  <span aria-hidden="true" className="absolute top-3 -bottom-5 left-2 w-[1.5px] -translate-x-1/2 bg-belly" />
+                  <span data-testid="rig-hook" className="absolute top-[calc(100%+15px)] left-[3px]">
+                    <FlyHook />
+                  </span>
+                </>
               )}
               <span
                 aria-hidden="true"
