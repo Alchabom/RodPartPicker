@@ -16,6 +16,12 @@ describe('SiteFooter', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows the draft count', () => {
+    render(<MemoryRouter><SiteFooter signedIn={false} builderProgress={3} /></MemoryRouter>)
+    const nav = screen.getByRole('navigation', { name: 'Footer' })
+    expect(within(nav).getByRole('link', { name: 'Builder, 3 of 5 picked' })).toHaveTextContent('3 of 5')
+  })
+
   it.each([
     [false, ['Builder', 'Community Rack']],
     [true, ['Builder', 'My builds', 'Community Rack']],

@@ -1,9 +1,11 @@
-import { NavLink } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { Container } from './Container'
-import { visibleNavItems } from './navItems'
+import { activeNavItem, builderLabel, visibleNavItems } from './navItems'
 import { Wordmark } from './Wordmark'
 
-export function SiteFooter({ signedIn }: { signedIn: boolean }) {
+export function SiteFooter({ signedIn, builderProgress = 0 }: { signedIn: boolean; builderProgress?: number }) {
+  const active = activeNavItem(useLocation().pathname)
+  const builder = builderLabel(builderProgress)
   return (
     <footer className="mt-auto">
       <svg
@@ -27,13 +29,16 @@ export function SiteFooter({ signedIn }: { signedIn: boolean }) {
             <Wordmark className="focus-visible:ring-stone-page" />
             <nav aria-label="Footer" className="flex gap-6">
               {visibleNavItems(signedIn).map((item) => (
-                <NavLink
+                <Link
                   key={item.to}
                   to={item.to}
+                  aria-current={active === item.to ? 'page' : undefined}
+                  aria-label={item.to === '/builder' ? builder.accessibleName : undefined}
                   className="rounded-sm text-sm outline-none transition-colors duration-150 hover:underline focus-visible:ring-2 focus-visible:ring-stone-page"
                 >
                   {item.label}
-                </NavLink>
+                  {item.to === '/builder' && builder.pill && <span aria-hidden="true"> · {builder.pill}</span>}
+                </Link>
               ))}
             </nav>
           </div>

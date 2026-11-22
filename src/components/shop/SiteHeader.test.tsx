@@ -7,11 +7,15 @@ import { SiteHeader } from './SiteHeader'
 
 function renderAt(
   path: string,
-  { signedIn = false, account = <span>Log in</span> }: { signedIn?: boolean; account?: ReactNode } = {},
+  {
+    signedIn = false,
+    account = <span>Log in</span>,
+    builderProgress,
+  }: { signedIn?: boolean; account?: ReactNode; builderProgress?: number } = {},
 ) {
   render(
     <MemoryRouter initialEntries={[path]}>
-      <SiteHeader account={account} signedIn={signedIn} />
+      <SiteHeader account={account} signedIn={signedIn} builderProgress={builderProgress} />
     </MemoryRouter>,
   )
 }
@@ -19,7 +23,9 @@ function renderAt(
 describe('SiteHeader', () => {
   it.each([
     ['/builder', 'Builder'],
-    ['/builder/12/rod/all', 'Builder'],
+    ['/builder/line', 'Builder'],
+    ['/builder/12/rod/all', 'My builds'],
+    ['/builder/12/line', 'My builds'],
     ['/my-builds', 'My builds'],
     ['/rack', 'Community Rack'],
     ['/rack/5', 'Community Rack'],
@@ -69,6 +75,32 @@ describe('SiteHeader', () => {
     renderAt('/', { account: <span>a-very-long-display-name-that-goes-on@example.com</span> })
     const account = screen.getByText(/a-very-long-display-name/)
     expect(account.parentElement).toHaveClass('min-w-0')
+  })
+
+  it('shows the draft count on Builder', () => {
+    renderAt('/', { builderProgress: 3 })
+    const nav = screen.getByRole('navigation', { name: 'Main' })
+    expect(within(nav).getByRole('link', { name: 'Builder, 3 of 5 picked' })).toHaveTextContent('3 of 5')
+  })
+
+  it('calls a full draft ready', () => {
+    renderAt('/', { builderProgress: 5 })
+    const nav = screen.getByRole('navigation', { name: 'Main' })
+    expect(within(nav).getByRole('link', { name: 'Builder, rig ready' })).toHaveTextContent('ready')
+  })
+
+  it('shows no count for an empty draft', () => {
+    renderAt('/', { builderProgress: 0 })
+    const nav = screen.getByRole('navigation', { name: 'Main' })
+    expect(within(nav).getByRole('link', { name: 'Builder' })).toHaveTextContent(/^Builder$/)
+  })
+
+  it('shows the count in the phone menu too', async () => {
+    const user = userEvent.setup()
+    renderAt('/', { builderProgress: 3 })
+    await user.click(screen.getByRole('button', { name: 'Menu' }))
+    const nav = within(screen.getByRole('dialog', { name: 'Menu' })).getByRole('navigation', { name: 'Menu' })
+    expect(within(nav).getByRole('link', { name: 'Builder, 3 of 5 picked' })).toBeInTheDocument()
   })
 
   it('has no Products link', () => {
