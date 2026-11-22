@@ -137,6 +137,43 @@
     }
   }
 
+  /* The home page's catch (CatchLink), 0-450ms: the hook sets (0-120ms), then a
+     brook trout leaps onto it with a splash (120-400ms) */
+  --animate-catch-set: catch-set 120ms var(--ease-shop) forwards;
+  @keyframes catch-set {
+    to {
+      transform: translateY(-6px);
+    }
+  }
+
+  --animate-catch-leap: catch-leap 280ms var(--ease-shop) 120ms both;
+  @keyframes catch-leap {
+    0% {
+      opacity: 0;
+      transform: translateY(40px) rotate(25deg);
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(-8px) rotate(-8deg);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(-6px) rotate(4deg);
+    }
+  }
+
+  --animate-catch-splash: catch-splash 280ms ease-out 120ms both;
+  @keyframes catch-splash {
+    from {
+      opacity: 1;
+      transform: scale(0.4);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.4);
+    }
+  }
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
