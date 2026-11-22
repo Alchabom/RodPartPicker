@@ -6,13 +6,14 @@ import { AccountPage, DisplayNamePage, LoginPage, RequireAuth, UserMenu } from '
 import { HomePage } from '@features/home'
 import { PublishedBuildPage, PublishedListPage } from '@features/catalog'
 import {
-  BrandPartsPage,
+  BuilderIndex,
   BuilderLayout,
-  BuilderPage,
   LocalBuildProvider,
   MyBuildsPage,
-  RodSeriesPage,
   SavedBuildProvider,
+  STEP_ORDER,
+  StepPage,
+  StepRedirect,
 } from '@features/builder'
 import { RedirectToMyBuilds, RedirectToRack, RedirectToRackBuild } from './redirects'
 
@@ -29,6 +30,19 @@ function Layout() {
   )
 }
 
+// The guided builder, the same under a draft (/builder) and a saved build
+// (/builder/:buildId): the summary at the index, one static path per step (so
+// a step never reads as a build id), and old brand-first links redirected
+const builderSteps = (
+  <>
+    <Route index element={<BuilderIndex />} />
+    {STEP_ORDER.map((type) => (
+      <Route key={type} path={type} element={<StepPage type={type} />} />
+    ))}
+    <Route path=":component/:brand" element={<StepRedirect />} />
+  </>
+)
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -36,11 +50,7 @@ export function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path="builder/saved" element={<RedirectToMyBuilds />} />
         <Route path="builder" element={<BuilderLayout />}>
-          <Route element={<LocalBuildProvider />}>
-            <Route index element={<BuilderPage />} />
-            <Route path="rod/:brand" element={<RodSeriesPage />} />
-            <Route path=":component/:brand" element={<BrandPartsPage />} />
-          </Route>
+          <Route element={<LocalBuildProvider />}>{builderSteps}</Route>
           <Route
             path=":buildId"
             element={
@@ -49,9 +59,7 @@ export function AppRoutes() {
               </RequireAuth>
             }
           >
-            <Route index element={<BuilderPage />} />
-            <Route path="rod/:brand" element={<RodSeriesPage />} />
-            <Route path=":component/:brand" element={<BrandPartsPage />} />
+            {builderSteps}
           </Route>
         </Route>
         <Route path="rack" element={<PublishedListPage />} />
