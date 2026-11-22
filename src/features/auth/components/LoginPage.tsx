@@ -5,6 +5,7 @@ import { ApiError } from '@/lib/api'
 import { useAuth } from '@hooks/auth'
 import { requestCode, verifyCode } from '../api/auth'
 import { safeNext } from '../utils/safeNext'
+import { PageHeader } from '@components/shop'
 
 // Matches the API's per-email cooldown, so "Resend code" never hits a 429
 const RESEND_AFTER_MS = 60_000
@@ -101,7 +102,7 @@ export function LoginPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-4 py-16">
-      <h1 className="text-3xl font-bold text-te-papa-green">Log in</h1>
+      <PageHeader title="Log in" />
 
       {step === 'email' ? (
         <form onSubmit={onSubmitEmail} className="mt-6 flex flex-col gap-3">

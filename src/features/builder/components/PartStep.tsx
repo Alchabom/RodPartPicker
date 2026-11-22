@@ -69,7 +69,7 @@ export function PartStep({ type }: { type: Exclude<ComponentType, 'rod'> }) {
       <BuildHeader />
       <BuildSteps current={type} />
 
-      <h1 className="mt-8 text-3xl font-medium text-olive">Choose {component.article} {label}</h1>
+      <h1 className="mt-8 text-[28px] font-medium text-olive">Choose {component.article} {label}</h1>
       {matchedTo.length > 0 && <p className="mt-1 text-ink-2">Matched to your {matchedTo.join(' and ')}</p>}
 
       {picked && (

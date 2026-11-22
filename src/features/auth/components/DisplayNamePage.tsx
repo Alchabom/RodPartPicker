@@ -2,6 +2,7 @@ import { Navigate, useSearchParams } from 'react-router'
 import { useAuth } from '@hooks/auth'
 import { safeNext } from '../utils/safeNext'
 import { DisplayNameForm } from './DisplayNameForm'
+import { PageHeader } from '@components/shop'
 
 /**
  * Onboarding: a new user picks their first display name. Renames happen on
@@ -19,8 +20,7 @@ export function DisplayNamePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-4 py-16">
-      <h1 className="text-3xl font-bold text-te-papa-green">Pick a display name</h1>
-      <p className="mt-2 text-plantation">Other anglers see this on your builds.</p>
+      <PageHeader title="Pick a display name" description="Other anglers see this on your builds." />
       <DisplayNameForm submitLabel="Continue" />
     </main>
   )

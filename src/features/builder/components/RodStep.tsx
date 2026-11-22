@@ -91,7 +91,7 @@ export function RodStep() {
       <BuildHeader />
       <BuildSteps current="rod" />
 
-      <h1 className="mt-8 text-3xl font-medium text-olive">Choose a rod</h1>
+      <h1 className="mt-8 text-[28px] font-medium text-olive">Choose a rod</h1>
       {needsRod && (
         <p role="status" className="mt-1 text-ink-2">
           Pick a rod first: everything else is matched to it.
