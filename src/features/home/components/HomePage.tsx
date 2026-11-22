@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { RidgeScene } from './RidgeScene'
 import { RecentBuilds } from './RecentBuilds'
-import { RigSteps } from './RigSteps'
+import { RigBridge, RigSteps } from './RigSteps'
 
 // The entrance (text rise, line draw) plays on the first visit to `/` per page
 // load, not every time someone comes back to it inside the app.
@@ -40,8 +40,13 @@ export function HomePage() {
           </div>
         </Container>
       </section>
-      <RigSteps />
-      <RecentBuilds />
+      {/* The hero's line comes down the bridge into the steps; recent builds
+          sit beside them from lg */}
+      <Container className="relative grid gap-16 pt-20 pb-24 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-20">
+        <RigBridge />
+        <RigSteps />
+        <RecentBuilds />
+      </Container>
     </main>
   )
 }

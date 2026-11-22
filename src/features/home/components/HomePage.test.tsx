@@ -1,11 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/published', () => ({
   listPublished: vi.fn().mockResolvedValue({ items: [], page: 1, pageSize: 20, total: 0 }),
 }))
+
+// After vi.resetModules(), import the same (fresh) mock HomePage will use
+const mockedList = async () => vi.mocked((await import('@/lib/published')).listPublished)
 
 // The entrance runs once per page load, so each test gets a fresh module
 beforeEach(() => {
@@ -41,6 +44,17 @@ describe('HomePage', () => {
     await renderHome()
     const steps = within(screen.getByRole('list', { name: 'How a rig goes together' })).getAllByRole('listitem')
     expect(steps.map((s) => s.querySelector('h3')?.textContent)).toEqual(['Rod', 'Reel', 'Line', 'Leader', 'Tippet'])
+  })
+
+  it('keeps the steps when recent builds fail', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    ;(await mockedList()).mockRejectedValueOnce(new Error('down'))
+    await renderHome()
+    await waitFor(() => expect(log).toHaveBeenCalledWith('Could not load recent builds', expect.any(Error)))
+    expect(screen.queryByRole('heading', { name: 'Recently rigged' })).toBeNull()
+    expect(within(screen.getByRole('list', { name: 'How a rig goes together' })).getAllByRole('listitem')).toHaveLength(5)
+    expect(screen.getAllByRole('link', { name: 'Start a build' })).toHaveLength(2)
+    log.mockRestore()
   })
 
   it('has no sample build card in the hero', async () => {
