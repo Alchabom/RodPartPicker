@@ -231,3 +231,84 @@
     background: var(--fin-edge);
   }
 }
+
+/* The home page's fly line (RigSteps): as the steps scroll into view the line
+   draws down, each step rises in as the line reaches it, and the hook sways.
+   Scroll-linked, so scrolling back up reverses it. Without view() timelines
+   (Firefox) or with reduced motion, nothing here applies and everything shows
+   finished: no rule outside these blocks hides anything. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rig-draw {
+      transform-origin: top;
+      animation: rig-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+    .rig-rise {
+      animation: rig-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 30%;
+    }
+    .rig-bridge {
+      stroke-dasharray: 1;
+      animation: rig-bridge linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 60%;
+    }
+    .rig-sway {
+      transform-origin: 5px 5px;
+      animation: rig-sway ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+
+@keyframes rig-draw {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes rig-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rig-bridge {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rig-sway {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* The catch pulls the line taut: the tippet shortens as the hook sets 6px */
+@media (prefers-reduced-motion: no-preference) {
+  .rig-tippet {
+    transition: bottom 120ms var(--ease-shop);
+  }
+  .rig-steps:has([data-catching]) .rig-tippet {
+    bottom: calc(-0.5rem + 6px);
+  }
+}
