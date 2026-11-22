@@ -259,4 +259,4 @@ All tests are Vitest.
 - "Why it fits" explanations, which would need the API's rules to explain fits as well as problems.
 - Filters beyond brand (weight, water, price).
 - Header and navigation changes (sub-project 4).
-- Changes to the compatibility rules or API responses.
+- Other changes to the compatibility rules or API responses. **One was added during the build:** with a leader selected, `/compatibility/parts` now marks tippets that aren't the leader's X size or one finer as not compatible (`rules.tippet_suits_leader`), so the tippet step never lists one that `/compatibility/check` then flags. It used to highlight every tippet on a light rod and never mark one as not compatible.

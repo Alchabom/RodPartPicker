@@ -64,6 +64,16 @@ def is_heavy_leader(leader: Leader) -> bool:
     return leader.strength_lb is not None and leader.strength_lb >= HEAVY_LEADER_LB
 
 
+def tippet_suits_leader(tippet: Tippet, leader: Leader) -> bool:
+    """Check whether a tippet is the leader's X size or one size finer.
+
+    A leader with no X size takes any tippet.
+    """
+    if leader.x_size_id is None:
+        return True
+    return tippet.x_size_id in (leader.x_size_id, leader.x_size_id + 1)
+
+
 def highlights_every_tippet(rod: Rod) -> bool:
     """Check whether a rod is light enough to highlight every tippet."""
     return rod.line_weight < LIGHT_TIPPET_MIN_ROD_WEIGHT
@@ -169,12 +179,7 @@ def check_build(
             )
         )
 
-    if (
-        leader
-        and tippet
-        and leader.x_size_id is not None
-        and tippet.x_size_id not in (leader.x_size_id, leader.x_size_id + 1)
-    ):
+    if leader and tippet and not tippet_suits_leader(tippet, leader):
         issues.append(
             BuildIssue(
                 WarningCode.LEADER_TIPPET_SIZE,

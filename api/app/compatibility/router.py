@@ -146,8 +146,9 @@ def get_compatible_parts(
     heavier = _heavier_lines(db, selected, water)
 
     # Rods start the build, so they're never not-compatible.
-    # A light rod highlights every tippet, whatever else is selected. A heavy rod
-    # drops light tippets from the highlights. Tippets are never not-compatible.
+    # A light rod highlights every tippet. A heavy rod drops light tippets from
+    # the highlights. A selected leader wins over both: a tippet that isn't its
+    # X size or one finer is not compatible, the same rule /check warns about.
     if rod is not None and rules.highlights_every_tippet(rod):
         tippets = list(db.scalars(select(Tippet)))
     elif rod is not None:
@@ -155,6 +156,15 @@ def get_compatible_parts(
             tippet
             for tippet in tippets
             if not rules.is_light_tippet_for_rod(tippet, rod)
+        ]
+    tippet_misfits: list[int] = []
+    leader = selected["leader"]
+    if leader is not None:
+        tippets = [t for t in tippets if rules.tippet_suits_leader(t, leader)]
+        tippet_misfits = [
+            t.id
+            for t in db.scalars(select(Tippet))
+            if not rules.tippet_suits_leader(t, leader)
         ]
 
     return CompatibleParts(
@@ -170,7 +180,7 @@ def get_compatible_parts(
             reel=_not_compatible(db, Reel, "reel", selected, reels),
             line=_not_compatible(db, FlyLine, "line", selected, lines, heavier),
             leader=_not_compatible(db, Leader, "leader", selected, leaders),
-            tippet=[],
+            tippet=tippet_misfits,
         ),
     )
 
