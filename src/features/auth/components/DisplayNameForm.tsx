@@ -50,7 +50,7 @@ export function DisplayNameForm({ initialName = '', submitLabel, onSaved }: Prop
   return (
     <>
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
-        <label htmlFor="display-name" className="text-sm font-semibold text-plantation">
+        <label htmlFor="display-name" className="text-sm font-semibold text-olive">
           Display name
         </label>
         <input
@@ -63,7 +63,7 @@ export function DisplayNameForm({ initialName = '', submitLabel, onSaved }: Prop
           onChange={(e) => setName(e.target.value)}
           aria-invalid={error !== null}
           aria-describedby={error ? 'display-name-hint display-name-error' : 'display-name-hint'}
-          className="w-full rounded-md border border-twine bg-white px-3 py-2 text-base text-te-papa-green outline-none focus:border-spectra focus:ring-2 focus:ring-spectra/30"
+          className="w-full rounded-md border border-ink-3 bg-white px-3 py-2 text-base text-olive outline-none focus:border-belly focus:ring-2 focus:ring-belly/30"
         />
         <p id="display-name-hint" className="text-sm text-muted-foreground">
           3 to 30 letters, numbers or underscores, like TroutBum_42.
@@ -72,7 +72,7 @@ export function DisplayNameForm({ initialName = '', submitLabel, onSaved }: Prop
           type="submit"
           size="lg"
           disabled={busy || unchanged}
-          className="bg-spectra text-linen hover:bg-te-papa-green"
+          className="bg-belly text-stone-page hover:bg-olive"
         >
           {busy ? 'Saving…' : submitLabel}
         </Button>

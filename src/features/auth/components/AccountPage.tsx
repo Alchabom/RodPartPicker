@@ -15,8 +15,8 @@ export function AccountPage() {
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-4 py-16">
       <PageHeader title="Account settings" />
 
-      <p className="mt-6 text-sm font-semibold text-plantation">Email</p>
-      <p className="mt-1 text-te-papa-green">{user.email}</p>
+      <p className="mt-6 text-sm font-semibold text-olive">Email</p>
+      <p className="mt-1 text-olive">{user.email}</p>
 
       {/* Keyed by the name, so after a save the form restarts from the new name */}
       <DisplayNameForm
@@ -27,7 +27,7 @@ export function AccountPage() {
       />
 
       {saved && (
-        <p role="status" className="mt-4 text-sm font-semibold text-spectra">
+        <p role="status" className="mt-4 text-sm font-semibold text-belly">
           Saved
         </p>
       )}

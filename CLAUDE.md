@@ -28,7 +28,7 @@ Both `package-lock.json` and `pnpm-lock.yaml` are committed, but pnpm is the pac
 - The React Compiler runs through `@rolldown/plugin-babel` with `reactCompilerPreset()` (see `vite.config.ts`). It memoizes automatically, so don't add `useMemo`/`useCallback`/`React.memo` by hand unless profiling shows a need.
 - Path aliases are defined in **two places** that must stay in sync: `resolve.alias` in `vite.config.ts` and `compilerOptions.paths` in `tsconfig.app.json`. The aliases are `@/*`, `@components`, `@features`, `@hooks`, `@styles`, `@utils` and `@types`, each pointing to the matching `src/` subdirectory. Note that `@types/*` can shadow npm `@types/` package names.
 - Global CSS lives in `src/styles/` (`index.css` is imported in `main.tsx`). It does not live at the `src/` root, even though the architecture doc's tree shows it there.
-- Design tokens live in `src/styles/index.css`. The block marked "Deprecated: removed in sub-project 2" holds old color aliases for the existing screens; don't use them in new code.
+- Design tokens live in `src/styles/index.css`.
 - Primitives are in `src/components/ui`. Shop components are in `src/components/shop` and are imported as `@components/shop`. See the layer rule in `docs/architecture_guidelines.md`.
 
 ## Architecture
