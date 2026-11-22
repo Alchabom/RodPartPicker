@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { compatibilityKeys, fetchCompatibleParts } from '../api/compatibility'
 import { COMPONENTS, getComponentInfo } from '../api/components'
 import { useBuild } from '../hooks/useBuild'
@@ -12,6 +11,8 @@ import { useCatalog } from '../hooks/useCatalog'
 import { useChoose } from '../hooks/useChoose'
 import type { ComponentType } from '../types'
 import { previousStep, stepAfter } from '../utils/steps'
+import { brandFromSearch } from '../utils/brandFilter'
+import { BrandChips } from './BrandChips'
 import { BuildSteps } from './BuildSteps'
 import { BuildHeader } from './BuildHeader'
 import { PartGroups, type FitStatus } from './PartGroups'
@@ -35,8 +36,7 @@ export function PartStep({ type }: { type: Exclude<ComponentType, 'rod'> }) {
   const { query } = useBuildQuery()
 
   const brands = getBrandsFor(type)
-  const brandParam = searchParams.get('brand')
-  const brand = brands.some((b) => b.id === brandParam) ? brandParam! : 'all'
+  const brand = brandFromSearch(searchParams, brands)
   const parts = getParts(type, brand)
 
   // Fit compares this step with the rest of the rig, so it needs another part
@@ -63,19 +63,6 @@ export function PartStep({ type }: { type: Exclude<ComponentType, 'rod'> }) {
   const after = stepAfter(type)
   const label = component.label.toLowerCase()
 
-  const chipClass = (active: boolean) =>
-    cn(
-      'rounded-full border px-3 py-1 text-sm transition-colors',
-      active ? 'border-olive bg-olive text-stone-card' : 'border-hairline bg-stone-card text-ink hover:bg-stone-raised',
-    )
-  const withBrand = (id: string | null) => {
-    const next = new URLSearchParams(searchParams)
-    if (id) next.set('brand', id)
-    else next.delete('brand')
-    const search = next.toString()
-    return search ? `?${search}` : '?'
-  }
-
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       {buildState.kind === 'saved' && <BuildHeader />}
@@ -95,24 +82,9 @@ export function PartStep({ type }: { type: Exclude<ComponentType, 'rod'> }) {
         </div>
       )}
 
-      {brands.length > 1 && (
-        <nav aria-label="Brands" className="mt-6 flex flex-wrap gap-2">
-          <Link to={withBrand(null)} replace aria-current={brand === 'all' ? 'page' : undefined} className={chipClass(brand === 'all')}>
-            All brands
-          </Link>
-          {brands.map((b) => (
-            <Link
-              key={b.id}
-              to={withBrand(b.id)}
-              replace
-              aria-current={brand === b.id ? 'page' : undefined}
-              className={chipClass(brand === b.id)}
-            >
-              {b.name}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <div className="mt-6">
+        <BrandChips brands={brands} current={brand} />
+      </div>
 
       <div className="mt-6">
         <PartGroups
