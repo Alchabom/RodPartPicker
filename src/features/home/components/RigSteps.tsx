@@ -45,8 +45,9 @@ export function RigSteps() {
                 data-segment
                 aria-hidden="true"
                 style={{ width: `${step.width}px` } as CSSProperties}
-                // The tippet ends on the hook's eye, 8px into the CatchLink below
-                className={`${segment} rig-draw top-2.5 ${last ? 'rig-tippet -bottom-2' : '-bottom-2.5'}`}
+                // The tippet ends at the hook's pivot, 16px above the CatchLink
+                // below, which draws the last inch of line down to the hook
+                className={`${segment} rig-draw top-2.5 ${last ? 'rig-tippet bottom-4' : '-bottom-2.5'}`}
               />
               <svg
                 data-marker

@@ -2,7 +2,7 @@
 
 Sub-project 1 of the UX polish pass (branch `oa-ux-polish`). Approved in brainstorming on 2026-11-22.
 
-**Revised 2026-11-22 after the first build:** the hero's cast no longer loops up to a fly dot. The line is cast down from the rod tip and out of the bottom of the hero, which replaces the slack from the reel. The catch has no fish: the hook's point is caught in the button's corner and lifts the button. Sections 1 and 4 below describe the revised design.
+**Revised 2026-11-22 after the first build:** the hero's cast no longer loops up to a fly dot. The line is cast down from the rod tip and out of the bottom of the hero, which replaces the slack from the reel. The catch has no fish: the small hook swings in on its tippet, catches the button's edge and lifts it. Sections 1 and 4 below describe the revised design.
 
 ## Why
 
@@ -87,11 +87,11 @@ lg and up                                       below lg
 
 This only applies to the **Start a build** button at the end of the line. The hero's **Start a build** stays instant.
 
-- **At rest:** the hook (`dorsal-band`) hangs off the tippet: its eye sits on the line, its shank runs down past the button, its bend hangs under it, and its point rises into the button's lower-left corner, past the fin edge, drawn over the button.
+- **At rest:** a small hook (`dorsal-band`) hangs beside the button on the last inch of tippet, from a pivot where the steps' line ends.
 - It is a real link to `/builder`. Modifier clicks (Cmd/Ctrl/Shift/Alt), clicks other than a primary click, and any click with reduced motion on behave as a normal link and navigate at once.
 - A primary click with motion allowed calls `preventDefault`, plays the catch, then calls `navigate('/builder')` 450 ms after the click:
-  1. **0 to 120 ms:** the hook sets with a short jerk (6px up) and the button starts to rise with it. Feedback starts within the first frame.
-  2. **120 to 400 ms:** the hook lifts the button out, 18px up in all, the button tilting 3° from the caught corner. The tippet shortens with it, so the line stays taut.
+  1. **0 to 180 ms:** the hook swings in on its tippet like a pendulum (34° about the pivot) and catches the button's left edge. Feedback starts within the first frame.
+  2. **180 to 400 ms:** the hook lifts the button out, 18px up, the button tilting 3° from the caught edge. The tippet shortens with it, so the line stays taut.
   3. **450 ms:** navigation.
 - Further clicks during the catch are ignored. The timer is cleared on unmount.
 - The hook is inline SVG, `aria-hidden`, with no sound and no added text.

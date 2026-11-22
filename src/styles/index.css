@@ -137,22 +137,22 @@
     }
   }
 
-  /* The home page's catch (CatchLink), 0-400ms: the hook sets with a short
-     jerk, then lifts the caught button out with it */
-  --animate-catch-lift: catch-lift 400ms var(--ease-shop) forwards;
-  @keyframes catch-lift {
-    30% {
-      transform: translateY(-6px);
+  /* The home page's catch (CatchLink), 0-400ms: the hook swings in on its
+     tippet to catch the button's edge (0-180ms), then lifts the button out */
+  --animate-catch-swing: catch-swing 400ms var(--ease-shop) forwards;
+  @keyframes catch-swing {
+    45% {
+      transform: rotate(-34deg);
     }
     100% {
-      transform: translateY(-18px);
+      transform: translateY(-18px) rotate(-34deg);
     }
   }
 
   --animate-catch-raise: catch-raise 400ms var(--ease-shop) forwards;
   @keyframes catch-raise {
-    30% {
-      transform: translateY(-6px) rotate(-1deg);
+    45% {
+      transform: none;
     }
     100% {
       transform: translateY(-18px) rotate(-3deg);
@@ -243,7 +243,7 @@
       animation-range: entry 0% entry 100%;
     }
     .rig-sway {
-      transform-origin: 8px 8px;
+      transform-origin: 5px 5px;
       animation: rig-sway ease-out both;
       animation-timeline: view();
       animation-range: entry 0% entry 100%;
@@ -290,12 +290,13 @@
   }
 }
 
-/* The catch pulls the line taut: the tippet shortens as the hook lifts 18px */
+/* The catch pulls the line taut: once the hook has swung in (180ms), the
+   tippet shortens as the hook lifts the button 18px */
 @media (prefers-reduced-motion: no-preference) {
   .rig-tippet {
-    transition: bottom 400ms var(--ease-shop);
+    transition: bottom 220ms var(--ease-shop) 180ms;
   }
   .rig-steps:has([data-catching]) .rig-tippet {
-    bottom: calc(-0.5rem + 18px);
+    bottom: calc(1rem + 18px);
   }
 }

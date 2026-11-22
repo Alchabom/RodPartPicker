@@ -8,11 +8,11 @@ export const CATCH_MS = 450
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
 /**
- * The end of the home page's line: a hook hanging off the tippet, its point
- * caught in Start a build's corner. A plain click sets the hook and lifts the
- * button out, then opens the builder; modifier clicks and reduced motion skip
- * straight to the link. The hook's eye sits 8px in and 8px down, on the
- * steps' line.
+ * The end of the home page's line: a hook hanging off the tippet beside
+ * Start a build. A plain click swings the hook in to catch the button and lift
+ * it, then opens the builder; modifier clicks and reduced motion skip straight
+ * to the link. The hook hangs from a pivot 8px in and 16px above this box,
+ * where the steps' line ends.
  */
 export function CatchLink() {
   const navigate = useNavigate()
@@ -35,11 +35,10 @@ export function CatchLink() {
   }
 
   return (
-    // pb-5: room for the hook's bend, which hangs below the button
-    <div className="relative pb-5 pl-10" data-catching={catching || undefined}>
-      {/* The button rises with the hook, tilting a little from the corner
-          the hook has caught */}
-      <span className="inline-block origin-bottom-left in-data-[catching=true]:motion-safe:animate-catch-raise">
+    <div className="relative pl-10" data-catching={catching || undefined}>
+      {/* The button rises with the hook, tilting a little from the edge the
+          hook has caught */}
+      <span className="inline-block origin-left in-data-[catching=true]:motion-safe:animate-catch-raise">
         <Button asChild size="lg">
           <Link to="/builder" onClick={handleClick}>
             Start a build
@@ -47,23 +46,30 @@ export function CatchLink() {
         </Button>
       </span>
 
-      {/* Over the button, so the point reads as caught in its lower-left
-          corner. The sway (on scroll) and the lift (on click) are on separate
-          elements, so their transforms don't fight */}
-      <span data-testid="hook" aria-hidden="true" className="rig-sway pointer-events-none absolute top-0 left-0 z-10">
+      {/* The hook hangs on the last inch of tippet from a pivot 16px above
+          this box, where the steps' line ends. On the catch it swings in on
+          that pivot, over the button, catches its edge and lifts it. The sway
+          (on scroll) and the swing (on click) are on separate elements, so
+          their transforms don't fight */}
+      <span
+        data-testid="hook"
+        aria-hidden="true"
+        className="rig-sway pointer-events-none absolute -top-[21px] left-[3px] z-10"
+      >
         <svg
-          viewBox="0 0 60 64"
-          width="60"
+          viewBox="0 0 20 64"
+          width="20"
           height="64"
           fill="none"
           strokeLinecap="round"
-          className="block stroke-dorsal-band in-data-[catching=true]:motion-safe:animate-catch-lift"
+          className="block origin-[5px_5px] in-data-[catching=true]:motion-safe:animate-catch-swing"
         >
-          {/* Eye on the line (8, 8); shank down past the button; bend under
-              it; point up into the button's corner, past its fin edge, with its barb */}
-          <circle cx="8" cy="8" r="3" strokeWidth="1.6" />
-          <path d="M8 11 V48 C8 63 52 63 52 48 V38" strokeWidth="2" />
-          <path d="M52 38 L48.5 42.5" strokeWidth="1.6" />
+          <path d="M5 5 V26.4" strokeWidth="1" className="stroke-belly" />
+          <g className="stroke-dorsal-band">
+            <circle cx="5" cy="29" r="2.6" strokeWidth="1.3" />
+            <path d="M5 31.6 V53 C5 62 15 62 15 53 V48" strokeWidth="1.6" />
+            <path d="M15 48 L12.4 51.2" strokeWidth="1.2" />
+          </g>
         </svg>
       </span>
     </div>
