@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { RidgeScene } from './RidgeScene'
 import { RecentBuilds } from './RecentBuilds'
-import { RigSteps } from './RigSteps'
+import { RigBridge, RigSteps } from './RigSteps'
 
 // The entrance (text rise, line draw) plays on the first visit to `/` per page
 // load, not every time someone comes back to it inside the app.
@@ -29,11 +29,7 @@ export function HomePage() {
             <h1 className={cn('text-[40px] leading-[1.06] font-medium tracking-[-0.02em] text-olive md:text-[52px]', rise())}>
               Rig a fly rod where every part fits
             </h1>
-            <p className={cn('mt-4 max-w-[30rem] text-lg leading-7 text-ink-2', rise('motion-safe:[animation-delay:50ms]'))}>
-              Pick a rod, reel, line, leader and tippet. We check each part against the rest of your rig and tell you
-              why it fits.
-            </p>
-            <div className={cn('mt-6 flex flex-wrap items-center gap-5', rise('motion-safe:[animation-delay:100ms]'))}>
+            <div className={cn('mt-8 flex flex-wrap items-center gap-5', rise('motion-safe:[animation-delay:50ms]'))}>
               <Button asChild size="lg">
                 <Link to="/builder">Start a build</Link>
               </Button>
@@ -44,8 +40,13 @@ export function HomePage() {
           </div>
         </Container>
       </section>
-      <RigSteps />
-      <RecentBuilds />
+      {/* The hero's line comes down the bridge into the steps; recent builds
+          sit beside them from lg */}
+      <Container className="relative grid gap-16 pt-20 pb-24 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-20">
+        <RigBridge />
+        <RigSteps />
+        <RecentBuilds />
+      </Container>
     </main>
   )
 }
