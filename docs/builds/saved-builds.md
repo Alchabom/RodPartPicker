@@ -48,7 +48,7 @@ stays **Delete**). An unposted build says "This can't be undone."
 
 ## Two providers
 
-The builder pages (`BuilderPage`, `BrandPartsPage`) don't know where a build
+The builder pages (the steps and the summary) don't know where a build
 is stored. They read it through `useBuild()`, and one of two route layouts
 provides it. The context value is a union on `kind`, so the type checker makes
 each page handle both modes.
@@ -70,12 +70,24 @@ From `src/routes/AppRoutes.tsx`:
 ```
 /builder                              BuilderLayout (catalog query)
 ├── (LocalBuildProvider)              pathless layout route
-│   ├── index                         BuilderPage
-│   └── :component/:brand             BrandPartsPage
+│   ├── index                         BuilderIndex: summary, or → rod step
+│   ├── rod, reel, line, leader, tippet   StepPage (one static path each)
+│   └── :component/:brand             StepRedirect → /builder/<part>?brand=
 └── :buildId                          RequireAuth → SavedBuildProvider
-    ├── index                         BuilderPage
-    └── :component/:brand             BrandPartsPage
+    ├── index                         BuilderIndex
+    ├── rod, reel, line, leader, tippet   StepPage
+    └── :component/:brand             StepRedirect
 ```
+
+- **Guided steps:** one part per step, in rig order. Choose moves on to the
+  next empty step (back around to a skipped one), then the summary
+  (`RigSummary`). Every step but the rod redirects to the rod step until the
+  build has one. The step paths are static, so they outrank `:buildId`.
+- **The index:** `/builder` shows the summary once there's a rod and sends an
+  empty build to `/builder/rod`. A `?copy=` or `?save=` intent always gets the
+  summary, which runs it (`BuilderIndex` decides once, on arrival, since both
+  intents strip their param straight away).
+- **Old links:** `/builder/reel/lamson` redirects to `/builder/reel?brand=lamson`.
 
 - My builds is `/my-builds` (`RequireAuth` → `MyBuildsPage`, inside a pathless
   `BuilderLayout` route). `/builder/saved` redirects to it.
@@ -86,10 +98,10 @@ From `src/routes/AppRoutes.tsx`:
 
 ## Saving a signed-out draft
 
-A visitor can try the builder before signing up. **Save build** sends them to
+A visitor can try the builder before signing up. **Save this rig** sends them to
 sign in and back, and the save finishes on its own once they return. The
 `save=1` query parameter is the intent: a build is only created when someone
-clicked **Save build**, so signing in for another reason never turns leftover
+clicked **Save this rig**, so signing in for another reason never turns leftover
 picks into a surprise "Untitled build".
 
 ```mermaid
@@ -99,7 +111,7 @@ sequenceDiagram
   participant L as /login (and /welcome)
   participant A as API
 
-  U->>B: Save build
+  U->>B: Save this rig
   B->>L: /login?next=/builder?save=1
   U->>L: email + code
   L->>A: POST /api/auth/verify
@@ -116,8 +128,8 @@ Where this lives:
 
 - **The button:** `SaveDraftButton` in
   `src/features/builder/components/SaveDraftButton.tsx`, rendered by
-  `BuilderPage` below the build table, right-aligned under the Total, in
-  draft mode only. It's disabled while the draft is empty or
+  `RigSummary` below the Total, in draft mode only. It's the primary action
+  on a complete rig and a secondary one beside **Continue** otherwise. It's disabled while the draft is empty or
   the session is still loading. Signed out, it navigates to
   `/login?next=%2Fbuilder%3Fsave%3D1`; signed in, it runs the save directly.
 - **The round trip:** `LoginPage` sends the user to `safeNext(next)` (query
