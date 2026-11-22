@@ -5,7 +5,9 @@ import {
   ROD_TIP,
   ROUTE_MARKS,
   ROUTE_SEGMENTS,
+  SLACK_OUTLINE,
   SLACK_PATH,
+  SLACK_WIDTH,
   TOP_GUIDE,
   lineWidthAt,
   pointOnRod,
@@ -17,6 +19,13 @@ describe('cast geometry', () => {
   it('runs the slack from the reel to the bottom center', () => {
     expect(SLACK_PATH).toMatch(/^M607\.76 360\.89 /)
     expect(SLACK_PATH).toMatch(/ 600 460$/)
+  })
+
+  it('widens the slack from the threaded line to the scene edge', () => {
+    expect(SLACK_WIDTH.reel).toBe(LINE_WIDTH.rod)
+    expect(SLACK_OUTLINE).toMatch(/^M[\d. L]+Z$/)
+    // The last outline point before the far side is the edge's left side
+    expect(SLACK_OUTLINE).toContain(`${600 - SLACK_WIDTH.edge / 2} 460`)
   })
 
   it('has five guides: four up the rod and one at the tip', () => {

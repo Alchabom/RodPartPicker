@@ -53,9 +53,7 @@ describe('RigSteps', () => {
     expect(root).toHaveClass('hidden')
     expect(root).toHaveClass('lg:block')
     expect(root).toHaveAttribute('aria-hidden', 'true')
-    const path = root.querySelector('path')!
-    expect(path).toHaveAttribute('vector-effect', 'non-scaling-stroke')
-    expect(path).toHaveAttribute('pathLength', '1')
-    expect(path).toHaveClass('rig-bridge')
+    expect(root).toHaveClass('rig-bridge')
+    expect(root.querySelector('path')).toHaveAttribute('vector-effect', 'non-scaling-stroke')
   })
 })

@@ -7,8 +7,7 @@ import {
   LINE_OUTLINE,
   ROD_PATH,
   ROD_WIDTH,
-  SLACK_PATH,
-  SLACK_WIDTH,
+  SLACK_OUTLINE,
   guideLegs,
 } from '../utils/castGeometry'
 
@@ -97,14 +96,7 @@ export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
       />
       {/* Drawn over the nearest ridge so it reads as running off the bottom of
           the scene, into the steps below */}
-      <path
-        data-testid="slack"
-        d={SLACK_PATH}
-        fill="none"
-        strokeWidth={SLACK_WIDTH}
-        strokeLinecap="round"
-        className="hidden stroke-belly lg:block"
-      />
+      <path data-testid="slack" d={SLACK_OUTLINE} className="hidden fill-belly lg:block" />
     </svg>
   )
 }

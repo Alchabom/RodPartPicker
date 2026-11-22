@@ -30,8 +30,9 @@ export function RigSteps() {
   const headingId = useId()
   return (
     <section aria-labelledby={headingId} className="rig-steps min-w-0">
-      <div className="relative pb-8 pl-10">
-        {/* From lg the bridge lands here; below lg the line starts at the Rod */}
+      {/* From lg the bridge lands beside the heading; below lg the line starts
+          at the Rod, and the heading lines up with Recently rigged */}
+      <div className="relative pb-8 lg:pl-10">
         <span aria-hidden="true" className={`${segment} top-0 -bottom-2.5 hidden w-1 lg:block`} />
         <SectionHeading id={headingId}>How a rig goes together</SectionHeading>
       </div>
@@ -78,7 +79,9 @@ export function RigSteps() {
  */
 export function RigBridge() {
   return (
-    <div aria-hidden="true" className="absolute top-0 right-1/2 left-[calc(1.5rem+8px)] hidden h-20 lg:block">
+    // Revealed by clipping the box top-down (rig-bridge), not by dashing the
+    // path: Chrome mis-measures dashes on a non-scaling stroke
+    <div aria-hidden="true" className="rig-bridge absolute top-0 right-1/2 left-[calc(1.5rem+8px)] hidden h-20 lg:block">
       <svg viewBox="0 0 100 80" preserveAspectRatio="none" className="block size-full overflow-visible">
         <path
           d="M100 0 C100 48 0 32 0 80"
@@ -86,8 +89,6 @@ export function RigBridge() {
           stroke="var(--belly)"
           strokeWidth={4}
           vectorEffect="non-scaling-stroke"
-          pathLength={1}
-          className="rig-bridge"
         />
       </svg>
     </div>

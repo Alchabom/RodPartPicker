@@ -132,7 +132,9 @@ export const CAST_ROUTE =
 // ridge to the scene's bottom center (x 600 sits at 50% of the width under any
 // xMidYMid slice crop), where the home page's steps pick it up
 export const SLACK_PATH = `M${f(reel.x)} ${f(reel.y)} C614 392 600 420 600 460`
-export const SLACK_WIDTH = 1.5
+// It widens as it falls toward the viewer, from the threaded line's width at
+// the reel to about the steps' 4px line at the scene's edge
+export const SLACK_WIDTH = { reel: 0.5, edge: 2.5 }
 
 // The line is thinnest in the guides and widest at the loop, as if the line
 // comes toward you as it rises, then narrows through the leader and tippet
@@ -181,3 +183,19 @@ export const LINE_OUTLINE = (() => {
 
 // The fly, at the tippet's end
 export const FLY = { x: 672.5, y: 209.2, r: 1.4 }
+
+// The slack as a filled outline whose width runs from SLACK_WIDTH.reel to .edge
+export const SLACK_OUTLINE = (() => {
+  const slack: Cubic = [reel, p(614, 392), p(600, 420), p(600, 460)]
+  const left: Point[] = []
+  const right: Point[] = []
+  for (let j = 0; j <= STEPS; j++) {
+    const t = j / STEPS
+    const at = bezier(slack, t)
+    const dir = tangent(slack, t)
+    const h = (SLACK_WIDTH.reel + (SLACK_WIDTH.edge - SLACK_WIDTH.reel) * t) / 2
+    left.push({ x: at.x - dir.y * h, y: at.y + dir.x * h })
+    right.push({ x: at.x + dir.y * h, y: at.y - dir.x * h })
+  }
+  return 'M' + [...left, ...right.reverse()].map((q) => `${f(q.x)} ${f(q.y)}`).join(' L') + 'Z'
+})()

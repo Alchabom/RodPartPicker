@@ -251,7 +251,6 @@
       animation-range: entry 20% cover 30%;
     }
     .rig-bridge {
-      stroke-dasharray: 1;
       animation: rig-bridge linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 60%;
@@ -285,12 +284,13 @@
   }
 }
 
+/* Wide margins so the 4px stroke at the box's left edge isn't clipped */
 @keyframes rig-bridge {
   from {
-    stroke-dashoffset: 1;
+    clip-path: inset(-4px -4px 100% -4px);
   }
   to {
-    stroke-dashoffset: 0;
+    clip-path: inset(-4px -4px -4px -4px);
   }
 }
 

@@ -49,6 +49,6 @@ describe('RidgeScene', () => {
     expect(slack).toHaveClass('lg:block')
     expect(slack).not.toHaveAttribute('mask')
     expect(slack.previousElementSibling).toHaveClass('fill-haze-5')
-    expect(slack).toHaveAttribute('stroke-width', '1.5')
+    expect(slack).toHaveClass('fill-belly')
   })
 })
