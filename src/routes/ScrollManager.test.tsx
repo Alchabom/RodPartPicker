@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ScrollManager } from './ScrollManager'
@@ -20,11 +20,8 @@ function setScrollY(value: number) {
 
 let scrollTo: ReturnType<typeof vi.fn>
 
-beforeEach(() => {
-  scrollTo = vi.fn()
-  vi.stubGlobal('scrollTo', scrollTo)
-  setScrollY(0)
-  render(
+function renderApp() {
+  return render(
     <MemoryRouter initialEntries={['/a']}>
       <ScrollManager />
       <Grab />
@@ -34,6 +31,14 @@ beforeEach(() => {
       </Routes>
     </MemoryRouter>,
   )
+}
+
+beforeEach(() => {
+  sessionStorage.clear()
+  scrollTo = vi.fn()
+  vi.stubGlobal('scrollTo', scrollTo)
+  setScrollY(0)
+  renderApp()
   scrollTo.mockClear()
 })
 
@@ -102,5 +107,48 @@ describe('ScrollManager', () => {
       navigate(-1)
     })
     expect(scrollTo).toHaveBeenLastCalledWith(0, 640)
+  })
+
+  it('leaves a first load with nothing saved where the browser put it', () => {
+    cleanup()
+    scrollTo.mockClear()
+    renderApp()
+    expect(scrollTo).not.toHaveBeenCalled()
+  })
+
+  it('restores the position after a reload', () => {
+    setScrollY(640)
+    fireEvent(window, new Event('pagehide'))
+    cleanup()
+    setScrollY(0)
+    scrollTo.mockClear()
+    renderApp() // the same first entry, so the same key
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 640)
+  })
+
+  it('keeps the saved position when a short page clamps the restore', () => {
+    setScrollY(640)
+    act(() => {
+      navigate('/b')
+    })
+    setScrollY(0)
+    act(() => {
+      navigate(-1)
+    })
+    setScrollY(600) // the page was too short to reach 640
+    act(() => {
+      navigate(1)
+    })
+    act(() => {
+      navigate(-1)
+    })
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 640)
+  })
+
+  it('survives a malformed hash', () => {
+    act(() => {
+      navigate('/b#%E0')
+    })
+    expect(scrollTo).toHaveBeenLastCalledWith(0, 0)
   })
 })

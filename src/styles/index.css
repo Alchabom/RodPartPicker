@@ -234,7 +234,9 @@
 
 /* The home page's fly line (RigSteps): as the steps scroll into view the line
    draws down, each step rises in as the line reaches it, and the hook sways.
-   Scroll-linked, so scrolling back up reverses it. Without view() timelines
+   Scroll-linked, so scrolling back up reverses it. Each piece finishes as soon
+   as it is fully on screen (entry 100%), so the last ones still complete near
+   the bottom of a short page on a tall screen. Without view() timelines
    (Firefox) or with reduced motion, nothing here applies and everything shows
    finished: no rule outside these blocks hides anything. */
 @supports (animation-timeline: view()) {
@@ -243,17 +245,17 @@
       transform-origin: top;
       animation: rig-draw linear both;
       animation-timeline: view();
-      animation-range: entry 0% cover 40%;
+      animation-range: entry 0% entry 100%;
     }
     .rig-rise {
       animation: rig-rise linear both;
       animation-timeline: view();
-      animation-range: entry 20% cover 30%;
+      animation-range: entry 0% entry 100%;
     }
     .rig-bridge {
       animation: rig-bridge linear both;
       animation-timeline: view();
-      animation-range: entry 0% cover 60%;
+      animation-range: entry 0% entry 100%;
     }
     .rig-sway {
       transform-origin: 5px 5px;
