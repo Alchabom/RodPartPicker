@@ -58,6 +58,17 @@ export function LocalBuildProvider() {
   useEffect(() => writeStorage(STORAGE_KEY, build), [build])
   useEffect(() => writeStorage(NOTES_KEY, notes), [notes])
 
+  // Another tab changed the draft: follow it, so this tab shows the same parts
+  // as the header's count and its next pick doesn't overwrite the other tab's
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY || event.key === null) setBuild(loadBuild())
+      if (event.key === NOTES_KEY || event.key === null) setNotes(loadNotes())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   const selectPart = (component: ComponentType, partId: string) => {
     setBuild((prev) => ({ ...prev, [component]: partId }))
     setNotes((prev) => without(prev, component))

@@ -7,7 +7,11 @@ function readPicked(): number {
     const draft: unknown = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? '{}')
     if (typeof draft !== 'object' || draft === null) return 0
     const entries = draft as Record<string, unknown>
-    return STEP_ORDER.filter((type) => typeof entries[type] === 'string' && entries[type] !== '').length
+    // The same check the draft's provider loads with
+    return STEP_ORDER.filter((type) => {
+      const id = entries[type]
+      return typeof id === 'string' && id.startsWith(`${type}-`)
+    }).length
   } catch {
     // Bad JSON, or storage blocked (private mode): no count
     return 0

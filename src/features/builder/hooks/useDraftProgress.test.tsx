@@ -25,8 +25,9 @@ describe('useDraftProgress', () => {
   })
 
   it('counts only the five parts', () => {
-    store({ rod: 'rod-1', reel: 'reel-2', junk: 'x', line: 5, leader: '' })
+    store({ rod: 'rod-1', reel: 'reel-2', junk: 'x', line: 5, leader: '', tippet: 'reel-9' })
     render(<Count />)
+    // tippet: 'reel-9' isn't a tippet id, so the builder wouldn't load it either
     expect(screen.getByTestId('picked')).toHaveTextContent('2')
   })
 
@@ -68,6 +69,27 @@ describe('LocalBuildProvider', () => {
       </>
     )
   }
+
+  it('follows a draft another tab changed', () => {
+    function Shown() {
+      return <p data-testid="rod">{useBuild().build.rod ?? 'none'}</p>
+    }
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route element={<LocalBuildProvider />}>
+            <Route index element={<Shown />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('rod')).toHaveTextContent('none')
+    store({ rod: 'rod-7' })
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'rpp:build:v2' }))
+    })
+    expect(screen.getByTestId('rod')).toHaveTextContent('rod-7')
+  })
 
   it('announces every draft write, so the count follows picks and clears', () => {
     render(

@@ -16,6 +16,11 @@ describe('activeNavItem', () => {
     ['/account', null],
     ['/login', null],
     ['/builders', null],
+    ['/my-builds/', '/my-builds'],
+    ['/Rack', '/rack'],
+    ['/builder/', '/builder'],
+    ['/builder/abc', '/my-builds'],
+    ['/builder/saved', '/my-builds'],
   ])('%s belongs to %s', (path, item) => {
     expect(activeNavItem(path)).toBe(item)
   })
