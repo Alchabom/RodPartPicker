@@ -2,6 +2,8 @@
 
 Sub-project 1 of the UX polish pass (branch `oa-ux-polish`). Approved in brainstorming on 2026-11-22.
 
+**Revised 2026-11-22 after the first build:** the hero's cast no longer loops up to a fly dot. The line is cast down from the rod tip and out of the bottom of the hero, which replaces the slack from the reel. The catch has no fish: the hook's point is caught in the button's corner and lifts the button. Sections 1 and 4 below describe the revised design.
+
 ## Why
 
 - The hero paragraph ("Pick a rod, reel, line, leader and tippet. We check each part…") repeats the headline and reads as generated copy.
@@ -26,9 +28,11 @@ This spec covers sub-project 1 only. Each later sub-project gets its own spec.
 ### 1. Hero
 
 - Remove the paragraph from `HomePage.tsx`. The hero is the headline and the two actions: **Start a build** (primary) and **See the Community Rack** (link). Tighten the space so the actions sit directly under the headline.
-- **The rod stays exactly as it is now:** the same curved rod, five guides with legs, threaded line, cast loop and the fly dot. The hero fly stays a dot. The existing entrance (text rise, cast draw) is unchanged.
-- **New: the slack.** On `lg` and up, a second, static segment of fly line leaves the reel (behind the near ridge) and falls in front of the nearest ridge to the bottom edge of the hero, at the horizontal center (viewBox x = 600, which `xMidYMid slice` always maps to 50% of the width). It is drawn with the cast: it is part of the scene from the first paint, not scroll-driven. It acts as a scroll cue. Its geometry lives in `castGeometry.ts`, next to the rest of the line.
-- Below `lg`, the rod, guides and cast are hidden (unchanged), so the slack is hidden too.
+- **The rod and guides stay exactly as they are now:** the same curved rod, and five guides on legs with the line threaded through them. The entrance (text rise, line draw) is unchanged.
+- **The cast goes down into the page.** Out of the top guide, the line swings out in front of the rod and falls to the bottom edge of the hero at the horizontal center (viewBox x = 600, which `xMidYMid slice` always maps to 50% of the width), leaving straight down. It never crosses the rod. There is no loop and no fly dot; the line ends in the hook below the steps.
+- **Width:** the line is 0.5 viewBox units through the guides and widens to 2.5 at the exit, as it falls toward the viewer, to about the steps' 4px line.
+- **Drawing order:** the whole line is drawn behind the near ridges, like the rod. The drop from the tip is drawn again in front of them, so the line visibly falls out of the scene. Both use the cast's draw-in mask, so the drop casts in on the entrance and invites the scroll. The geometry lives in `castGeometry.ts`.
+- Below `lg`, the rod, guides and line are hidden (unchanged).
 
 ### 2. Steps and Recently rigged: one section, two columns
 
@@ -58,7 +62,7 @@ lg and up                                       below lg
 - The steps form one vertical list at every width. The `lg:grid-cols-5` row goes away. The heading stays "How a rig goes together". The step lines are the current `STEPS` copy, still mirroring `api/app/compatibility/rules.py`.
 - **The line:** it runs down the gutter left of the steps, in `belly`, tapering 4, 4, 3, 2, 1 px (the segment below each step, as in today's `STEPS[].width`).
 - **Markers:** each step's marker is a small guide ring in `dorsal-band`, the same as the hero's guides, with the line passing through it. These replace the step numbers. The order is already carried by the `<ol>` and by the line.
-- **The bridge (`lg` and up):** a decorative `aria-hidden` SVG at the top of the section continues the slack from the hero's bottom center and swings left into the gutter. It is drawn at a constant 4 px, the width the steps' line starts at. A tapering outline would distort under the horizontal stretch. It lives inside the centered `Container`, filling the container's top padding, so it runs from the gutter to 50% of the container's width (the same point as the viewport center), and uses `preserveAspectRatio="none"` with `vector-effect: non-scaling-stroke`. Below `lg` there is no bridge, and the line starts at the first marker.
+- **The bridge (`lg` and up):** a decorative `aria-hidden` SVG at the top of the section continues the cast from the hero's bottom center and swings left into the gutter. It is drawn at a constant 4 px, the width the steps' line starts at. A tapering outline would distort under the horizontal stretch. It lives inside the centered `Container`, filling the container's top padding, so it runs from the gutter to 50% of the container's width (the same point as the viewport center), and uses `preserveAspectRatio="none"` with `vector-effect: non-scaling-stroke`. Below `lg` there is no bridge, and the line starts at the first marker.
 - **The end of the line:** a dry-fly hook (eye, shank, bend, point, barb) in `dorsal-band`, hanging off the tippet beside the final **Start a build** button. See section 4.
 
 **Right column: Recently rigged.**
@@ -79,17 +83,18 @@ lg and up                                       below lg
 - **Fallback:** without `view()` support (Firefox today) or with reduced motion on, everything renders in its finished state.
 - Keyframes and timeline rules go in `src/styles/index.css`, next to `cast` and `rise`.
 
-### 4. "Fish on": the final Start a build
+### 4. The hook lands Start a build
 
 This only applies to the **Start a build** button at the end of the line. The hero's **Start a build** stays instant.
 
+- **At rest:** the hook (`dorsal-band`) hangs off the tippet: its eye sits on the line, its shank runs down past the button, its bend hangs under it, and its point rises into the button's lower-left corner, past the fin edge, drawn over the button.
 - It is a real link to `/builder`. Modifier clicks (Cmd/Ctrl/Shift/Alt), clicks other than a primary click, and any click with reduced motion on behave as a normal link and navigate at once.
-- A primary click with motion allowed calls `preventDefault` and plays the catch, then calls `navigate('/builder')` 450 ms after the click:
-  1. **0 to 120 ms:** the button shows its pressed state, the line goes taut and the hook jerks up. Feedback starts within the first frame.
-  2. **120 to 400 ms:** a small brook trout leaps up from below onto the hook, with two splash rings in `halo`. Its colors are tokens only: an `olive` back, a `belly` belly, `spot` spots with `halo` rings and a `stone-card` fin edge.
+- A primary click with motion allowed calls `preventDefault`, plays the catch, then calls `navigate('/builder')` 450 ms after the click:
+  1. **0 to 120 ms:** the hook sets with a short jerk (6px up) and the button starts to rise with it. Feedback starts within the first frame.
+  2. **120 to 400 ms:** the hook lifts the button out, 18px up in all, the button tilting 3° from the caught corner. The tippet shortens with it, so the line stays taut.
   3. **450 ms:** navigation.
 - Further clicks during the catch are ignored. The timer is cleared on unmount.
-- The fish and splash are inline SVG, `aria-hidden`, with no sound and no added text.
+- The hook is inline SVG, `aria-hidden`, with no sound and no added text.
 
 ### 5. Scroll behavior between pages
 
@@ -107,9 +112,9 @@ All scrolling is instant (`behavior: 'auto'`), never smooth.
 ## Units and files
 
 - `src/features/home/components/HomePage.tsx`: remove the paragraph, tighten the spacing, render the merged section.
-- `src/features/home/components/RidgeScene.tsx` and `src/features/home/utils/castGeometry.ts`: add the slack.
+- `src/features/home/components/RidgeScene.tsx` and `src/features/home/utils/castGeometry.ts`: cast the line down out of the scene.
 - `src/features/home/components/RigSteps.tsx`: rewrite as the steps column (line, markers, bridge, hook, catch link).
-- `src/features/home/components/CatchLink.tsx` (new): the final Start a build and the fish; owns the click rules and the timer.
+- `src/features/home/components/CatchLink.tsx` (new): the final Start a build and the hook; owns the click rules and the timer.
 - `src/features/home/components/RecentBuilds.tsx`: becomes the right column, using `compact` cards.
 - `src/components/shop/BuildCard.tsx` and `BuildCardSkeleton.tsx`: add the `compact` variant.
 - `src/routes/ScrollManager.tsx` (new) and `src/main.tsx`: mount it.
@@ -124,8 +129,8 @@ All tests are Vitest. jsdom has no layout or scroll timelines, so the tests chec
   - The headline and both actions are still there.
   - The five steps are still listed in order.
   - The entrance tests still pass.
-- **`RidgeScene`:** the existing rod and guide tests still pass unchanged. That is the "rod still looks like a rod" guard. The slack is hidden below `lg`.
-- **`castGeometry`:** the slack starts at the reel point and ends at (600, 460).
+- **`RidgeScene`:** the existing rod and guide tests still pass unchanged. That is the "rod still looks like a rod" guard. The drop is drawn in front of the near ridge, is hidden below `lg`, and there is no fly dot.
+- **`castGeometry`:** the line leaves the scene at (600, 460), heading straight down, and the drop never crosses the rod.
 - **`RigSteps`:** the steps are an `<ol>` of five in order; the markers, line, bridge and hook are `aria-hidden`.
 - **`CatchLink`** (fake timers, mocked `matchMedia`):
   - A primary click navigates to `/builder` after 450 ms, not before.
@@ -143,7 +148,7 @@ All tests are Vitest. jsdom has no layout or scroll timelines, so the tests chec
   - A same-path `REPLACE` doesn't scroll.
   - `POP` restores the recorded position.
 - **Manual check in a real browser** (Chrome and Firefox; 390 px, 1024 px and 1440 px; reduced motion on and off):
-  - The bridge lines up with the hero's slack.
+  - The bridge lines up with the hero's line.
   - The reveal scrubs smoothly.
   - The catch plays and then lands on the builder.
   - Back from the builder returns to the steps.

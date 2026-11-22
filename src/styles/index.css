@@ -137,40 +137,25 @@
     }
   }
 
-  /* The home page's catch (CatchLink), 0-450ms: the hook sets (0-120ms), then a
-     brook trout leaps onto it with a splash (120-400ms) */
-  --animate-catch-set: catch-set 120ms var(--ease-shop) forwards;
-  @keyframes catch-set {
-    to {
+  /* The home page's catch (CatchLink), 0-400ms: the hook sets with a short
+     jerk, then lifts the caught button out with it */
+  --animate-catch-lift: catch-lift 400ms var(--ease-shop) forwards;
+  @keyframes catch-lift {
+    30% {
       transform: translateY(-6px);
     }
+    100% {
+      transform: translateY(-18px);
+    }
   }
 
-  --animate-catch-leap: catch-leap 280ms var(--ease-shop) 120ms both;
-  @keyframes catch-leap {
-    0% {
-      opacity: 0;
-      transform: translateY(40px) rotate(25deg);
-    }
-    60% {
-      opacity: 1;
-      transform: translateY(-8px) rotate(-8deg);
+  --animate-catch-raise: catch-raise 400ms var(--ease-shop) forwards;
+  @keyframes catch-raise {
+    30% {
+      transform: translateY(-6px) rotate(-1deg);
     }
     100% {
-      opacity: 1;
-      transform: translateY(-6px) rotate(4deg);
-    }
-  }
-
-  --animate-catch-splash: catch-splash 280ms ease-out 120ms both;
-  @keyframes catch-splash {
-    from {
-      opacity: 1;
-      transform: scale(0.4);
-    }
-    to {
-      opacity: 0;
-      transform: scale(1.4);
+      transform: translateY(-18px) rotate(-3deg);
     }
   }
 
@@ -258,7 +243,7 @@
       animation-range: entry 0% entry 100%;
     }
     .rig-sway {
-      transform-origin: 5px 5px;
+      transform-origin: 8px 8px;
       animation: rig-sway ease-out both;
       animation-timeline: view();
       animation-range: entry 0% entry 100%;
@@ -305,12 +290,12 @@
   }
 }
 
-/* The catch pulls the line taut: the tippet shortens as the hook sets 6px */
+/* The catch pulls the line taut: the tippet shortens as the hook lifts 18px */
 @media (prefers-reduced-motion: no-preference) {
   .rig-tippet {
-    transition: bottom 120ms var(--ease-shop);
+    transition: bottom 400ms var(--ease-shop);
   }
   .rig-steps:has([data-catching]) .rig-tippet {
-    bottom: calc(-0.5rem + 6px);
+    bottom: calc(-0.5rem + 18px);
   }
 }

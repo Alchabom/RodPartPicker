@@ -111,34 +111,22 @@ const rodSegments: Cubic[] = threaded.slice(1).map((b, i) => {
 })
 const top = threaded[threaded.length - 1]
 const p = (x: number, y: number): Point => ({ x, y })
-// Out of the top guide, up into a tight loop, then the fly leg lies back
-// (line, leader, tippet). Kept inside x 270–930, right of and below the hero text
-const castSegments: Cubic[] = [
-  [top, p(726, 262), p(792, 242), p(856, 232)],
-  [p(856, 232), p(870, 228), p(878, 224), p(878, 219.5)],
-  [p(878, 219.5), p(878, 215.5), p(870, 214), p(860, 214.5)],
-  [p(860, 214.5), p(810, 216), p(770, 213), p(735, 210)],
-  [p(735, 210), p(716, 209), p(703, 208), p(692, 208)],
-  [p(692, 208), p(684, 208), p(679, 208.5), p(675, 209)],
-]
-export const ROUTE_SEGMENTS: Cubic[] = [...rodSegments, ...castSegments]
+// Out of the top guide the line is cast down into the page: it swings out in
+// front of the rod and falls to the scene's bottom center (x 600 sits at 50% of
+// the width under any xMidYMid slice crop), leaving straight down, where the
+// home page's steps pick it up. It stays right of the rod all the way down
+export const LINE_EXIT: Point = p(600, 460)
+const dropSegments: Cubic[] = [[top, p(735, 300), p(600, 400), LINE_EXIT]]
+export const ROUTE_SEGMENTS: Cubic[] = [...rodSegments, ...dropSegments]
 
 const f = (n: number) => Number(n.toFixed(2))
 export const CAST_ROUTE =
   `M${f(reel.x)} ${f(reel.y)} ` +
   ROUTE_SEGMENTS.map(([, c1, c2, e]) => `C${f(c1.x)} ${f(c1.y)} ${f(c2.x)} ${f(c2.y)} ${f(e.x)} ${f(e.y)}`).join(' ')
 
-// The slack: the line's other end, falling from the reel in front of the near
-// ridge to the scene's bottom center (x 600 sits at 50% of the width under any
-// xMidYMid slice crop), where the home page's steps pick it up
-export const SLACK_PATH = `M${f(reel.x)} ${f(reel.y)} C614 392 600 420 600 460`
-// It widens as it falls toward the viewer, from the threaded line's width at
-// the reel to about the steps' 4px line at the scene's edge
-export const SLACK_WIDTH = { reel: 0.5, edge: 2.5 }
-
-// The line is thinnest in the guides and widest at the loop, as if the line
-// comes toward you as it rises, then narrows through the leader and tippet
-export const LINE_WIDTH = { rod: 0.5, loop: 1.5, fly: 0.45 }
+// The line is thinnest in the guides and widens as it falls toward you, to
+// about the steps' 4px line at the scene's edge
+export const LINE_WIDTH = { rod: 0.5, exit: 2.5 }
 
 const STEPS = 40
 const samples: { at: Point; dir: Point; length: number }[] = []
@@ -154,48 +142,34 @@ ROUTE_SEGMENTS.forEach((seg, k) => {
   }
 })
 
-/** Distances along the line: where it leaves the top guide, the loop's top, its end. */
+/** Distances along the line: where it leaves the top guide, and its end. */
 export const ROUTE_MARKS = {
   leavesRod: segmentStarts[rodSegments.length],
-  loopTop: segmentStarts[rodSegments.length + 2],
   end: length,
 }
 
 export function lineWidthAt(distance: number): number {
-  const { leavesRod, loopTop, end } = ROUTE_MARKS
+  const { leavesRod, end } = ROUTE_MARKS
   if (distance <= leavesRod) return LINE_WIDTH.rod
-  if (distance <= loopTop) return LINE_WIDTH.rod + ((LINE_WIDTH.loop - LINE_WIDTH.rod) * (distance - leavesRod)) / (loopTop - leavesRod)
-  return LINE_WIDTH.loop + ((LINE_WIDTH.fly - LINE_WIDTH.loop) * (distance - loopTop)) / (end - loopTop)
+  return LINE_WIDTH.rod + ((LINE_WIDTH.exit - LINE_WIDTH.rod) * (distance - leavesRod)) / (end - leavesRod)
 }
 
-// The line as one filled outline whose width follows lineWidthAt, so it widens
-// and narrows smoothly with no steps
-export const LINE_OUTLINE = (() => {
+// A stretch of the line as one filled outline whose width follows lineWidthAt,
+// so it widens smoothly with no steps
+function outline(from: number): string {
   const left: Point[] = []
   const right: Point[] = []
   for (const { at, dir, length: l } of samples) {
+    if (l < from) continue
     const h = lineWidthAt(l) / 2
     left.push({ x: at.x - dir.y * h, y: at.y + dir.x * h })
     right.push({ x: at.x + dir.y * h, y: at.y - dir.x * h })
   }
   return 'M' + [...left, ...right.reverse()].map((q) => `${f(q.x)} ${f(q.y)}`).join(' L') + 'Z'
-})()
+}
 
-// The fly, at the tippet's end
-export const FLY = { x: 672.5, y: 209.2, r: 1.4 }
-
-// The slack as a filled outline whose width runs from SLACK_WIDTH.reel to .edge
-export const SLACK_OUTLINE = (() => {
-  const slack: Cubic = [reel, p(614, 392), p(600, 420), p(600, 460)]
-  const left: Point[] = []
-  const right: Point[] = []
-  for (let j = 0; j <= STEPS; j++) {
-    const t = j / STEPS
-    const at = bezier(slack, t)
-    const dir = tangent(slack, t)
-    const h = (SLACK_WIDTH.reel + (SLACK_WIDTH.edge - SLACK_WIDTH.reel) * t) / 2
-    left.push({ x: at.x - dir.y * h, y: at.y + dir.x * h })
-    right.push({ x: at.x + dir.y * h, y: at.y - dir.x * h })
-  }
-  return 'M' + [...left, ...right.reverse()].map((q) => `${f(q.x)} ${f(q.y)}`).join(' L') + 'Z'
-})()
+/** The whole line, reel to exit: drawn behind the near ridges, like the rod. */
+export const LINE_OUTLINE = outline(0)
+/** The drop from the tip: drawn again in front of the near ridges, so the line
+    visibly falls out of the scene. */
+export const DROP_OUTLINE = outline(ROUTE_MARKS.leavesRod)

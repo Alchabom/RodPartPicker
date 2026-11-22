@@ -42,13 +42,18 @@ describe('RidgeScene', () => {
     expect(drawPath(container).getAttribute('d')).toMatch(/^M607\.76 360\.89 /)
   })
 
-  it('draws the slack in front of the near ridge, only from lg', () => {
+  it('draws the drop again in front of the near ridge, only from lg, cast in with the line', () => {
     render(<RidgeScene drawCast />)
-    const slack = screen.getByTestId('slack')
-    expect(slack).toHaveClass('hidden')
-    expect(slack).toHaveClass('lg:block')
-    expect(slack).not.toHaveAttribute('mask')
-    expect(slack.previousElementSibling).toHaveClass('fill-haze-5')
-    expect(slack).toHaveClass('fill-belly')
+    const drop = screen.getByTestId('drop')
+    expect(drop).toHaveClass('hidden')
+    expect(drop).toHaveClass('lg:block')
+    expect(drop).toHaveClass('fill-belly')
+    expect(drop.previousElementSibling).toHaveClass('fill-haze-5')
+    expect(drop.getAttribute('mask')).toBe(screen.getByTestId('cast').getAttribute('mask'))
+  })
+
+  it('has no fly dot: the line ends in the steps below', () => {
+    render(<RidgeScene />)
+    expect(screen.getByTestId('cast').querySelector('circle')).toBeNull()
   })
 })

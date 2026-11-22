@@ -5,9 +5,9 @@ import {
   ROD_TIP,
   ROUTE_MARKS,
   ROUTE_SEGMENTS,
-  SLACK_OUTLINE,
-  SLACK_PATH,
-  SLACK_WIDTH,
+  CAST_ROUTE,
+  DROP_OUTLINE,
+  LINE_EXIT,
   TOP_GUIDE,
   lineWidthAt,
   pointOnRod,
@@ -16,16 +16,31 @@ import {
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-6
 
 describe('cast geometry', () => {
-  it('runs the slack from the reel to the bottom center', () => {
-    expect(SLACK_PATH).toMatch(/^M607\.76 360\.89 /)
-    expect(SLACK_PATH).toMatch(/ 600 460$/)
+  it('casts the line down out of the bottom center of the scene', () => {
+    expect(LINE_EXIT).toEqual({ x: 600, y: 460 })
+    expect(CAST_ROUTE).toMatch(/ 600 460$/)
+    // It leaves straight down, so the steps' bridge can pick it up
+    const [, , c2, end] = ROUTE_SEGMENTS[ROUTE_SEGMENTS.length - 1]
+    expect(c2.x).toBe(end.x)
   })
 
-  it('widens the slack from the threaded line to the scene edge', () => {
-    expect(SLACK_WIDTH.reel).toBe(LINE_WIDTH.rod)
-    expect(SLACK_OUTLINE).toMatch(/^M[\d. L]+Z$/)
-    // The last outline point before the far side is the edge's left side
-    expect(SLACK_OUTLINE).toContain(`${600 - SLACK_WIDTH.edge / 2} 460`)
+  it('keeps the drop in front of the rod, never crossing it', () => {
+    const drop = ROUTE_SEGMENTS[ROUTE_SEGMENTS.length - 1]
+    for (let i = 1; i < 20; i++) {
+      const t = i / 20
+      const u = 1 - t
+      const x = u ** 3 * drop[0].x + 3 * u * u * t * drop[1].x + 3 * u * t * t * drop[2].x + t ** 3 * drop[3].x
+      const y = u ** 3 * drop[0].y + 3 * u * u * t * drop[1].y + 3 * u * t * t * drop[2].y + t ** 3 * drop[3].y
+      // The rod at the same height (it runs up and to the right)
+      const rodAt = [...Array(101).keys()].map((k) => pointOnRod(k / 100)).reduce((a, b) => (Math.abs(b.y - y) < Math.abs(a.y - y) ? b : a))
+      if (y <= ROD_TIP.y || y >= pointOnRod(0).y) continue
+      expect(x).toBeGreaterThan(rodAt.x)
+    }
+  })
+
+  it('draws the drop as its own outline, ending at the exit width', () => {
+    expect(DROP_OUTLINE).toMatch(/^M[\d. L]+Z$/)
+    expect(DROP_OUTLINE).toContain(`${600 - LINE_WIDTH.exit / 2} 460`)
   })
 
   it('has five guides: four up the rod and one at the tip', () => {
@@ -73,12 +88,10 @@ describe('cast geometry', () => {
     }
   })
 
-  it('makes the line thinnest at the rod and widest at the loop, as if coming toward you', () => {
+  it('makes the line thinnest at the rod and widest at the exit, as if falling toward you', () => {
     expect(lineWidthAt(0)).toBe(LINE_WIDTH.rod)
     expect(lineWidthAt(ROUTE_MARKS.leavesRod / 2)).toBe(LINE_WIDTH.rod)
-    expect(lineWidthAt(ROUTE_MARKS.loopTop)).toBeCloseTo(LINE_WIDTH.loop)
-    expect(lineWidthAt(ROUTE_MARKS.end)).toBeCloseTo(LINE_WIDTH.fly)
-    expect(LINE_WIDTH.rod).toBeLessThan(LINE_WIDTH.loop)
-    expect(LINE_WIDTH.fly).toBeLessThan(LINE_WIDTH.loop)
+    expect(lineWidthAt(ROUTE_MARKS.end)).toBeCloseTo(LINE_WIDTH.exit)
+    expect(LINE_WIDTH.rod).toBeLessThan(LINE_WIDTH.exit)
   })
 })

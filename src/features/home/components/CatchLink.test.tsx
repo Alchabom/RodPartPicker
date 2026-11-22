@@ -85,11 +85,13 @@ describe('CatchLink', () => {
     expect(navigate).not.toHaveBeenCalled()
   })
 
-  it('hides the hook and fish from assistive tech', () => {
+  it('hooks the button itself: no fish, and the hook is hidden from assistive tech', () => {
     const { link } = renderCatch()
     expect(screen.getByTestId('hook')).toHaveAttribute('aria-hidden', 'true')
-    expect(screen.getByTestId('fish')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.queryByTestId('fish')).toBeNull()
     expect(screen.getAllByRole('link')).toHaveLength(1)
     expect(link).toHaveAttribute('href', '/builder')
+    // The button rises on the catch, only with motion allowed
+    expect(link.parentElement).toHaveClass('in-data-[catching=true]:motion-safe:animate-catch-raise')
   })
 })
