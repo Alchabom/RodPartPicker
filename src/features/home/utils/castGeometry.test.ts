@@ -1,9 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { GUIDES, LINE_WIDTH, ROD_TIP, ROUTE_MARKS, ROUTE_SEGMENTS, TOP_GUIDE, lineWidthAt, pointOnRod } from './castGeometry'
+import {
+  GUIDES,
+  LINE_WIDTH,
+  ROD_TIP,
+  ROUTE_MARKS,
+  ROUTE_SEGMENTS,
+  SLACK_PATH,
+  TOP_GUIDE,
+  lineWidthAt,
+  pointOnRod,
+} from './castGeometry'
 
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-6
 
 describe('cast geometry', () => {
+  it('runs the slack from the reel to the bottom center', () => {
+    expect(SLACK_PATH).toMatch(/^M607\.76 360\.89 /)
+    expect(SLACK_PATH).toMatch(/ 600 460$/)
+  })
+
   it('has five guides: four up the rod and one at the tip', () => {
     expect(GUIDES).toHaveLength(5)
     expect(GUIDES[GUIDES.length - 1]).toBe(TOP_GUIDE)

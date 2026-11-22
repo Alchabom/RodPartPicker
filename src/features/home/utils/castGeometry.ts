@@ -128,6 +128,12 @@ export const CAST_ROUTE =
   `M${f(reel.x)} ${f(reel.y)} ` +
   ROUTE_SEGMENTS.map(([, c1, c2, e]) => `C${f(c1.x)} ${f(c1.y)} ${f(c2.x)} ${f(c2.y)} ${f(e.x)} ${f(e.y)}`).join(' ')
 
+// The slack: the line's other end, falling from the reel in front of the near
+// ridge to the scene's bottom center (x 600 sits at 50% of the width under any
+// xMidYMid slice crop), where the home page's steps pick it up
+export const SLACK_PATH = `M${f(reel.x)} ${f(reel.y)} C614 392 600 420 600 460`
+export const SLACK_WIDTH = 1.5
+
 // The line is thinnest in the guides and widest at the loop, as if the line
 // comes toward you as it rises, then narrows through the leader and tippet
 export const LINE_WIDTH = { rod: 0.5, loop: 1.5, fly: 0.45 }

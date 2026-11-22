@@ -29,11 +29,7 @@ export function HomePage() {
             <h1 className={cn('text-[40px] leading-[1.06] font-medium tracking-[-0.02em] text-olive md:text-[52px]', rise())}>
               Rig a fly rod where every part fits
             </h1>
-            <p className={cn('mt-4 max-w-[30rem] text-lg leading-7 text-ink-2', rise('motion-safe:[animation-delay:50ms]'))}>
-              Pick a rod, reel, line, leader and tippet. We check each part against the rest of your rig and tell you
-              why it fits.
-            </p>
-            <div className={cn('mt-6 flex flex-wrap items-center gap-5', rise('motion-safe:[animation-delay:100ms]'))}>
+            <div className={cn('mt-8 flex flex-wrap items-center gap-5', rise('motion-safe:[animation-delay:50ms]'))}>
               <Button asChild size="lg">
                 <Link to="/builder">Start a build</Link>
               </Button>

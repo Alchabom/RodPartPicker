@@ -32,6 +32,11 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: 'See the Community Rack' })).toHaveAttribute('href', '/rack')
   })
 
+  it('has no paragraph under the headline', async () => {
+    await renderHome()
+    expect(screen.queryByText(/We check each part/)).toBeNull()
+  })
+
   it('lists the five rig steps in order', async () => {
     await renderHome()
     const steps = within(screen.getByRole('list', { name: 'How a rig goes together' })).getAllByRole('listitem')

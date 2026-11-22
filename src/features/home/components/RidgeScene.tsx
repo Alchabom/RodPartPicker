@@ -7,6 +7,8 @@ import {
   LINE_OUTLINE,
   ROD_PATH,
   ROD_WIDTH,
+  SLACK_PATH,
+  SLACK_WIDTH,
   guideLegs,
 } from '../utils/castGeometry'
 
@@ -14,7 +16,7 @@ import {
 // ridges fading into haze, far (haze-1) to near (haze-5). A small fly rod rises
 // from behind the second-nearest ridge, and its line runs up through five guides
 // into a cast between the far and near ridges. `drawCast` draws the line in once;
-// the rod and guides are there from the start.
+// the rod, guides and the slack hanging off the reel are there from the start.
 export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
   const skyId = useId()
   const maskId = useId()
@@ -92,6 +94,16 @@ export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
       <path
         className="fill-haze-5"
         d="M0 422 C140 406 260 412 380 416 S600 398 720 408 S960 400 1080 408 S1160 402 1200 404 V460 H0Z"
+      />
+      {/* Drawn over the nearest ridge so it reads as running off the bottom of
+          the scene, into the steps below */}
+      <path
+        data-testid="slack"
+        d={SLACK_PATH}
+        fill="none"
+        strokeWidth={SLACK_WIDTH}
+        strokeLinecap="round"
+        className="hidden stroke-belly lg:block"
       />
     </svg>
   )

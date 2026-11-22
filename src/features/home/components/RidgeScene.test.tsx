@@ -41,4 +41,14 @@ describe('RidgeScene', () => {
     expect(screen.getByTestId('guides')).not.toHaveAttribute('mask')
     expect(drawPath(container).getAttribute('d')).toMatch(/^M607\.76 360\.89 /)
   })
+
+  it('draws the slack in front of the near ridge, only from lg', () => {
+    render(<RidgeScene drawCast />)
+    const slack = screen.getByTestId('slack')
+    expect(slack).toHaveClass('hidden')
+    expect(slack).toHaveClass('lg:block')
+    expect(slack).not.toHaveAttribute('mask')
+    expect(slack.previousElementSibling).toHaveClass('fill-haze-5')
+    expect(slack).toHaveAttribute('stroke-width', '1.5')
+  })
 })
