@@ -20,7 +20,7 @@ function withoutSave(params: URLSearchParams) {
 }
 
 // Draft mode only: saves the local draft as a new build in the user's account
-export function SaveDraftButton() {
+export function SaveDraftButton({ variant = 'primary' }: { variant?: 'primary' | 'secondary' }) {
   const { build, clearBuild } = useBuild()
   const { getPart } = useCatalog()
   const { status } = useAuth()
@@ -58,9 +58,9 @@ export function SaveDraftButton() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <Button onClick={onClick} disabled={isEmpty || status === 'loading' || isPending}>
-        <Save data-icon="inline-start" /> {isPending ? 'Saving…' : 'Save build'}
+    <div className="flex flex-col items-start gap-1">
+      <Button variant={variant} onClick={onClick} disabled={isEmpty || status === 'loading' || isPending}>
+        <Save data-icon="inline-start" /> {isPending ? 'Saving…' : 'Save this rig'}
       </Button>
       {isError && (
         <p role="alert" className="text-sm text-destructive">

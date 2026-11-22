@@ -65,7 +65,7 @@ export function PartStep({ type }: { type: Exclude<ComponentType, 'rod'> }) {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      {buildState.kind === 'saved' && <BuildHeader />}
+      <BuildHeader />
       <BuildSteps current={type} />
 
       <h1 className="mt-8 text-3xl font-medium text-olive">Choose {component.article} {label}</h1>

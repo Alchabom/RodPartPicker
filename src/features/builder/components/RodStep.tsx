@@ -87,7 +87,7 @@ export function RodStep() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      {buildState.kind === 'saved' && <BuildHeader />}
+      <BuildHeader />
       <BuildSteps current="rod" />
 
       <h1 className="mt-8 text-3xl font-medium text-olive">Choose a rod</h1>
