@@ -110,6 +110,21 @@ describe('RigSummary', () => {
     expect(screen.getByRole('link', { name: 'Find a reel that fits' })).toHaveAttribute('href', '/builder/reel')
   })
 
+  it('ties a wind knot in the line at a flagged part, and counts the knots', () => {
+    flags = { byPart: { reel: ['too light'], line: ['wrong weight'] }, buildWide: ['mixed water'] }
+    renderSummary()
+    expect(within(screen.getByRole('alert')).getByText('3 knots to untie:')).toBeInTheDocument()
+    expect(screen.getAllByTestId('knot')).toHaveLength(2)
+    expect(screen.getAllByTestId('knot')[0].closest('li')).toHaveTextContent('Reel')
+    expect(screen.getAllByTestId('knot')[0].querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('says one knot for one problem', () => {
+    flags = { byPart: { tippet: ['wrong size'] }, buildWide: [] }
+    renderSummary()
+    expect(screen.getByText('One knot to untie:')).toBeInTheDocument()
+  })
+
   it('shows build-wide warnings only in the banner', () => {
     flags = { byPart: {}, buildWide: ['This build mixes freshwater and saltwater parts.'] }
     renderSummary()

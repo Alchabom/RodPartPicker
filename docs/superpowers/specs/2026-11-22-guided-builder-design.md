@@ -163,7 +163,7 @@ Unknown codes are build-wide too.
 - Shows the API's message under it.
 - Shows **Find a <part> that fits**, which opens its step.
 
-**The summary with flags:** the heading becomes **"Almost there"**, and one banner under it lists every message: the per-part ones and the build-wide ones. A rig is only "ready" when all five are picked and nothing is flagged.
+**The summary with flags:** the heading becomes **"Almost there"**, and one banner under it lists every message: the per-part ones and the build-wide ones. The banner is a length of line with a **wind knot** in it (the tangle a bad cast ties in a leader), headed "One knot to untie:" or "<n> knots to untie:". On the rig's line, a flagged part's ring is the same knot. A rig is only "ready" when all five are picked and nothing is flagged.
 
 **Nothing is removed automatically.**
 

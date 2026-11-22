@@ -15,6 +15,7 @@ import { CopyPublishedIntent } from './CopyPublishedIntent'
 import { PublishControls } from './PublishControls'
 import { QuestionnaireDialog } from './QuestionnaireDialog'
 import { SaveDraftButton } from './SaveDraftButton'
+import { WindKnot } from './WindKnot'
 
 /**
  * The end of the guided builder: the rig's five parts down a fly line, with
@@ -58,12 +59,23 @@ export function RigSummary() {
       {failed && <p className="mt-1 text-sm text-ink-2">Couldn't check the rig</p>}
 
       {messages.length > 0 && (
-        <div role="alert" className="mt-4 rounded-md border border-hairline border-l-4 border-l-negative bg-stone-card px-4 py-3">
-          <ul className="list-disc space-y-1 pl-4 text-sm text-ink">
-            {messages.map((message) => (
-              <li key={message}>{message}</li>
-            ))}
-          </ul>
+        // A length of line with a wind knot in it, beside what needs untying
+        <div role="alert" className="mt-4 flex gap-4 rounded-md border border-hairline bg-stone-card py-3 pr-4 pl-3">
+          <div aria-hidden="true" className="flex w-4 shrink-0 flex-col items-center">
+            <span className="w-[1.5px] flex-1 bg-belly" />
+            <WindKnot />
+            <span className="w-[1.5px] flex-1 bg-belly" />
+          </div>
+          <div className="py-0.5">
+            <p className="text-sm font-medium text-ink">
+              {messages.length === 1 ? 'One knot to untie:' : `${messages.length} knots to untie:`}
+            </p>
+            <ul className="mt-1 list-disc space-y-1 pl-4 text-sm text-ink">
+              {messages.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 
@@ -86,13 +98,20 @@ export function RigSummary() {
                   </span>
                 </>
               )}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'absolute top-1.5 left-0.5 size-3 rounded-full border-[1.5px] bg-stone-page',
-                  flagged ? 'border-2 border-negative' : part ? 'border-dorsal-band' : 'border-dashed border-ink-3',
-                )}
-              />
+              {flagged ? (
+                // A wind knot in the line where the part doesn't fit, as in the banner
+                <span data-testid="knot" className="absolute top-0 left-0 bg-stone-page">
+                  <WindKnot />
+                </span>
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute top-1.5 left-0.5 size-3 rounded-full border-[1.5px] bg-stone-page',
+                    part ? 'border-dorsal-band' : 'border-dashed border-ink-3',
+                  )}
+                />
+              )}
               {part ? (
                 <div className="flex gap-4">
                   <PartImage src={part.imageUrl} alt="" label={component.label} className="h-14 w-24 shrink-0" />
