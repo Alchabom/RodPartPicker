@@ -6,11 +6,13 @@ import '@styles/index.css'
 import { AuthProvider } from '@hooks/auth'
 import { queryClient } from '@/lib/queryClient'
 import { AppRoutes } from './routes/AppRoutes.tsx'
+import { ScrollManager } from './routes/ScrollManager.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollManager />
         <AuthProvider>
           <AppRoutes />
         </AuthProvider>
