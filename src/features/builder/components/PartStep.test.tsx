@@ -136,7 +136,7 @@ describe('PartStep', () => {
 
   it('names what the step is matched to', async () => {
     renderStep('/builder/line')
-    expect(screen.getByText('Matched to your R8 Core 590-4 · 5 wt')).toBeInTheDocument()
+    expect(screen.getByText('Matched to your RIO R8 Core 590-4 · 5 wt')).toBeInTheDocument()
   })
 
   it('hides brand chips when the part has one brand', () => {

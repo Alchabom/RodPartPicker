@@ -98,7 +98,7 @@ export function RodStep() {
       )}
       <Button
         variant="link"
-        className="mt-3"
+        className="mt-3 text-left whitespace-normal"
         onClick={() => {
           // The questionnaire rigs a whole setup, so it starts from an empty build
           clearBuild()

@@ -75,7 +75,7 @@ describe('RigSummary', () => {
   it('celebrates a complete rig', () => {
     renderSummary()
     expect(screen.getByRole('heading', { level: 1, name: 'Your rig is ready' })).toBeInTheDocument()
-    expect(screen.getByText('Five parts, matched to a 5 wt R8 Core 590-4.')).toBeInTheDocument()
+    expect(screen.getByText('Five parts, matched to your 5 wt RIO R8 Core 590-4.')).toBeInTheDocument()
     expect(within(screen.getByRole('list', { name: 'Your rig' })).getAllByRole('link', { name: /^Change/ })).toHaveLength(5)
     expect(screen.getByText('$1,311.00')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /^Continue/ })).toBeNull()

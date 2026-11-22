@@ -122,7 +122,7 @@ From top to bottom:
 **Complete and nothing flagged:**
 - The progress bar.
 - **Saved builds:** the name input, the save status and Retry (today's `BuildHeader` content).
-- The heading **"Your rig is ready"** and the line "Five parts, matched to a <weight> wt <rod name>."
+- The heading **"Your rig is ready"** and the line "Five parts, matched to your <weight> wt <brand> <rod name>."
 - **The rig on its line:** the five parts down a vertical `belly` line with `dorsal-band` guide-ring markers, the homepage's motif without its scroll animation. Each part shows:
   - its photo;
   - its name;

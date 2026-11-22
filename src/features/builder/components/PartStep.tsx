@@ -55,7 +55,8 @@ export function PartStep({ type }: { type: Exclude<ComponentType, 'rod'> }) {
     .map((t) => {
       const part = getPart(build[t])
       if (!part) return null
-      return t === 'rod' ? `${part.name} · ${part.specs['Line Wt']}` : part.name
+      const name = [getBrand(part.brandId)?.name, part.name].filter(Boolean).join(' ')
+      return t === 'rod' ? `${name} · ${part.specs['Line Wt']}` : name
     })
     .filter(Boolean)
   const picked = getPart(build[type])
