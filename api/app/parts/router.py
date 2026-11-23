@@ -63,8 +63,8 @@ def list_tippets(db: DbSession) -> list[TippetOut]:
     stmt = (
         select(Tippet)
         .join(Tippet.brand)
-        .join(Tippet.x_size)
+        .outerjoin(Tippet.x_size)  # wire tippet has no x_size
         .options(contains_eager(Tippet.brand), contains_eager(Tippet.x_size))
-        .order_by(Brand.name, Tippet.name, XSize.id)
+        .order_by(Brand.name, Tippet.name, XSize.id.is_(None), XSize.id)
     )
     return db.scalars(stmt).all()

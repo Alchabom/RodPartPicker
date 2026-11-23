@@ -76,7 +76,7 @@ class LeaderOut(PartOut):
 class TippetOut(PartOut):
     image_url: ImageUrl
     material: Material
-    x_size: str = Field(validation_alias=AliasPath("x_size", "label"))
+    x_size: str | None = Field(validation_alias=AliasPath("x_size", "label"))
     strength_lb: float | None
     spool_yards: int
     price: float

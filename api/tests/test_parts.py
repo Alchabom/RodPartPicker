@@ -82,6 +82,16 @@ def test_tippet_shows_x_size_label(client, make_part):
     assert row["spoolYards"] == 30
 
 
+def test_tippet_without_x_size(client, make_part):
+    # A wire bite tippet is rated only in lb
+    tippet = make_part(Tippet, x_size_id=None, strength_lb=Decimal(30))
+
+    row = find(client.get("/api/parts/tippet").json(), tippet.id)
+
+    assert row["xSize"] is None
+    assert row["strengthLb"] == 30.0
+
+
 def test_rods_ordered_by_brand_then_name(client, make_brand, make_part):
     b = make_part(Rod, brand=make_brand("Zz Order B"), name="Alpha")
     a2 = make_part(Rod, brand=make_brand("Zz Order A"), name="Beta")

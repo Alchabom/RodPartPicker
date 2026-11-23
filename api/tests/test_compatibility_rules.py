@@ -315,11 +315,30 @@ def test_leader_tippet_size(tippet_size, expected):
     [(8, False), (9, True), (10, True), (11, False)],
 )
 def test_tippet_suits_leader(tippet_size, expected):
-    assert rules.tippet_suits_leader(Tippet(x_size_id=tippet_size), Leader(x_size_id=9)) is expected
+    assert (
+        rules.tippet_suits_leader(Tippet(x_size_id=tippet_size), Leader(x_size_id=9))
+        is expected
+    )
 
 
 def test_any_tippet_suits_a_leader_with_no_x_size():
-    assert rules.tippet_suits_leader(Tippet(x_size_id=4), Leader(x_size_id=None)) is True
+    assert (
+        rules.tippet_suits_leader(Tippet(x_size_id=4), Leader(x_size_id=None)) is True
+    )
+
+
+def test_a_tippet_with_no_x_size_suits_any_leader():
+    # Wire bite tippet is rated only in lb
+    assert (
+        rules.tippet_suits_leader(Tippet(x_size_id=None), Leader(x_size_id=9)) is True
+    )
+
+
+def test_a_tippet_with_no_x_size_is_not_light_for_a_heavy_rod():
+    assert (
+        rules.is_light_tippet_for_rod(Tippet(x_size_id=None), Rod(line_weight=10))
+        is False
+    )
 
 
 def test_leader_tippet_size_skipped_when_leader_has_no_x_size():

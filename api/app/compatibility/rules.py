@@ -67,9 +67,10 @@ def is_heavy_leader(leader: Leader) -> bool:
 def tippet_suits_leader(tippet: Tippet, leader: Leader) -> bool:
     """Check whether a tippet is the leader's X size or one size finer.
 
-    A leader with no X size takes any tippet.
+    A leader with no X size takes any tippet, and a tippet with no X size (wire)
+    suits any leader.
     """
-    if leader.x_size_id is None:
+    if leader.x_size_id is None or tippet.x_size_id is None:
         return True
     return tippet.x_size_id in (leader.x_size_id, leader.x_size_id + 1)
 
@@ -86,6 +87,7 @@ def is_light_tippet_for_rod(tippet: Tippet, rod: Rod) -> bool:
     """
     return (
         rod.line_weight >= LIGHT_TIPPET_MIN_ROD_WEIGHT
+        and tippet.x_size_id is not None
         and tippet.x_size_id >= LIGHT_TIPPET_X_SIZE_ID
     )
 
