@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { cn } from '@/lib/utils'
 import {
   CAST_ROUTE,
-  FLY,
+  DROP_OUTLINE,
   GUIDES,
   LINE_OUTLINE,
   ROD_PATH,
@@ -13,8 +13,8 @@ import {
 // The Blue Ridge at first light: a stone-page → dawn sky, a pale sun and five
 // ridges fading into haze, far (haze-1) to near (haze-5). A small fly rod rises
 // from behind the second-nearest ridge, and its line runs up through five guides
-// into a cast between the far and near ridges. `drawCast` draws the line in once;
-// the rod and guides are there from the start.
+// and is cast down out of the bottom of the scene, into the home page's steps.
+// `drawCast` draws the line in once; the rod and guides are there from the start.
 export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
   const skyId = useId()
   const maskId = useId()
@@ -39,7 +39,7 @@ export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
             strokeWidth={10}
             strokeLinecap="round"
             // Dash 1, gap 2: hidden at offset 1 the only dash end is the route's
-            // start, behind the near ridges, so no stray cap shows at the fly
+            // start, behind the near ridges, so no stray cap shows at the exit
             strokeDasharray="1 2"
             className={cn(drawCast && 'motion-safe:animate-cast')}
           />
@@ -72,8 +72,7 @@ export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
         className="hidden stroke-dorsal-band lg:block"
       />
       <g data-testid="cast" className="hidden lg:block" mask={`url(#${maskId})`}>
-        <path d={LINE_OUTLINE} fillOpacity={0.9} className="fill-belly" />
-        <circle cx={FLY.x} cy={FLY.y} r={FLY.r} className="fill-olive" />
+        <path d={LINE_OUTLINE} className="fill-belly" />
       </g>
       <g data-testid="guides" fill="none" strokeLinecap="round" className="hidden stroke-dorsal-band lg:block">
         {GUIDES.map((guide) => (
@@ -92,6 +91,14 @@ export function RidgeScene({ drawCast = false }: { drawCast?: boolean }) {
       <path
         className="fill-haze-5"
         d="M0 422 C140 406 260 412 380 416 S600 398 720 408 S960 400 1080 408 S1160 402 1200 404 V460 H0Z"
+      />
+      {/* The drop again, over the near ridges, so the line visibly falls out
+          of the bottom of the scene. Same mask: it draws in with the cast */}
+      <path
+        data-testid="drop"
+        d={DROP_OUTLINE}
+        mask={`url(#${maskId})`}
+        className="hidden fill-belly lg:block"
       />
     </svg>
   )

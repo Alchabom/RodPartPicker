@@ -1,7 +1,7 @@
 import { useEffect, useId } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { BuildCard, BuildCardSkeleton, Container, EmptyState, Loading, SectionHeading } from '@components/shop'
+import { BuildCard, BuildCardSkeleton, EmptyState, Loading, SectionHeading } from '@components/shop'
 import { Button } from '@/components/ui/button'
 import { listPublished } from '@/lib/published'
 import { publishedKeys } from '@/lib/publishedKeys'
@@ -25,14 +25,15 @@ export function RecentBuilds() {
   const items = data?.items.slice(0, SHOWN) ?? []
 
   return (
-    <Container as="section" className="pt-8 pb-24">
+    // The right-hand column beside the rig steps (below lg, under them)
+    <section aria-labelledby={headingId} className="min-w-0">
       <SectionHeading id={headingId}>Recently rigged</SectionHeading>
-      <div className="mt-10">
+      <div className="mt-6">
         {isPending ? (
           <Loading label="Loading recent builds">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-3">
               {Array.from({ length: SHOWN }, (_, i) => (
-                <BuildCardSkeleton key={i} />
+                <BuildCardSkeleton key={i} variant="compact" />
               ))}
             </div>
           </Loading>
@@ -48,17 +49,17 @@ export function RecentBuilds() {
           />
         ) : (
           <>
-            <ul aria-labelledby={headingId} className="grid gap-4 md:grid-cols-3">
+            <ul aria-labelledby={headingId} className="flex flex-col gap-3">
               {items.map((build) => (
-                <BuildCard key={build.id} build={build} />
+                <BuildCard key={build.id} build={build} variant="compact" />
               ))}
             </ul>
-            <Button asChild variant="link" className="mt-8">
+            <Button asChild variant="link" className="mt-6">
               <Link to="/rack">See all of the Community Rack</Link>
             </Button>
           </>
         )}
       </div>
-    </Container>
+    </section>
   )
 }

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { listPublished, type PublishedList, type PublishedSummary } from '@/lib/published'
@@ -81,5 +81,19 @@ describe('RecentBuilds', () => {
     await act(() => queryClient.refetchQueries())
     await waitFor(() => expect(console.error).toHaveBeenCalled())
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
+  })
+
+  it('stacks compact cards', async () => {
+    vi.mocked(listPublished).mockResolvedValue(list(3))
+    renderRecent()
+    const items = await screen.findAllByRole('listitem')
+    for (const li of items) expect(within(li).getByRole('link')).toHaveAttribute('data-variant', 'compact')
+    expect(items[0].parentElement).toHaveClass('flex-col')
+  })
+
+  it('shows compact skeletons while loading', () => {
+    vi.mocked(listPublished).mockReturnValue(new Promise(() => {}))
+    renderRecent()
+    for (const s of screen.getAllByTestId('build-card-skeleton')) expect(s).toHaveAttribute('data-variant', 'compact')
   })
 })
