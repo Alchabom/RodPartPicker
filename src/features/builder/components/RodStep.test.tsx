@@ -234,8 +234,17 @@ describe('RodSeriesPage', () => {
     expect(screen.getByText('Pick a rod first: everything else is matched to it.')).toHaveAttribute('role', 'status')
   })
 
+  it('offers the questionnaire as a labelled button that says it replaces the build', async () => {
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt()
+
+    const prompt = screen.getByRole('region', { name: 'Not sure where to start?' })
+    expect(within(prompt).getByRole('button', { name: 'Answer 5 questions' })).toBeInTheDocument()
+    expect(prompt).toHaveTextContent('This replaces your current build.')
+  })
+
   async function answerEverything() {
-    await userEvent.click(screen.getByRole('button', { name: /Not sure where to start/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Answer 5 questions' }))
     expect(clearBuild).toHaveBeenCalled()
     // Pick the first answer that can be picked, question after question
     for (let i = 0; i < 5; i++) {

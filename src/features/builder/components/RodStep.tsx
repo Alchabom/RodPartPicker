@@ -107,17 +107,29 @@ export function RodStep() {
           </Button>
         </div>
       )}
-      <Button
-        variant="link"
-        className="mt-3 text-left whitespace-normal"
-        onClick={() => {
-          // The questionnaire rigs a whole setup, so it starts from an empty build
-          clearBuild()
-          setQuestionnaireOpen(true)
-        }}
+      <section
+        aria-labelledby="questionnaire-prompt"
+        className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-lg border border-hairline bg-stone-card p-4"
       >
-        Not sure where to start? Answer 4 questions and we'll rig it for you.
-      </Button>
+        <div className="max-w-prose">
+          <h2 id="questionnaire-prompt" className="font-medium text-ink">
+            Not sure where to start?
+          </h2>
+          <p className="mt-0.5 text-sm text-ink-2">
+            Tell us how and where you fish, and we'll pick all five parts for you. This replaces your current build.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            // The questionnaire rigs a whole setup, so it starts from an empty build
+            clearBuild()
+            setQuestionnaireOpen(true)
+          }}
+        >
+          Answer 5 questions
+        </Button>
+      </section>
 
       <div className="mt-6">
         <BrandChips brands={brands} current={brand} />
