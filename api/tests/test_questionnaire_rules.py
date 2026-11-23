@@ -6,7 +6,7 @@ from itertools import product
 import pytest
 
 from app.questionnaire import rules
-from app.questionnaire.rules import Answers
+from app.questionnaire.rules import CreekAnswers as Answers
 
 COMPONENTS = ["rod", "reel", "line", "leader", "tippet"]
 ALL_ANSWERS = [

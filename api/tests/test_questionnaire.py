@@ -6,7 +6,7 @@ from itertools import product
 import pytest
 
 from app.parts.models import FlyLine, Leader, Reel, Rod, Tippet
-from app.questionnaire import rules
+from app.questionnaire.rules import creeks
 
 URL = "/api/questionnaire/recommend"
 CHECK_URL = "/api/compatibility/check"
@@ -84,9 +84,11 @@ def test_bad_answers_return_422(client, overrides):
 
 
 def test_a_missing_pick_returns_500(client, monkeypatch):
-    missing = rules.REDINGTON_376 | {"length_in": 999}  # no rod is this long
-    setups = rules.SETUPS | {(True, "low"): (missing, *rules.SETUPS[(True, "low")][1:])}
-    monkeypatch.setattr(rules, "SETUPS", setups)
+    missing = creeks.REDINGTON_376 | {"length_in": 999}  # no rod is this long
+    setups = creeks.SETUPS | {
+        (True, "low"): (missing, *creeks.SETUPS[(True, "low")][1:])
+    }
+    monkeypatch.setattr(creeks, "SETUPS", setups)
     response = client.get(URL, params=params())
     assert response.status_code == 500
     assert response.json()["detail"] == "Recommended part is missing from the catalog"

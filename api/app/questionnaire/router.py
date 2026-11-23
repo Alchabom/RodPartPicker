@@ -45,7 +45,7 @@ def _find(db, pick: rules.Pick) -> int:
 
 @router.get("/recommend")
 def recommend(db: DbSession, query: Annotated[AnswersQuery, Query()]) -> Recommendation:
-    answers = rules.Answers(
+    answers = rules.CreekAnswers(
         experience=query.experience,
         trout=query.trout,
         only_rod=query.only_rod,

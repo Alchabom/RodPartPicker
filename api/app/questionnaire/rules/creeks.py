@@ -1,31 +1,21 @@
-"""Questionnaire pick rules: which catalog parts to recommend for a set of answers,
+"""Small creeks pick rules: which catalog parts to recommend for a set of answers,
 and why. Plain data with no database or HTTP code; the router resolves each pick's
 natural key to a catalog row."""
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal
 
-Level = Literal["low", "medium", "high"]
-Component = Literal["rod", "reel", "line", "leader", "tippet"]
+from app.questionnaire.rules.common import Level, Pick, _join
 
 
 @dataclass(frozen=True)
-class Answers:
-    """The answers that change the setup. Only small creeks is supported, so the
-    place isn't here yet."""
+class CreekAnswers:
+    """The answers that change a small creeks setup."""
 
     experience: Level
     trout: bool
     only_rod: bool
     budget: Level
-
-
-@dataclass(frozen=True)
-class Pick:
-    component: Component
-    key: dict  # natural key: brand plus the columns that identify the row
-    reason: str
 
 
 def _rod(brand: str, name: str, weight: int, length_in: int) -> dict:
@@ -159,11 +149,7 @@ SETUPS = {
 }
 
 
-def _join(*sentences: str | None) -> str:
-    return " ".join(s for s in sentences if s)
-
-
-def recommend(answers: Answers) -> list[Pick]:
+def recommend(answers: CreekAnswers) -> list[Pick]:
     """Return the five picks, in order rod, reel, line, leader, tippet."""
     rod, reel, line = SETUPS[(answers.only_rod, answers.budget)]
     fast = rod == SAGE_486 and answers.experience == "high"
