@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { describe, it, expect } from 'vitest'
 import type { PublishedSummary } from '@/lib/published'
 import { BuildCard } from './BuildCard'
@@ -46,5 +46,21 @@ describe('BuildCard', () => {
   it('matches the compact skeleton to the compact card', () => {
     render(<BuildCardSkeleton variant="compact" />)
     expect(screen.getByTestId('build-card-skeleton')).toHaveAttribute('data-variant', 'compact')
+  })
+
+  it('tells the build page where it was opened from', () => {
+    function From() {
+      return <p data-testid="from">{(useLocation().state as { from: string }).from}</p>
+    }
+    render(
+      <MemoryRouter initialEntries={['/rack?brand=sage']}>
+        <Routes>
+          <Route path="/rack" element={<ul><BuildCard build={build} /></ul>} />
+          <Route path="/rack/:id" element={<From />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByRole('link'))
+    expect(screen.getByTestId('from')).toHaveTextContent('/rack?brand=sage')
   })
 })

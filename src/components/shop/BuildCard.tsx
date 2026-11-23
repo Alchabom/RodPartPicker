@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { formatApiDate } from '@utils/formatApiDate'
 import type { PublishedSummary } from '@/lib/published'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ export type BuildCardVariant = 'default' | 'compact'
  */
 export function BuildCard({ build, variant = 'default' }: { build: PublishedSummary; variant?: BuildCardVariant }) {
   const compact = variant === 'compact'
+  const { pathname, search } = useLocation()
   const specs = build.rod
     ? [`${build.rod.brand} ${build.rod.name}`, `${build.rod.lineWeight} wt`]
     : ['Rod no longer available']
@@ -46,6 +47,8 @@ export function BuildCard({ build, variant = 'default' }: { build: PublishedSumm
     <li>
       <Link
         to={`/rack/${build.id}`}
+        // The build page goes back to a Rack list it was opened from, filters and all
+        state={{ from: pathname + search }}
         data-variant={variant}
         className={cn(
           'h-full rounded-card border border-hairline bg-stone-card transition-colors hover:bg-stone-raised',

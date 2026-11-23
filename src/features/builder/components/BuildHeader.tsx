@@ -1,3 +1,5 @@
+import { Link } from 'react-router'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBuild } from '../hooks/useBuild'
 
@@ -14,6 +16,12 @@ export function BuildHeader() {
 
   return (
     <div className="mb-8">
+      <Link
+        to="/my-builds"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-ink-2 underline-offset-4 hover:text-ink hover:underline"
+      >
+        <ArrowLeft className="size-4" aria-hidden /> My builds
+      </Link>
       {/* The name input stands in for a visible title; each page has its own h1 */}
       <input
         type="text"

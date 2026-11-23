@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { NotFound } from '@components/NotFound'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -8,7 +8,7 @@ import { publishedKeys } from '@/lib/publishedKeys'
 import { formatApiDate } from '@utils/formatApiDate'
 import { formatPrice } from '@utils/formatPrice'
 import { getPublished, type Slot } from '@/lib/published'
-import { Loading, PartImage, ShareButton } from '@components/shop'
+import { Loading, PageHeader, PartImage, ShareButton } from '@components/shop'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const SLOTS: { slot: Slot; label: string }[] = [
@@ -48,6 +48,14 @@ const DATE_OPTIONS: Intl.DateTimeFormatOptions = { dateStyle: 'medium' }
 
 export function PublishedBuildPage() {
   const { id: rawId } = useParams()
+  const navigate = useNavigate()
+  const from = (useLocation().state as { from?: unknown } | null)?.from
+  // Opened from the Rack list: go back to it in history, keeping its filters
+  // and scroll. Opened any other way (home, a shared link): link to the Rack
+  const back =
+    typeof from === 'string' && /^\/rack(\?|$)/.test(from)
+      ? { to: from, label: 'Community Rack', onClick: () => navigate(-1) }
+      : { to: '/rack', label: 'Community Rack' }
   const valid = rawId !== undefined && /^[1-9]\d*$/.test(rawId)
   const id = valid ? Number(rawId) : 0
   const { data, error, isFetching, refetch } = useQuery({
@@ -75,10 +83,19 @@ export function PublishedBuildPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-te-papa-green">{data.title}</h1>
-      <p className="mt-2 text-muted-foreground">
-        by {data.author} · {formatApiDate(data.publishedAt, DATE_OPTIONS)}
-      </p>
+      <PageHeader
+        back={back}
+        title={data.title}
+        description={`by ${data.author} · ${formatApiDate(data.publishedAt, DATE_OPTIONS)}`}
+        actions={
+          <>
+            <Button asChild>
+              <Link to={`/builder?copy=${id}`}>Open in Builder</Link>
+            </Button>
+            <ShareButton path={`/rack/${data.id}`} title={data.title} size="default" />
+          </>
+        }
+      />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {(['rod', 'reel'] as const).map((slot) => {
@@ -152,13 +169,6 @@ export function PublishedBuildPage() {
       </Table>
 
       <p className="mt-8 whitespace-pre-line">{data.writeup}</p>
-
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild>
-          <Link to={`/builder?copy=${id}`}>Open in Builder</Link>
-        </Button>
-        <ShareButton path={`/rack/${data.id}`} title={data.title} size="default" />
-      </div>
     </main>
   )
 }

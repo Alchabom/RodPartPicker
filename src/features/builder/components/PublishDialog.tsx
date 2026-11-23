@@ -16,7 +16,7 @@ const WRITEUP_MAX = 4000
 const charCount = (text: string) => [...text].length
 
 const INPUT_CLASS =
-  'w-full rounded-md border border-twine bg-white px-3 py-2 text-base text-te-papa-green outline-none focus:border-spectra focus:ring-2 focus:ring-spectra/30'
+  'w-full rounded-md border border-ink-3 bg-white px-3 py-2 text-base text-olive outline-none focus:border-belly focus:ring-2 focus:ring-belly/30'
 
 // FastAPI errors carry {"detail": "..."}; validation errors carry a list instead
 function apiMessage(error: unknown): string {
@@ -167,7 +167,7 @@ function PublishForm({
       </DialogHeader>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="publish-title" className="text-sm font-semibold text-plantation">
+        <label htmlFor="publish-title" className="text-sm font-semibold text-olive">
           Title
         </label>
         <input
@@ -188,7 +188,7 @@ function PublishForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="publish-writeup" className="text-sm font-semibold text-plantation">
+        <label htmlFor="publish-writeup" className="text-sm font-semibold text-olive">
           Write-up
         </label>
         <textarea

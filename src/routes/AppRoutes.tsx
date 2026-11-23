@@ -14,18 +14,20 @@ import {
   STEP_ORDER,
   StepPage,
   StepRedirect,
+  useDraftProgress,
 } from '@features/builder'
 import { RedirectToMyBuilds, RedirectToRack, RedirectToRackBuild } from './redirects'
 
 function Layout() {
   const { status } = useAuth()
+  const { picked } = useDraftProgress()
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader account={<UserMenu />} signedIn={status === 'authenticated'} />
+      <SiteHeader account={<UserMenu />} signedIn={status === 'authenticated'} builderProgress={picked} />
       <div className="flex flex-1 flex-col">
         <Outlet />
       </div>
-      <SiteFooter signedIn={status === 'authenticated'} />
+      <SiteFooter signedIn={status === 'authenticated'} builderProgress={picked} />
     </div>
   )
 }

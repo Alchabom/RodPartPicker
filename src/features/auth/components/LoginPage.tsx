@@ -5,12 +5,13 @@ import { ApiError } from '@/lib/api'
 import { useAuth } from '@hooks/auth'
 import { requestCode, verifyCode } from '../api/auth'
 import { safeNext } from '../utils/safeNext'
+import { PageHeader } from '@components/shop'
 
 // Matches the API's per-email cooldown, so "Resend code" never hits a 429
 const RESEND_AFTER_MS = 60_000
 
 const inputClass =
-  'w-full rounded-md border border-twine bg-white px-3 py-2 text-base text-te-papa-green outline-none focus:border-spectra focus:ring-2 focus:ring-spectra/30'
+  'w-full rounded-md border border-ink-3 bg-white px-3 py-2 text-base text-olive outline-none focus:border-belly focus:ring-2 focus:ring-belly/30'
 
 /** Turn a failed request into the sentence the user sees. */
 function errorMessage(error: unknown, fallback: string): string {
@@ -101,11 +102,11 @@ export function LoginPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-4 py-16">
-      <h1 className="text-3xl font-bold text-te-papa-green">Log in</h1>
+      <PageHeader title="Log in" />
 
       {step === 'email' ? (
         <form onSubmit={onSubmitEmail} className="mt-6 flex flex-col gap-3">
-          <label htmlFor="login-email" className="text-sm font-semibold text-plantation">
+          <label htmlFor="login-email" className="text-sm font-semibold text-olive">
             Email
           </label>
           <input
@@ -122,17 +123,17 @@ export function LoginPage() {
           <p className="text-sm text-muted-foreground">
             We'll email you a 6-digit code. No password needed.
           </p>
-          <Button type="submit" size="lg" disabled={busy} className="bg-spectra text-linen hover:bg-te-papa-green">
+          <Button type="submit" size="lg" disabled={busy} className="bg-belly text-stone-page hover:bg-olive">
             {busy ? 'Sending…' : 'Email me a code'}
           </Button>
         </form>
       ) : (
         <form onSubmit={onSubmitCode} className="mt-6 flex flex-col gap-3">
-          <p className="text-plantation" role="status">
+          <p className="text-olive" role="status">
             {resent ? 'We sent a new code' : 'Check your email. We sent a code'} to{' '}
             <strong>{email}</strong>.
           </p>
-          <label htmlFor="login-code" className="text-sm font-semibold text-plantation">
+          <label htmlFor="login-code" className="text-sm font-semibold text-olive">
             Code
           </label>
           <input
@@ -149,7 +150,7 @@ export function LoginPage() {
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
             className={`${inputClass} tracking-[0.4em]`}
           />
-          <Button type="submit" size="lg" disabled={busy} className="bg-spectra text-linen hover:bg-te-papa-green">
+          <Button type="submit" size="lg" disabled={busy} className="bg-belly text-stone-page hover:bg-olive">
             {busy ? 'Checking…' : 'Log in'}
           </Button>
           <div className="flex items-center justify-between text-sm">

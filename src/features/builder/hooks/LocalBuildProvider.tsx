@@ -3,10 +3,9 @@ import { Outlet } from 'react-router'
 import { getComponentInfo } from '../api/components'
 import type { Build, BuildNotes, ComponentType, RecommendedPart } from '../types'
 import { BuildContext } from './buildContext'
+import { DRAFT_CHANGE_EVENT, DRAFT_KEY as STORAGE_KEY } from '../utils/draftStorage'
 import { without } from './without'
 
-// v2: part ids became `${component}-${dbId}` when the catalog moved to the API
-const STORAGE_KEY = 'rpp:build:v2'
 // Kept apart from the build, so builds saved before notes existed still load
 const NOTES_KEY = 'rpp:notes:v1'
 
@@ -25,6 +24,8 @@ function writeStorage(key: string, value: object) {
   } catch {
     // Storage unavailable (private mode, quota) — build still works in memory
   }
+  // The header's Builder count reads the draft from storage
+  if (key === STORAGE_KEY) window.dispatchEvent(new Event(DRAFT_CHANGE_EVENT))
 }
 
 // Keep only well-formed entries. Ids that no longer exist in the catalog
@@ -56,6 +57,17 @@ export function LocalBuildProvider() {
 
   useEffect(() => writeStorage(STORAGE_KEY, build), [build])
   useEffect(() => writeStorage(NOTES_KEY, notes), [notes])
+
+  // Another tab changed the draft: follow it, so this tab shows the same parts
+  // as the header's count and its next pick doesn't overwrite the other tab's
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY || event.key === null) setBuild(loadBuild())
+      if (event.key === NOTES_KEY || event.key === null) setNotes(loadNotes())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   const selectPart = (component: ComponentType, partId: string) => {
     setBuild((prev) => ({ ...prev, [component]: partId }))

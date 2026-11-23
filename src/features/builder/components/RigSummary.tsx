@@ -50,7 +50,7 @@ export function RigSummary() {
       <BuildHeader />
       <BuildSteps current="summary" />
 
-      <h1 className="mt-8 text-3xl font-medium text-olive">{heading}</h1>
+      <h1 className="mt-8 text-[28px] font-medium text-olive">{heading}</h1>
       {complete && rod && (
         <p className="mt-1 text-ink-2">
           Five parts, matched to your {rod.specs['Line Wt']} {[getBrand(rod.brandId)?.name, rod.name].filter(Boolean).join(' ')}.

@@ -86,7 +86,7 @@ export function PublishControls({ id, name, build }: { id: number; name: string;
         onSaved={(mode) => setNotice(mode === 'publish' ? 'Posted to the Rack' : 'Updated on the Rack')}
       />
       {/* Always mounted so screen readers announce the text when it appears */}
-      <span role="status" className="font-semibold text-te-papa-green">
+      <span role="status" className="font-semibold text-olive">
         {notice}
       </span>
     </div>

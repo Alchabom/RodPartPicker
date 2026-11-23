@@ -100,17 +100,6 @@
   --color-recommended-ink: var(--recommended-ink);
   --color-recommended-wash: var(--recommended-wash);
 
-  /* Deprecated: removed in sub-project 2 */
-  --color-te-papa-green: var(--olive);
-  --color-plantation: var(--olive);
-  --color-spectra: var(--belly);
-  --color-tasman: var(--ink-2);
-  --color-sulu: var(--belly);
-  --color-cod-gray: var(--ink);
-  --color-linen: var(--stone-page);
-  --color-bone: var(--stone-raised);
-  --color-twine: var(--ink-3);
-
   /* The hero's fly line draws itself in once (a mask's dash offset, 1 → 0) */
   --animate-cast: cast 1200ms var(--ease-shop) 300ms both;
   @keyframes cast {
