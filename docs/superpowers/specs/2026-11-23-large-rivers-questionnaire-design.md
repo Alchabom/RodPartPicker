@@ -123,10 +123,12 @@ allows.
 | Setup | Leader | Tippet |
 |---|---|---|
 | Trout, dries and nymphs | RIO Powerflex Plus Trout Leader 9' 5X | RIO Powerflex Strong 5X |
-| Trout, small to medium streamers | *new* RIO Powerflex Plus Trout Leader 9' 2X | RIO Powerflex Strong 2X |
+| Trout, small to medium streamers | *new* RIO Powerflex Plus Trout Leader 9' 3X | RIO Powerflex Strong 3X |
 | Trout, large streamers (sink tip) | Scientific Anglers Absolute Streamer Leader 4' 10 lb | RIO Powerflex Strong 3X |
 | Smallmouth | *new* RIO Powerflex Plus Trout Leader 9' 0X | RIO Powerflex Strong 0X |
 | Predators | *new* heavy fluorocarbon musky leader | *new* wire bite tippet |
+
+The 6wt streamer rig uses 3X, not 2X: `check_build` flags leaders of 10 lb or more (`HEAVY_LEADER_LB`) on rods under 7wt, and a 2X leader is about 11 lb.
 
 The short streamer leader keeps the fly down with a sink tip. Musky teeth cut nylon and
 fluorocarbon, so the musky rig ends in wire.
@@ -149,7 +151,7 @@ is written; rows without a photo show the placeholder until the team adds one.
 | Line | RIO Elite Pike/Musky | 10wt, floating |
 | Line | 10wt intermediate sink tip (e.g. Scientific Anglers Sonar Titan Clear Tip) | 10wt, intermediate |
 | Line | 10wt heavy sink tip (e.g. RIO InTouch Big Nasty Sink Tip) | 10wt, sink tip, with sink rate |
-| Leader | RIO Powerflex Plus Trout Leader | 9' 2X and 9' 0X, 3-pack (new sizes of an existing product) |
+| Leader | RIO Powerflex Plus Trout Leader | 9' 3X and 9' 0X, 3-pack (new sizes of an existing product) |
 | Leader | Heavy fluorocarbon musky leader | about 6', 40–60 lb, no X size |
 | Tippet | RIO Knottable Wire (or similar) | about 30 lb, no X size |
 
