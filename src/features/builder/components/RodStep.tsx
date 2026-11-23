@@ -120,7 +120,6 @@ export function RodStep() {
           </p>
         </div>
         <Button
-          variant="secondary"
           onClick={() => {
             // The questionnaire rigs a whole setup, so it starts from an empty build
             clearBuild()
