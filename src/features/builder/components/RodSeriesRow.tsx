@@ -108,10 +108,11 @@ export function RodSeriesRow({ series, open, onToggle, selectedPartId, onAdd }: 
                         ) : (
                           <Button
                             size="sm"
-                            aria-label={`Add ${label} ${size.sizeCode ?? `${formatLength(size.lengthIn)} ${size.lineWeight} wt`}`}
+                            variant="secondary"
+                            aria-label={`Choose ${label} ${size.sizeCode ?? `${formatLength(size.lengthIn)} ${size.lineWeight} wt`}`}
                             onClick={() => onAdd(partId)}
                           >
-                            Add
+                            Choose
                           </Button>
                         )}
                       </TableCell>

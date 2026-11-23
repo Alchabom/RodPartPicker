@@ -252,14 +252,35 @@ def test_heavier_line_has_no_weight_warning(client, make_part):
 
 def test_light_rod_highlights_every_tippet(client, make_part):
     rod = make_part(Rod, line_weight=6, water="fresh")
-    leader = make_part(Leader, x_size_id=9)  # 5X
     salt_tippet = make_part(Tippet, water="salt", x_size_id=9)
-    wrong_size = make_part(Tippet, x_size_id=4)  # 0X doesn't suit a 5X leader
+    light_tippet = make_part(Tippet, x_size_id=11)  # 7X
+
+    data = get_parts(client, rodId=rod.id)
+
+    assert salt_tippet.id in data["tippet"]
+    assert light_tippet.id in data["tippet"]
+
+
+@pytest.mark.parametrize("rod_weight", [6, 7])
+def test_leader_size_wins_over_the_rods_tippet_highlights(client, make_part, rod_weight):
+    # The same rule /check warns about (LEADER_TIPPET_SIZE), so a tippet listed
+    # as fitting never comes back flagged
+    rod = make_part(Rod, line_weight=rod_weight, water="fresh")
+    # 2X and 3X tippets, so a 7 wt rod's light-tippet rule (4X and finer) stays out of it
+    leader = make_part(Leader, x_size_id=6)  # 2X
+    same = make_part(Tippet, x_size_id=6)
+    finer = make_part(Tippet, x_size_id=7)
+    wrong_size = make_part(Tippet, x_size_id=4)  # 0X doesn't suit a 2X leader
 
     data = get_parts(client, rodId=rod.id, leaderId=leader.id)
 
-    assert salt_tippet.id in data["tippet"]
-    assert wrong_size.id in data["tippet"]
+    assert same.id in data["tippet"]
+    assert finer.id in data["tippet"]
+    assert wrong_size.id not in data["tippet"]
+    assert wrong_size.id in data["notCompatible"]["tippet"]
+    assert same.id not in data["notCompatible"]["tippet"]
+    response = client.get(CHECK_URL, params={"leaderId": leader.id, "tippetId": wrong_size.id})
+    assert [w["code"] for w in response.json()["warnings"]] == ["LEADER_TIPPET_SIZE"]
 
 
 def test_heavy_rod_skips_light_tippets(client, make_part):
@@ -274,7 +295,7 @@ def test_heavy_rod_skips_light_tippets(client, make_part):
 
 
 @pytest.mark.parametrize("rod_weight", [6, 7])
-def test_tippets_are_never_not_compatible(client, make_part, rod_weight):
+def test_tippets_are_not_compatible_only_with_a_leader(client, make_part, rod_weight):
     rod = make_part(Rod, line_weight=rod_weight, water="fresh")
     make_part(Tippet, x_size_id=10, water="salt")
 

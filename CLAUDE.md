@@ -45,6 +45,8 @@ The landing page is `features/home` (`HomePage`), the index route `/`. The publi
 
 Public catalog: `src/features/catalog` holds the signed-out-friendly pages `/rack` and `/rack/:id` (outside `BuilderLayout`). Its **Open in Builder** link goes to `/builder?copy=<id>`, handled by `CopyPublishedIntent` in the builder (the `save=1` pattern), so the features never import each other. Publish controls live in the builder; shared query keys are in `src/lib/publishedKeys.ts`. See `docs/builds/published-builds.md`.
 
+Guided builder: one step per part in rig order at `/builder/<part>` (rod first: the other steps redirect to `/builder/rod` until there's a rod), parts grouped by fit, and the summary (`RigSummary`) at `/builder`, which flags parts that no longer fit. Old `/builder/<part>/<brand>` links redirect to `?brand=`. See `docs/superpowers/specs/2026-11-22-guided-builder-design.md`.
+
 Builder persistence: the builder keeps a local draft (`LocalBuildProvider`, `localStorage` key `rpp:build:v2`) and saved builds (`SavedBuildProvider`, with debounced autosave). My builds lives at `/my-builds`. TanStack Query is the data layer: the client is in `src/lib/queryClient.ts` and query keys live next to their fetchers (e.g. `buildKeys` in `features/builder/api/builds.ts`). See `docs/builds/saved-builds.md`.
 
 Most of these directories don't exist on disk yet (git doesn't track empty folders). Create them as needed.

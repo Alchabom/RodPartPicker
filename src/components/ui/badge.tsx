@@ -8,8 +8,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        // Both badges are brook-trout gold; the blue row tint marks what fits
-        fit: "bg-recommended-wash text-recommended-ink",
+        // Brook-trout gold: the builder's Best match label
         recommended: "bg-recommended-wash text-recommended-ink",
         muted: "bg-stone-raised text-ink-2",
       },

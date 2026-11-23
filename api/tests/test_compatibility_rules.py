@@ -310,6 +310,18 @@ def test_leader_tippet_size(tippet_size, expected):
     assert ("LEADER_TIPPET_SIZE" in codes(leader=leader, tippet=tippet)) is expected
 
 
+@pytest.mark.parametrize(
+    "tippet_size, expected",
+    [(8, False), (9, True), (10, True), (11, False)],
+)
+def test_tippet_suits_leader(tippet_size, expected):
+    assert rules.tippet_suits_leader(Tippet(x_size_id=tippet_size), Leader(x_size_id=9)) is expected
+
+
+def test_any_tippet_suits_a_leader_with_no_x_size():
+    assert rules.tippet_suits_leader(Tippet(x_size_id=4), Leader(x_size_id=None)) is True
+
+
 def test_leader_tippet_size_skipped_when_leader_has_no_x_size():
     leader = Leader(x_size_id=None)
     tippet = Tippet(x_size_id=9)

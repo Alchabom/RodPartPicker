@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router'
-import { ArrowLeft } from 'lucide-react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { NotFound } from '@components/NotFound'
 import { Loading } from '@components/shop'
 import { Button } from '@/components/ui/button'
@@ -9,18 +8,36 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fetchRodSeries, rodSeriesKeys, type RodSeries } from '../api/rodSeries'
 import { useBuild } from '../hooks/useBuild'
 import { useCatalog } from '../hooks/useCatalog'
+import { useChoose } from '../hooks/useChoose'
+import { brandFromSearch } from '../utils/brandFilter'
+import { BrandChips } from './BrandChips'
+import { BuildHeader } from './BuildHeader'
+import { BuildSteps } from './BuildSteps'
+import { QuestionnaireDialog } from './QuestionnaireDialog'
 import { RodSeriesRow } from './RodSeriesRow'
 
 function holdsPart(series: RodSeries, partId: string | undefined): boolean {
   return series.sizes.some((size) => `rod-${size.id}` === partId)
 }
 
-/** The rod picker: a brand's rod series as rows that open to their sizes. */
-export function RodSeriesPage() {
-  const brand = useParams<{ brand: string }>().brand ?? 'all'
+/**
+ * The guided builder's first step: rod series as rows that open to their
+ * sizes, filtered by brand. Everything after is matched to the rod chosen here.
+ * Unsure anglers can answer the questionnaire instead, which rigs all five.
+ */
+export function RodStep() {
+  const buildState = useBuild()
+  const { build, basePath, clearBuild, removePart } = buildState
+  const { getBrand, getBrandsFor, getPart } = useCatalog()
+  const picked = getPart(build.rod)
+  const choose = useChoose('rod')
   const navigate = useNavigate()
-  const { build, basePath, selectPart } = useBuild()
-  const { getBrand } = useCatalog()
+  const [searchParams] = useSearchParams()
+  const needsRod = (useLocation().state as { needsRod?: boolean } | null)?.needsRod === true
+  const [questionnaireOpen, setQuestionnaireOpen] = useState(false)
+
+  const brands = getBrandsFor('rod')
+  const brand = brandFromSearch(searchParams, brands)
 
   const { data, error, isPending, refetch } = useQuery({
     queryKey: rodSeriesKeys.list(brand),
@@ -42,22 +59,8 @@ export function RodSeriesPage() {
     setOpen({ brand, ids })
   }
 
-  const handleAdd = (partId: string) => {
-    selectPart('rod', partId)
-    navigate(basePath)
-  }
-
-  const isAll = brand === 'all'
-  const title = isAll ? 'All rods' : `${getBrand(brand)?.name ?? data?.[0]?.brand.name ?? 'Brand'} rods`
-
   if (data && data.length === 0) {
-    return (
-      <NotFound
-        message="We don't have any rods for that brand."
-        backTo={basePath}
-        backLabel="Back to your build"
-      />
-    )
+    return <NotFound message="We don't have any rods for that brand." backTo={basePath} backLabel="Back to your build" />
   }
 
   const renderRows = (rows: RodSeries[]) => (
@@ -69,7 +72,7 @@ export function RodSeriesPage() {
           open={openIds.has(series.id)}
           onToggle={() => toggle(series.id)}
           selectedPartId={build.rod}
-          onAdd={handleAdd}
+          onAdd={choose}
         />
       ))}
     </div>
@@ -85,15 +88,43 @@ export function RodSeriesPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <Link
-        to={basePath}
-        className="inline-flex items-center gap-1 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+      <BuildHeader />
+      <BuildSteps current="rod" />
+
+      <h1 className="mt-8 text-3xl font-medium text-olive">Choose a rod</h1>
+      {needsRod && (
+        <p role="status" className="mt-1 text-ink-2">
+          Pick a rod first: everything else is matched to it.
+        </p>
+      )}
+      {picked && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          <span>
+            Your rod: <span className="font-medium">{[getBrand(picked.brandId)?.name, picked.name].join(' ')}</span>
+          </span>
+          <Button size="sm" variant="quiet" onClick={() => removePart('rod')}>
+            Remove
+          </Button>
+        </div>
+      )}
+      <Button
+        variant="link"
+        className="mt-3 text-left whitespace-normal"
+        onClick={() => {
+          // The questionnaire rigs a whole setup, so it starts from an empty build
+          clearBuild()
+          setQuestionnaireOpen(true)
+        }}
       >
-        <ArrowLeft className="size-4" aria-hidden /> Back to your build
-      </Link>
-      <h1 className="mt-4 text-3xl font-bold text-te-papa-green">{title}</h1>
+        Not sure where to start? Answer 4 questions and we'll rig it for you.
+      </Button>
+
+      <div className="mt-6">
+        <BrandChips brands={brands} current={brand} />
+      </div>
+
       {data && (
-        <p className="mt-1 mb-6 text-muted-foreground">
+        <p className="mt-4 mb-4 text-sm text-ink-2">
           {data.length} series. Open one to see its sizes.
         </p>
       )}
@@ -127,14 +158,20 @@ export function RodSeriesPage() {
       )}
 
       {data &&
-        (isAll
+        (brand === 'all'
           ? groups.map((group) => (
               <section key={group.name} className="mt-8 first-of-type:mt-0">
-                <h2 className="mb-3 text-xl font-bold text-te-papa-green">{group.name}</h2>
+                <h2 className="mb-3 text-xl font-medium text-olive">{group.name}</h2>
                 {renderRows(group.rows)}
               </section>
             ))
           : renderRows(data))}
+
+      <QuestionnaireDialog
+        open={questionnaireOpen}
+        onOpenChange={setQuestionnaireOpen}
+        onRigged={() => navigate(basePath)}
+      />
     </main>
   )
 }

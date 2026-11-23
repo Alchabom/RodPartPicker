@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RodSeries } from '../api/rodSeries'
-import { RodSeriesPage } from './RodSeriesPage'
+import { RodStep } from './RodStep'
 
 const fetchRodSeries = vi.fn()
 vi.mock('../api/rodSeries', async (importOriginal) => ({
@@ -13,12 +13,37 @@ vi.mock('../api/rodSeries', async (importOriginal) => ({
 }))
 
 const selectPart = vi.fn()
+const clearBuild = vi.fn()
+const loadRecommendation = vi.fn()
+const removePart = vi.fn()
 let buildRod: string | undefined
 vi.mock('../hooks/useBuild', () => ({
-  useBuild: () => ({ build: { rod: buildRod }, basePath: '/builder', selectPart }),
+  useBuild: () => ({
+    build: { rod: buildRod },
+    basePath: '/builder',
+    kind: 'draft',
+    selectPart,
+    clearBuild,
+    loadRecommendation,
+    removePart,
+  }),
 }))
+const BRANDS = [
+  { id: 'orvis', name: 'Orvis' },
+  { id: 'sage', name: 'Sage' },
+]
 vi.mock('../hooks/useCatalog', () => ({
-  useCatalog: () => ({ getBrand: (id: string) => (id === 'sage' ? { id, name: 'Sage' } : undefined) }),
+  useCatalog: () => ({
+    getBrand: (id: string) => BRANDS.find((b) => b.id === id),
+    getBrandsFor: () => BRANDS,
+    getPart: (id: string | undefined) => (id ? { id, specs: {} } : undefined),
+  }),
+}))
+vi.mock('../hooks/useBuildCheck', () => ({ useBuildCheck: () => ({ flags: { byPart: {}, buildWide: [] }, failed: false }) }))
+const getRecommendation = vi.fn()
+vi.mock('../api/questionnaire', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/questionnaire')>()),
+  getRecommendation: (...args: unknown[]) => getRecommendation(...args),
 }))
 
 function series(id: number, name: string, sizeIds: number[], extra: Partial<RodSeries> = {}): RodSeries {
@@ -54,14 +79,18 @@ function series(id: number, name: string, sizeIds: number[], extra: Partial<RodS
 
 const SAGE = [series(1, 'R8 Core', [51, 52]), series(2, 'Foundation', [61])]
 
-function renderAt(path = '/builder/rod/sage') {
+function Where() {
+  return <p data-testid="at">{useLocation().pathname}</p>
+}
+
+function renderAt(path = '/builder/rod?brand=sage', state?: unknown) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[path]}>
+      <MemoryRouter initialEntries={[{ pathname: path.split('?')[0], search: path.includes('?') ? `?${path.split('?')[1]}` : '', state }]}>
         <Routes>
-          <Route path="/builder" element={<p>Build page</p>} />
-          <Route path="/builder/rod/:brand" element={<RodSeriesPage />} />
+          <Route path="/builder/rod" element={<RodStep />} />
+          <Route path="*" element={<Where />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -74,6 +103,9 @@ describe('RodSeriesPage', () => {
   beforeEach(() => {
     fetchRodSeries.mockReset()
     selectPart.mockReset()
+    clearBuild.mockReset()
+    loadRecommendation.mockReset()
+    getRecommendation.mockReset()
     buildRod = undefined
   })
 
@@ -82,7 +114,8 @@ describe('RodSeriesPage', () => {
     renderAt()
 
     expect(await screen.findByRole('button', { name: /^R8 Core/ })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Sage rods' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Choose a rod' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Sage' })).toHaveAttribute('aria-current', 'page')
     expect(fetchRodSeries).toHaveBeenCalledWith('sage', expect.anything())
     expect(header('R8 Core')).toHaveAttribute('aria-expanded', 'false')
     expect(header('Foundation')).toHaveAttribute('aria-expanded', 'false')
@@ -112,15 +145,15 @@ describe('RodSeriesPage', () => {
     expect(screen.getByRole('button', { name: /Selected/ })).toBeDisabled()
   })
 
-  it('adds a size and goes back to the build', async () => {
+  it('chooses a size and moves on to the reel', async () => {
     fetchRodSeries.mockResolvedValue(SAGE)
     renderAt()
 
     await userEvent.click(await screen.findByRole('button', { name: /^R8 Core/ }))
-    await userEvent.click(screen.getByRole('button', { name: 'Add Sage R8 Core 590-4' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Choose Sage R8 Core 590-4' }))
 
     expect(selectPart).toHaveBeenCalledWith('rod', 'rod-52')
-    expect(await screen.findByText('Build page')).toBeInTheDocument()
+    expect(await screen.findByTestId('at')).toHaveTextContent('/builder/reel')
   })
 
   it('shows a placeholder without an image, and no Buy link without a link', async () => {
@@ -156,9 +189,17 @@ describe('RodSeriesPage', () => {
     expect(fetchRodSeries).toHaveBeenCalledTimes(2)
   })
 
-  it("says so when a brand has no rods", async () => {
+  it('shows every brand for a brand it does not know', async () => {
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt('/builder/rod?brand=nope')
+
+    expect(await screen.findByRole('button', { name: /^R8 Core/ })).toBeInTheDocument()
+    expect(fetchRodSeries).toHaveBeenCalledWith('all', expect.anything())
+  })
+
+  it("says so when there are no rods", async () => {
     fetchRodSeries.mockResolvedValue([])
-    renderAt('/builder/rod/nope')
+    renderAt()
 
     expect(await screen.findByText("We don't have any rods for that brand.")).toBeInTheDocument()
   })
@@ -168,12 +209,66 @@ describe('RodSeriesPage', () => {
       series(4, 'Clearwater', [81], { brand: { name: 'Orvis', slug: 'orvis' } }),
       ...SAGE,
     ])
-    renderAt('/builder/rod/all')
+    renderAt('/builder/rod')
 
     expect(await screen.findByRole('heading', { name: 'Orvis' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'All rods' })).toBeInTheDocument()
     expect(fetchRodSeries).toHaveBeenCalledWith('all', expect.anything())
     expect(screen.getByRole('heading', { name: 'Orvis' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Sage' })).toBeInTheDocument()
+  })
+
+  it('shows your rod with Remove', async () => {
+    buildRod = 'rod-52'
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt()
+    await screen.findByRole('button', { name: /^R8 Core/ })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    expect(removePart).toHaveBeenCalledWith('rod')
+  })
+
+  it('explains why it opened when a later step needed a rod', async () => {
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt('/builder/rod', { needsRod: true })
+
+    expect(screen.getByText('Pick a rod first: everything else is matched to it.')).toHaveAttribute('role', 'status')
+  })
+
+  async function answerEverything() {
+    await userEvent.click(screen.getByRole('button', { name: /Not sure where to start/ }))
+    expect(clearBuild).toHaveBeenCalled()
+    // Pick the first answer that can be picked, question after question
+    for (let i = 0; i < 5; i++) {
+      const dialog = screen.queryByRole('dialog')
+      if (!dialog) break
+      const option = within(dialog).queryAllByRole('button').find((b) => !b.hasAttribute('disabled') && !/Back|Close/.test(b.textContent ?? ''))
+      if (!option) break
+      await userEvent.click(option)
+    }
+  }
+
+  it('rigs a whole setup from the questions and lands on the summary', async () => {
+    fetchRodSeries.mockResolvedValue(SAGE)
+    getRecommendation.mockResolvedValue([{ component: 'rod', partId: 'rod-52', reason: 'why' }])
+    renderAt()
+    await screen.findByRole('button', { name: /^R8 Core/ })
+
+    await answerEverything()
+
+    expect(loadRecommendation).toHaveBeenCalled()
+    expect(await screen.findByTestId('at')).toHaveTextContent(/^\/builder$/)
+  })
+
+  it('stays put and shows the error when the questions fail', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    fetchRodSeries.mockResolvedValue(SAGE)
+    getRecommendation.mockRejectedValue(new Error('down'))
+    renderAt()
+    await screen.findByRole('button', { name: /^R8 Core/ })
+
+    await answerEverything()
+
+    expect(await screen.findByText("Couldn't get a recommendation")).toBeInTheDocument()
+    expect(screen.queryByTestId('at')).toBeNull()
   })
 })

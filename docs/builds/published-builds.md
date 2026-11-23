@@ -92,7 +92,7 @@ A title or write-up is written by one user and read by everyone.
 
 ### Publish
 
-1. The owner, on `/builder/42` with all five parts, clicks **Post to the Rack**
+1. The owner, on the summary at `/builder/42` with all five parts, clicks **Post to the Rack**
    (`PublishControls`). The button is disabled with "Add all five parts to
    post" until then.
 2. `PublishDialog` asks for a title (pre-filled with the build's name) and a
@@ -153,7 +153,7 @@ builds shows the new status.
 **Open in Builder** links to `/builder?copy=<id>`. Features can't import each
 other, so the builder handles it the way it handles `save=1`:
 
-1. `CopyPublishedIntent` (draft mode only, rendered by `BuilderPage`) reads
+1. `CopyPublishedIntent` (draft mode only, rendered by `RigSummary`) reads
    `copy` once into state and removes it from the URL with `replace`.
 2. An id that isn't a positive integer shows the notice at once and makes no
    request. Otherwise it calls `useQuery` with `publishedKeys.detail(id)`, the

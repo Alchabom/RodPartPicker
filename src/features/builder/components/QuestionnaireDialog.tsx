@@ -23,21 +23,23 @@ function toAnswers(draft: Draft): Answers {
 export function QuestionnaireDialog({
   open,
   onOpenChange,
+  onRigged,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onRigged?: () => void // after the recommendation is in the build
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         {/* Radix unmounts the content when closed, so every open starts at question 1 */}
-        <QuestionnaireSteps onDone={() => onOpenChange(false)} />
+        <QuestionnaireSteps onDone={() => onOpenChange(false)} onRigged={onRigged} />
       </DialogContent>
     </Dialog>
   )
 }
 
-function QuestionnaireSteps({ onDone }: { onDone: () => void }) {
+function QuestionnaireSteps({ onDone, onRigged }: { onDone: () => void; onRigged?: () => void }) {
   const { loadRecommendation } = useBuild()
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<Draft>({})
@@ -54,6 +56,7 @@ function QuestionnaireSteps({ onDone }: { onDone: () => void }) {
     getRecommendation(answers, controller.signal)
       .then((parts) => {
         loadRecommendation(parts)
+        onRigged?.()
         onDone()
       })
       .catch((error: unknown) => {
