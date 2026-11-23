@@ -262,7 +262,9 @@ def test_light_rod_highlights_every_tippet(client, make_part):
 
 
 @pytest.mark.parametrize("rod_weight", [6, 7])
-def test_leader_size_wins_over_the_rods_tippet_highlights(client, make_part, rod_weight):
+def test_leader_size_wins_over_the_rods_tippet_highlights(
+    client, make_part, rod_weight
+):
     # The same rule /check warns about (LEADER_TIPPET_SIZE), so a tippet listed
     # as fitting never comes back flagged
     rod = make_part(Rod, line_weight=rod_weight, water="fresh")
@@ -279,7 +281,9 @@ def test_leader_size_wins_over_the_rods_tippet_highlights(client, make_part, rod
     assert wrong_size.id not in data["tippet"]
     assert wrong_size.id in data["notCompatible"]["tippet"]
     assert same.id not in data["notCompatible"]["tippet"]
-    response = client.get(CHECK_URL, params={"leaderId": leader.id, "tippetId": wrong_size.id})
+    response = client.get(
+        CHECK_URL, params={"leaderId": leader.id, "tippetId": wrong_size.id}
+    )
     assert [w["code"] for w in response.json()["warnings"]] == ["LEADER_TIPPET_SIZE"]
 
 
