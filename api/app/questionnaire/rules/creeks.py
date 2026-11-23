@@ -5,7 +5,7 @@ natural key to a catalog row."""
 from dataclasses import dataclass
 from decimal import Decimal
 
-from app.questionnaire.rules.common import Level, Pick, _join
+from app.questionnaire.rules.common import HEAVIER_LINE_NOTE, Level, Pick, _join
 
 
 @dataclass(frozen=True)
@@ -104,10 +104,6 @@ LINE_REASONS = {
         "long range."
     ),
 }
-HEAVIER_LINE_NOTE = (
-    "Fast rods like this one often cast even better with a slightly heavier line. "
-    "To try one, look at the recommended heavier lines in the Line section."
-)
 
 # ---------- Leader and tippet ----------
 

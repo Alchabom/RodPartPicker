@@ -14,5 +14,11 @@ class Pick:
     reason: str
 
 
+HEAVIER_LINE_NOTE = (
+    "Fast rods like this one often cast even better with a slightly heavier line. "
+    "To try one, look at the recommended heavier lines in the Line section."
+)
+
+
 def _join(*sentences: str | None) -> str:
     return " ".join(s for s in sentences if s)
