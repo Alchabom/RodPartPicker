@@ -50,8 +50,11 @@ def test_part_loads_its_brand_and_x_size(db, make_brand, make_part):
 
 
 def test_water_tags_cover_strong_tippets_and_sealed_reels(db):
+    # Sized tippets only: 029's wire bite tippet is also tagged both
     both_tippets = (
-        select(func.count()).select_from(Tippet).where(Tippet.water == "both")
+        select(func.count())
+        .select_from(Tippet)
+        .where(Tippet.water == "both", Tippet.x_size_id.is_not(None))
     )
     both_reels = select(func.count()).select_from(Reel).where(Reel.water == "both")
     assert db.scalar(both_tippets) == 16

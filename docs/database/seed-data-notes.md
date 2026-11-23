@@ -124,6 +124,15 @@ Notes on the `links` batch:
 - Lamson `Remix S` and `Remix S (sealed)` both link to the Remix S page, and `speedster` and `speedster with fighting butt` both link to the Speedster rod page. Lamson sells those variants from one page.
 - Scientific Anglers' `absolute-trout` page is the Trout *Tippet*. The Absolute Trout Leader is `absolute-trout-1-pack`, and the Absolute Fluorocarbon Trout Leader is `absolute-fluorocarbon` (page title "Absolute Fluorocarbon Leaders").
 
+## Large rivers parts (2026-11-23)
+
+Migration `028_nullable_tippet_x_size.sql` lets a tippet have no X size, and `029_large_river_parts.sql` adds the parts the large rivers questionnaire needs (`docs/superpowers/specs/2026-11-23-large-rivers-questionnaire-design.md`). The header comment of 029 lists each source.
+
+- Lines: Scientific Anglers Sonar Titan Sink Tip, 7wt Sink 3 and 10wt Int and Sink 6 (one row per tip, named like `Flats Pro (Int)`), and RIO Elite Predator WF10F (RIO's Pike/Musky line). The Sonar Titan head weights differ between retailer listings, so they're blank. RIO's InTouch Streamertip, named in the spec's first draft, was sold out everywhere, so the Sonar Titan replaced it.
+- Leaders: RIO Powerflex Plus Trout Leader 9' 3X (9.5 lb) and 9' 0X (18 lb), which copy the 9' 5X row's price, link and image, and the RIO Pike/Musky Leader (6', 60 lb fluorocarbon bite section, no X size).
+- Tippet: RIO Powerflex Wire Bite Tippet, 30 lb, 15 ft (5 yd) spool, no X size. 029 adds `wire` to `tippets.material`.
+- Links come from the manufacturer pages, except Elite Predator, which links to Trident because the RIO page wasn't found. None of the new lines or the musky parts have images yet, so they show the placeholder until a `part_details_*.csv` image batch adds them.
+
 ## Changing the data
 
 Data typed into TablePlus lives only in that computer's database. Teammates
