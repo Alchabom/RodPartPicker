@@ -1,6 +1,6 @@
 # Large rivers questionnaire design
 
-Date: 2026-11-23 · Branch: `oa-large-rivers` · Status: draft, awaiting review
+Date: 2026-11-23 · Branch: `oa-large-rivers` · Status: approved
 
 ## Purpose
 
@@ -109,9 +109,10 @@ everyone.
 
 - **Floating, 5–7wt:** RIO Avid Trout-Gold on a low budget, RIO Elite Gold on medium and high.
 - **Floating, 8wt:** RIO Elite Gold at every budget (the only freshwater 8wt line).
-- **Trout, large streamers:** *new* RIO InTouch Streamertip 7wt at every budget.
-- **Predators:** *new* 10wt lines at every budget: RIO Elite Pike/Musky (floating) for weighted
-  flies, a heavy sink tip for unweighted flies, an intermediate sink tip for some of both.
+- **Trout, large streamers:** *new* SA Sonar Titan Sink Tip (Sink 3) 7wt at every budget.
+- **Predators:** *new* 10wt lines at every budget: RIO Elite Predator (floating) for weighted
+  flies, Sonar Titan Sink Tip (Sink 6) for unweighted flies, Sonar Titan Sink Tip (Int) for
+  some of both.
 - **Fast rods** with a floating Gold line get the creeks' note pointing to the recommended
   heavier lines in the Line section.
 
@@ -147,13 +148,17 @@ is written; rows without a photo show the placeholder until the team adds one.
 
 | Part | Product | Specs |
 |---|---|---|
-| Line | RIO InTouch Streamertip | 7wt, sink tip, with sink rate |
-| Line | RIO Elite Pike/Musky | 10wt, floating |
-| Line | 10wt intermediate sink tip (e.g. Scientific Anglers Sonar Titan Clear Tip) | 10wt, intermediate |
-| Line | 10wt heavy sink tip (e.g. RIO InTouch Big Nasty Sink Tip) | 10wt, sink tip, with sink rate |
-| Leader | RIO Powerflex Plus Trout Leader | 9' 3X and 9' 0X, 3-pack (new sizes of an existing product) |
-| Leader | Heavy fluorocarbon musky leader | about 6', 40–60 lb, no X size |
-| Tippet | RIO Knottable Wire (or similar) | about 30 lb, no X size |
+| Line | Scientific Anglers Sonar Titan Sink Tip (Sink 3) | 7wt, sink tip, about 3 ips |
+| Line | RIO Elite Predator (RIO's Pike/Musky line) | 10wt, floating, 410 gr |
+| Line | Scientific Anglers Sonar Titan Sink Tip (Int) | 10wt, intermediate tip, about 1.25 ips |
+| Line | Scientific Anglers Sonar Titan Sink Tip (Sink 6) | 10wt, heavy sink tip, about 6 ips |
+| Leader | RIO Powerflex Plus Trout Leader | 9' 3X (9.5 lb) and 9' 0X (18 lb), 3-pack (new sizes of an existing product) |
+| Leader | RIO Pike/Musky Leader | 6', 60 lb fluorocarbon, no X size |
+| Tippet | RIO Powerflex Wire Bite Tippet | 30 lb, 15 ft spool, no X size, `wire` material |
+
+The first draft named RIO's InTouch Streamertip for the 7wt sink tip; it was sold out
+everywhere, so the Sonar Titan Sink Tip, which also covers both musky sink tips, replaced it.
+`029_large_river_parts.sql` lists the sources.
 
 Water tags: the freshwater lines and trout leaders are `fresh`; the musky leader and wire
 tippet are `both` if the maker sells them for both. The build's water tags must not mix
