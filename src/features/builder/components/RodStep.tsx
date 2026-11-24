@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 import { NotFound } from '@components/NotFound'
 import { Loading } from '@components/shop'
 import { Button } from '@/components/ui/button'
@@ -10,11 +10,8 @@ import { useBuild } from '../hooks/useBuild'
 import { useCatalog } from '../hooks/useCatalog'
 import { useChoose } from '../hooks/useChoose'
 import { brandFromSearch } from '../utils/brandFilter'
-import { BrandChips } from './BrandChips'
-import { BuildHeader } from './BuildHeader'
-import { BuildSteps } from './BuildSteps'
-import { QuestionnaireDialog } from './QuestionnaireDialog'
 import { RodSeriesRow } from './RodSeriesRow'
+import { StepLayout } from './StepLayout'
 
 function holdsPart(series: RodSeries, partId: string | undefined): boolean {
   return series.sizes.some((size) => `rod-${size.id}` === partId)
@@ -23,18 +20,14 @@ function holdsPart(series: RodSeries, partId: string | undefined): boolean {
 /**
  * The guided builder's first step: rod series as rows that open to their
  * sizes, filtered by brand. Everything after is matched to the rod chosen here.
- * Unsure anglers can answer the questionnaire instead, which rigs all five.
+ * Unsure anglers can use Help me choose instead, which rigs all five.
  */
 export function RodStep() {
-  const buildState = useBuild()
-  const { build, basePath, clearBuild, removePart } = buildState
-  const { getBrand, getBrandsFor, getPart } = useCatalog()
-  const picked = getPart(build.rod)
+  const { build, basePath } = useBuild()
+  const { getBrandsFor } = useCatalog()
   const choose = useChoose('rod')
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const needsRod = (useLocation().state as { needsRod?: boolean } | null)?.needsRod === true
-  const [questionnaireOpen, setQuestionnaireOpen] = useState(false)
 
   const brands = getBrandsFor('rod')
   const brand = brandFromSearch(searchParams, brands)
@@ -87,55 +80,21 @@ export function RodStep() {
     : []
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10">
-      <BuildHeader />
-      <BuildSteps current="rod" />
-
-      <h1 className="mt-8 text-[28px] font-medium text-olive">Choose a rod</h1>
-      {needsRod && (
-        <p role="status" className="mt-1 text-ink-2">
-          Pick a rod first: everything else is matched to it.
-        </p>
-      )}
-      {picked && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-          <span>
-            Your rod: <span className="font-medium">{[getBrand(picked.brandId)?.name, picked.name].join(' ')}</span>
-          </span>
-          <Button size="sm" variant="quiet" onClick={() => removePart('rod')}>
-            Remove
-          </Button>
-        </div>
-      )}
-      <section
-        aria-labelledby="questionnaire-prompt"
-        className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-lg border border-hairline bg-stone-card p-4"
-      >
-        <div className="max-w-prose">
-          <h2 id="questionnaire-prompt" className="font-medium text-ink">
-            Not sure where to start?
-          </h2>
-          <p className="mt-0.5 text-sm text-ink-2">
-            Tell us how and where you fish, and we'll pick all five parts for you. This replaces your current build.
+    <StepLayout
+      current="rod"
+      title="Choose a rod"
+      subtitle={
+        needsRod && (
+          <p role="status" className="mt-1 text-ink-2">
+            Pick a rod first: everything else is matched to it.
           </p>
-        </div>
-        <Button
-          onClick={() => {
-            // The questionnaire rigs a whole setup, so it starts from an empty build
-            clearBuild()
-            setQuestionnaireOpen(true)
-          }}
-        >
-          Answer 5 questions
-        </Button>
-      </section>
-
-      <div className="mt-6">
-        <BrandChips brands={brands} current={brand} />
-      </div>
-
+        )
+      }
+      brands={brands}
+      brand={brand}
+    >
       {data && (
-        <p className="mt-4 mb-4 text-sm text-ink-2">
+        <p className="mb-4 text-sm text-ink-2">
           {data.length} series. Open one to see its sizes.
         </p>
       )}
@@ -177,12 +136,6 @@ export function RodStep() {
               </section>
             ))
           : renderRows(data))}
-
-      <QuestionnaireDialog
-        open={questionnaireOpen}
-        onOpenChange={setQuestionnaireOpen}
-        onRigged={() => navigate(basePath)}
-      />
-    </main>
+    </StepLayout>
   )
 }

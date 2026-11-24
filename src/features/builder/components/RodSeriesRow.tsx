@@ -102,7 +102,8 @@ export function RodSeriesRow({ series, open, onToggle, selectedPartId, onAdd }: 
                       <TableCell className="text-right tabular-nums">{formatPrice(size.price)}</TableCell>
                       <TableCell className="text-right">
                         {selected ? (
-                          <Button size="sm" variant="secondary" disabled>
+                          // aria-disabled, not disabled, so keyboard focus stays here after choosing
+                          <Button size="sm" variant="secondary" aria-disabled="true" className="cursor-default opacity-70">
                             <Check data-icon="inline-start" /> Selected
                           </Button>
                         ) : (
