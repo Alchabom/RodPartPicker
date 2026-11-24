@@ -145,7 +145,7 @@ describe('RodSeriesPage', () => {
     expect(screen.getByRole('button', { name: /Selected/ })).toBeDisabled()
   })
 
-  it('chooses a size and moves on to the reel', async () => {
+  it('chooses a size and stays on the rod step', async () => {
     fetchRodSeries.mockResolvedValue(SAGE)
     renderAt()
 
@@ -153,7 +153,7 @@ describe('RodSeriesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Choose Sage R8 Core 590-4' }))
 
     expect(selectPart).toHaveBeenCalledWith('rod', 'rod-52')
-    expect(await screen.findByTestId('at')).toHaveTextContent('/builder/reel')
+    expect(screen.getByTestId('at')).toHaveTextContent('/builder/rod')
   })
 
   it('shows a placeholder without an image, and no Buy link without a link', async () => {

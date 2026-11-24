@@ -168,11 +168,11 @@ describe('PartStep', () => {
     expect(selectPart).toHaveBeenCalledWith('line', 'line-3')
   })
 
-  it('chooses a part and moves to the next empty step', async () => {
+  it('chooses a part and stays on the step', async () => {
     renderStep('/builder/line')
     fireEvent.click(await screen.findByRole('button', { name: 'Choose RIO Elite Gold' }))
     expect(selectPart).toHaveBeenCalledWith('line', 'line-1')
-    expect(screen.getByTestId('at')).toHaveTextContent('/builder/leader')
+    expect(screen.getByTestId('at')).toHaveTextContent('/builder/line')
   })
 
   it('skips and goes back', () => {
