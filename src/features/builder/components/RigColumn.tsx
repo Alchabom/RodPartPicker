@@ -110,13 +110,21 @@ export function RigColumn({ current }: { current: ComponentType }) {
           <Button className="mt-3 w-full" onClick={goNext}>
             {next.label}
           </Button>
-          <Link
-            to={basePath}
-            className="mt-2 flex justify-between rounded-md px-2 py-1.5 text-sm text-ink-2 underline-offset-4 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            <span>Review rig</span>
-            <span className="tabular-nums">{formatPrice(total)}</span>
-          </Link>
+          {next.target === 'summary' ? (
+            // Next already goes to the summary, so just show the total
+            <p className="mt-2 flex justify-between px-2 py-1.5 text-sm text-ink-2">
+              <span>Total</span>
+              <span className="tabular-nums">{formatPrice(total)}</span>
+            </p>
+          ) : (
+            <Link
+              to={basePath}
+              className="mt-2 flex justify-between rounded-md px-2 py-1.5 text-sm text-ink-2 underline-offset-4 hover:text-ink hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <span>Review rig</span>
+              <span className="tabular-nums">{formatPrice(total)}</span>
+            </Link>
+          )}
           <p role="status" className="sr-only">
             {announcement}
           </p>

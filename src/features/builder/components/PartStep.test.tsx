@@ -210,6 +210,15 @@ describe('PartStep', () => {
     expect(screen.getByText('Water:').parentElement).toHaveTextContent('Freshwater')
   })
 
+  it('adds units to the head weight column', () => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('line')!} parts={[part('line', 1, 'Elite Gold', { specs: { 'Line Wt': '5 wt', Type: 'Floating', 'Head (gr)': '146' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Head weight in grains:').parentElement).toHaveTextContent('146 gr')
+  })
+
   it('opens the questionnaire from Help me choose', () => {
     renderStep('/builder/line')
     fireEvent.click(screen.getByRole('button', { name: 'Help me choose' }))

@@ -8,6 +8,7 @@ import { formatPrice } from '@utils/formatPrice'
 import type { CompatibleParts } from '../api/compatibility'
 import { useCatalog } from '../hooks/useCatalog'
 import type { ComponentInfo, ComponentType, Part } from '../types'
+import { NONE } from '../utils/format'
 import { PartPhotoButton } from './PartPhotoButton'
 
 export type FitStatus = 'off' | 'loading' | 'error' | 'ready'
@@ -28,6 +29,15 @@ const ROW_SPECS: Record<ComponentType, string[]> = {
   line: ['Line Wt', 'Type', 'Head (gr)'],
   leader: ['Length', 'X-Size', 'Test (lb)'],
   tippet: ['X-Size', 'Material', 'Test (lb)'],
+}
+
+// Columns with no header need their unit beside the number
+const UNITS: Record<string, string> = { 'Head (gr)': 'gr', 'Test (lb)': 'lb' }
+
+function specValue(part: Part, column: string): string | undefined {
+  const value = part.specs[column]
+  if (!value || value === NONE) return value
+  return UNITS[column] ? `${value} ${UNITS[column]}` : value
 }
 
 // Spoken names for the columns' short labels
@@ -70,7 +80,7 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
       <li
         key={part.id}
         style={{ '--spec-cols': columns.length } as CSSProperties}
-        className="flex items-center gap-4 border-b border-hairline py-3 last:border-b-0 sm:grid sm:grid-cols-[auto_minmax(0,1.6fr)_repeat(var(--spec-cols),minmax(0,1fr))_5.5rem_auto]"
+        className="flex items-center gap-3 border-b border-hairline py-3 last:border-b-0 sm:grid sm:grid-cols-[auto_minmax(0,1.6fr)_repeat(var(--spec-cols),minmax(0,1fr))_5.5rem_6.5rem]"
       >
         <PartPhotoButton src={part.imageUrl} name={fullName} label={component.label} />
         <div className="min-w-0 flex-1">
@@ -84,22 +94,22 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
           </p>
           <p className="text-sm text-ink-2">{brand}</p>
           {/* Small screens: the specs under the name instead of in columns */}
-          <p className="text-sm text-ink-2 sm:hidden">{columns.map((c) => part.specs[c]).filter(Boolean).join(' · ')}</p>
+          <p className="text-sm text-ink-2 sm:hidden">{columns.map((c) => specValue(part, c)).filter(Boolean).join(' · ')}</p>
         </div>
         {columns.map((c) => (
           <p key={c} className="hidden text-sm text-ink sm:block">
             <span className="sr-only">{SPEC_LABELS[c] ?? c}: </span>
-            {part.specs[c] ?? '—'}
+            {specValue(part, c) ?? NONE}
           </p>
         ))}
         <span className="text-right tabular-nums">{formatPrice(part.price)}</span>
         {selected ? (
           // aria-disabled, not disabled, so keyboard focus stays here after choosing
-          <Button size="sm" variant="secondary" aria-disabled="true" className="cursor-default opacity-70">
+          <Button size="sm" variant="secondary" aria-disabled="true" className="cursor-default opacity-70 sm:w-full">
             <Check data-icon="inline-start" /> Selected
           </Button>
         ) : (
-          <Button size="sm" variant="secondary" aria-label={`Choose ${fullName}`} onClick={() => onChoose(part.id)}>
+          <Button size="sm" variant="secondary" aria-label={`Choose ${fullName}`} onClick={() => onChoose(part.id)} className="sm:w-full">
             Choose
           </Button>
         )}

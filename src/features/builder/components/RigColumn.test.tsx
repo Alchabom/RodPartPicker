@@ -66,6 +66,13 @@ describe('RigColumn', () => {
     expect(screen.getByRole('link', { name: /Review rig/ })).toHaveTextContent('$1,259.00')
   })
 
+  it('shows only one Review rig once every other step is picked', () => {
+    build = { rod: 'rod-1', reel: 'reel-1', line: 'reel-1', leader: 'reel-1', tippet: 'reel-1' }
+    renderColumn('reel')
+    expect(within(column()).getAllByText('Review rig')).toHaveLength(1)
+    expect(within(column()).getByText('Total')).toBeInTheDocument()
+  })
+
   it('marks the step you are on', () => {
     renderColumn('reel')
     expect(within(column()).getByRole('link', { name: /^Reel/ })).toHaveAttribute('aria-current', 'step')
