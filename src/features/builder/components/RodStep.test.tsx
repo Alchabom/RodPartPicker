@@ -153,7 +153,9 @@ describe('RodSeriesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Choose Sage R8 Core 590-4' }))
 
     expect(selectPart).toHaveBeenCalledWith('rod', 'rod-52')
-    expect(screen.getByTestId('at')).toHaveTextContent('/builder/rod')
+    // Still on the rod step: the harness only shows where it is on other routes
+    expect(screen.getByRole('heading', { name: 'Choose a rod' })).toBeInTheDocument()
+    expect(screen.queryByTestId('at')).not.toBeInTheDocument()
   })
 
   it('shows a placeholder without an image, and no Buy link without a link', async () => {
