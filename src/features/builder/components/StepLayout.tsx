@@ -29,7 +29,7 @@ export function StepLayout({ current, title, subtitle, brands, brand, children }
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pt-8 pb-28 lg:pb-12">
       <BuildHeader />
-      <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+      <div className="lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:gap-6">
           <RigColumn current={current} />
           <BrandRail brands={brands} current={brand} />

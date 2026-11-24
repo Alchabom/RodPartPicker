@@ -52,14 +52,15 @@ export function RodSeriesRow({ series, open, onToggle, selectedPartId, onAdd }: 
         </span>
       </button>
 
+      {/* The photo sits beside the sizes only when the table still fits without scrolling */}
       {open && (
-        <div id={sizesId} className="grid gap-5 px-4 pt-1 pb-4 lg:grid-cols-[360px_1fr]">
+        <div id={sizesId} className="grid gap-5 px-4 pt-1 pb-4 xl:grid-cols-[13rem_minmax(0,1fr)]">
           <div>
             <PartImage
               src={series.imageUrl}
               alt={label}
               label="Rod"
-              className="aspect-[4/3] w-full lg:w-90"
+              className="aspect-[4/3] w-full max-w-xs xl:w-52"
             />
             {buyUrl && (
               <a

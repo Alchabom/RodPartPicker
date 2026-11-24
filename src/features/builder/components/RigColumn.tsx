@@ -63,7 +63,8 @@ export function RigColumn({ current }: { current: ComponentType }) {
               const body = (
                 <>
                   <span className={cn('text-xs', type === current ? 'font-medium text-ink' : 'text-ink-2')}>{label}</span>
-                  <span className={cn('block truncate text-sm', name ? 'text-ink' : 'text-ink-3')}>
+                  {/* Long names are cut off in the narrow column; hovering shows the whole name */}
+                  <span title={name} className={cn('block truncate text-sm', name ? 'text-ink' : 'text-ink-3')}>
                     {name ?? '—'}
                     {flagged && <span className="ml-1 text-negative">(doesn't fit)</span>}
                   </span>
