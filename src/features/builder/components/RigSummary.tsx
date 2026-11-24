@@ -196,10 +196,8 @@ export function RigSummary() {
         </Button>
         <Button
           variant="link"
-          onClick={() => {
-            clearBuild()
-            setQuestionnaireOpen(true)
-          }}
+          // The answers replace the rig once they're in, so it isn't cleared here
+          onClick={() => setQuestionnaireOpen(true)}
         >
           Retake the questions
         </Button>

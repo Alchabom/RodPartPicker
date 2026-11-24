@@ -154,6 +154,13 @@ describe('RigSummary', () => {
     expect(screen.getByTestId('at')).toHaveTextContent('/builder/rod')
   })
 
+  it('keeps the rig when you retake the questions, until they finish', () => {
+    renderSummary()
+    fireEvent.click(screen.getByRole('button', { name: 'Retake the questions' }))
+    expect(clearBuild).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toHaveTextContent('Your answers replace your current build.')
+  })
+
   it('says so when the rig check fails', () => {
     failed = true
     renderSummary()

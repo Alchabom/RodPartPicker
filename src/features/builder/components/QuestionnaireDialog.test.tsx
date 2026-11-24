@@ -27,6 +27,22 @@ beforeEach(() => {
 })
 
 describe('QuestionnaireDialog', () => {
+  it('says on the first question that the answers replace the build', async () => {
+    const { user } = renderDialog()
+    expect(screen.getByText('Your answers replace your current build.')).toBeInTheDocument()
+    await pick(user, 'Medium')
+    expect(screen.queryByText('Your answers replace your current build.')).not.toBeInTheDocument()
+  })
+
+  it('leaves the build alone when closed early', async () => {
+    const { user, onOpenChange } = renderDialog()
+    await pick(user, 'Medium', 'Large rivers')
+    await user.keyboard('{Escape}')
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+    expect(loadRecommendation).not.toHaveBeenCalled()
+    expect(getRecommendation).not.toHaveBeenCalled()
+  })
+
   it('asks large rivers anglers what they target, then that target’s flies', async () => {
     const { user } = renderDialog()
     await pick(user, 'Medium', 'Large rivers')
