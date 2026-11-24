@@ -1,6 +1,6 @@
 # Step layout design (UX polish sub-project 5)
 
-Date: 2026-11-23 · Branch: `oa-questionnaire-button` (stacked on `oa-large-rivers`, PR #63) · Status: draft, awaiting review
+Date: 2026-11-23 · Branch: `oa-questionnaire-button` (stacked on `oa-large-rivers`, PR #63) · Status: approved
 
 ## Purpose
 
