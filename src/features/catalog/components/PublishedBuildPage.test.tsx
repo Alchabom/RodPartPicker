@@ -51,6 +51,40 @@ describe('PublishedBuildPage', () => {
     expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument()
   })
 
+  it('offers a Buy button for each part with a shop link', async () => {
+    vi.mocked(getPublished).mockResolvedValueOnce({
+      id: 5,
+      title: 'Creek',
+      author: 'Sam',
+      rod: null,
+      totalPrice: 159,
+      publishedAt: '2026-01-01T00:00:00Z',
+      writeup: 'x',
+      updatedAt: '2026-01-01T00:00:00Z',
+      parts: {
+        rod: null,
+        reel: { id: 1, brand: 'Lamson', name: 'Liquid S', price: 159, purchaseUrl: 'https://shop.example/reel' },
+        line: { id: 2, brand: 'RIO', name: 'Elite Gold', price: 129, purchaseUrl: null },
+        leader: null,
+        tippet: null,
+      },
+    })
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/rack/5']}>
+          <Routes>
+            <Route path="/rack/:id" element={<PublishedBuildPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    const buy = await screen.findByRole('link', { name: 'Buy Lamson Liquid S' })
+    expect(buy).toHaveAttribute('href', 'https://shop.example/reel')
+    expect(buy).toHaveAttribute('data-slot', 'button')
+    expect(screen.queryByRole('link', { name: 'Buy RIO Elite Gold' })).toBeNull()
+  })
+
   const BUILD = {
     id: 5,
     title: 'Creek',
