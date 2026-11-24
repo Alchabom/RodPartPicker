@@ -101,9 +101,9 @@ describe('RigColumn', () => {
     expect(screen.getByTestId('at')).toHaveTextContent('/builder/line')
   })
 
-  it('offers to skip an empty step', () => {
+  it('shows no Next until the step has a part', () => {
     renderColumn('reel')
-    expect(screen.getAllByRole('button', { name: 'Skip to line' })).not.toHaveLength(0)
+    expect(screen.queryByRole('button', { name: /^Next|^Skip|Review rig/ })).not.toBeInTheDocument()
   })
 
   it('marks a part that no longer fits', () => {

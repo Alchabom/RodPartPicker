@@ -44,8 +44,8 @@ describe('nextAction', () => {
     expect(nextAction({ rod: 'rod-1', reel: 'reel-2' }, 'reel', getPart)).toEqual({ target: 'line', label: 'Next: line' })
   })
 
-  it('offers to skip an empty step', () => {
-    expect(nextAction({ rod: 'rod-1' }, 'reel', getPart)).toEqual({ target: 'line', label: 'Skip to line' })
+  it('has nothing to offer while the step is empty', () => {
+    expect(nextAction({ rod: 'rod-1' }, 'reel', getPart)).toBeNull()
   })
 
   it('loops back to a skipped step', () => {
@@ -54,7 +54,7 @@ describe('nextAction', () => {
   })
 
   it('never points back at the step you are on', () => {
-    const build = { rod: 'rod-1', reel: 'reel-1', line: 'line-1', leader: 'leader-1' }
+    const build = { rod: 'rod-1', reel: 'reel-1', line: 'line-1', leader: 'leader-1', tippet: 'tippet-1' }
     expect(nextAction(build, 'tippet', getPart)).toEqual({ target: 'summary', label: 'Review rig' })
   })
 

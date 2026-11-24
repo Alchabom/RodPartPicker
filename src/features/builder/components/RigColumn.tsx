@@ -31,7 +31,7 @@ export function RigColumn({ current }: { current: ComponentType }) {
   }
   const total = COMPONENTS.reduce((sum, { type }) => sum + (getPart(build[type])?.price ?? 0), 0)
   const next = nextAction(build, current, getPart)
-  const goNext = () => navigate(next.target === 'summary' ? basePath : `${basePath}/${next.target}`)
+  const goNext = () => next && navigate(next.target === 'summary' ? basePath : `${basePath}/${next.target}`)
 
   // Announce a pick on this step, but not what was already there on arrival
   const [announcement, setAnnouncement] = useState('')
@@ -107,10 +107,15 @@ export function RigColumn({ current }: { current: ComponentType }) {
             })}
           </ol>
 
-          <Button className="mt-3 w-full" onClick={goNext}>
-            {next.label}
-          </Button>
-          {next.target === 'summary' ? (
+          {/* Empty, same height, until the step has a part, so nothing shifts when Next appears */}
+          {next ? (
+            <Button className="mt-3 w-full" onClick={goNext}>
+              {next.label}
+            </Button>
+          ) : (
+            <div aria-hidden className="mt-3 h-9" />
+          )}
+          {next?.target === 'summary' ? (
             // Next already goes to the summary, so just show the total
             <p className="mt-2 flex justify-between px-2 py-1.5 text-sm text-ink-2">
               <span>Total</span>
@@ -167,11 +172,13 @@ export function RigColumn({ current }: { current: ComponentType }) {
           })}
         </ol>
       </nav>
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-hairline bg-stone-page/95 px-4 py-3 lg:hidden">
-        <Button className="w-full" onClick={goNext}>
-          {next.label}
-        </Button>
-      </div>
+      {next && (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-hairline bg-stone-page/95 px-4 py-3 lg:hidden">
+          <Button className="w-full" onClick={goNext}>
+            {next.label}
+          </Button>
+        </div>
+      )}
     </>
   )
 }

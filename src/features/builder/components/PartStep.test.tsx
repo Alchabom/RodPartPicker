@@ -175,10 +175,11 @@ describe('PartStep', () => {
     expect(screen.getByTestId('at')).toHaveTextContent('/builder/line')
   })
 
-  it('moves on from the rig column, and skips an empty step', () => {
+  it('moves on from the rig column once the step has a part', () => {
+    build = { rod: ROD.id, line: 'line-1' }
     renderStep('/builder/line')
-    // The reel is empty too, but Skip moves forward through the rig first
-    fireEvent.click(screen.getAllByRole('button', { name: 'Skip to leader' })[0])
+    // The reel is empty too, but Next moves forward through the rig first
+    fireEvent.click(screen.getAllByRole('button', { name: 'Next: leader' })[0])
     expect(screen.getByTestId('at')).toHaveTextContent('/builder/leader')
   })
 
