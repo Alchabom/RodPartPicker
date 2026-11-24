@@ -24,8 +24,12 @@ def _find(db, pick: rules.Pick) -> int:
     for column, value in pick.key.items():
         if column == "brand":
             continue
-        if column == "x_size":
+        if column == "x_size" and value is None:
+            query = query.where(model.x_size_id.is_(None))
+        elif column == "x_size":
             query = query.join(XSize).where(XSize.label == value)
+        elif value is None:
+            query = query.where(getattr(model, column).is_(None))
         else:
             query = query.where(getattr(model, column) == value)
 
@@ -45,12 +49,20 @@ def _find(db, pick: rules.Pick) -> int:
 
 @router.get("/recommend")
 def recommend(db: DbSession, query: Annotated[AnswersQuery, Query()]) -> Recommendation:
-    answers = rules.Answers(
-        experience=query.experience,
-        trout=query.trout,
-        only_rod=query.only_rod,
-        budget=query.budget,
-    )
+    if query.place == "large_rivers":
+        answers = rules.RiverAnswers(
+            experience=query.experience,
+            target=query.target,
+            flies=query.flies,
+            budget=query.budget,
+        )
+    else:
+        answers = rules.CreekAnswers(
+            experience=query.experience,
+            trout=query.trout,
+            only_rod=query.only_rod,
+            budget=query.budget,
+        )
     return Recommendation(
         parts=[
             RecommendedPart(

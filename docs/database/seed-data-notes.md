@@ -120,9 +120,18 @@ Notes on the `images` batch:
 
 Notes on the `links` batch:
 
-- RIO Powerflex Plus tippet had no link: RIO discontinued it and replaced it with Powerflex Strong ([Far Bank's RIO FAQ](https://farbank.com/pages/rio-product-faq)). Migration `023_powerflex_strong.sql` updates the eight rows in place, so builds that chose a Powerflex Plus size now hold Powerflex Strong. It sets the new name, the 30 yd spool, $8.49 (Far Bank's price), the Far Bank link, and these strengths from The Fly Stop's and Tailwaters' spec charts: 0X 16.2, 1X 14.0, 2X 11.2, 3X 9.1, 4X 7.5, 5X 5.5, 6X 3.6, 7X 2.5 lb. Strong's half sizes (4.5X, 5.5X, 6.5X) were not added. The questionnaire's tippet pick (`app/questionnaire/rules.py`) follows the rename.
+- RIO Powerflex Plus tippet had no link: RIO discontinued it and replaced it with Powerflex Strong ([Far Bank's RIO FAQ](https://farbank.com/pages/rio-product-faq)). Migration `023_powerflex_strong.sql` updates the eight rows in place, so builds that chose a Powerflex Plus size now hold Powerflex Strong. It sets the new name, the 30 yd spool, $8.49 (Far Bank's price), the Far Bank link, and these strengths from The Fly Stop's and Tailwaters' spec charts: 0X 16.2, 1X 14.0, 2X 11.2, 3X 9.1, 4X 7.5, 5X 5.5, 6X 3.6, 7X 2.5 lb. Strong's half sizes (4.5X, 5.5X, 6.5X) were not added. The questionnaire's tippet pick (then `app/questionnaire/rules.py`, now `rules/creeks.py`) follows the rename.
 - Lamson `Remix S` and `Remix S (sealed)` both link to the Remix S page, and `speedster` and `speedster with fighting butt` both link to the Speedster rod page. Lamson sells those variants from one page.
 - Scientific Anglers' `absolute-trout` page is the Trout *Tippet*. The Absolute Trout Leader is `absolute-trout-1-pack`, and the Absolute Fluorocarbon Trout Leader is `absolute-fluorocarbon` (page title "Absolute Fluorocarbon Leaders").
+
+## Large rivers parts (2026-11-23)
+
+Migration `028_nullable_tippet_x_size.sql` lets a tippet have no X size, and `029_large_river_parts.sql` adds the parts the large rivers questionnaire needs (`docs/superpowers/specs/2026-11-23-large-rivers-questionnaire-design.md`). The header comment of 029 lists each source.
+
+- Lines: Scientific Anglers Sonar Titan Sink Tip, 7wt Sink 3 and 10wt Int and Sink 6 (one row per tip, named like `Flats Pro (Int)`), and RIO Elite Predator WF10F (RIO's Pike/Musky line). The Sonar Titan head weights differ between retailer listings, so they're blank. RIO's InTouch Streamertip, named in the spec's first draft, was sold out everywhere, so the Sonar Titan replaced it.
+- Leaders: RIO Powerflex Plus Trout Leader 9' 3X (9.5 lb) and 9' 0X (18 lb), which copy the 9' 5X row's price, link and image, and the RIO Pike/Musky Leader (6', 60 lb fluorocarbon bite section, no X size).
+- Tippet: RIO Powerflex Wire Bite Tippet, 30 lb, 15 ft (5 yd) spool, no X size. 029 adds `wire` to `tippets.material`.
+- Links come from the manufacturer pages, except Elite Predator, which links to Trident because the RIO page wasn't found. None of the new lines or the musky parts have images yet, so they show the placeholder until a `part_details_*.csv` image batch adds them.
 
 ## Changing the data
 

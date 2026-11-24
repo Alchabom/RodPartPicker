@@ -3,21 +3,39 @@ import { ArrowLeft, LoaderCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { getRecommendation, type Answers, type Level } from '../api/questionnaire'
+import { getRecommendation, type Answers, type Flies, type Level, type Target } from '../api/questionnaire'
 import { useBuild } from '../hooks/useBuild'
-import { QUESTIONS } from '../utils/questions'
-
-type Draft = Partial<Record<keyof Answers, string>>
+import { questionsFor, type Draft } from '../utils/questions'
 
 // Option values are strings; this is the one place they become typed answers
 function toAnswers(draft: Draft): Answers {
+  const experience = draft.experience as Level
+  const budget = draft.budget as Level
+  if (draft.place === 'large_rivers') {
+    return {
+      experience,
+      place: 'large_rivers',
+      target: draft.target as Target,
+      flies: draft.flies as Flies,
+      budget,
+    }
+  }
   return {
-    experience: draft.experience as Level,
+    experience,
     place: 'small_creeks',
     trout: draft.trout === 'true',
     onlyRod: draft.onlyRod === 'true',
-    budget: draft.budget as Level,
+    budget,
   }
+}
+
+// Answering a question drops every later answer, so changing the place or the
+// target after going Back never leaves a stale follow-up behind
+function withAnswer(draft: Draft, step: number, value: string): Draft {
+  const questions = questionsFor(draft)
+  const kept: Draft = {}
+  for (const question of questions.slice(0, step)) kept[question.id] = draft[question.id]
+  return { ...kept, [questions[step].id]: value }
 }
 
 export function QuestionnaireDialog({
@@ -66,10 +84,11 @@ function QuestionnaireSteps({ onDone, onRigged }: { onDone: () => void; onRigged
       })
   }
 
+  const questions = questionsFor(draft)
   const answer = (value: string) => {
-    const next = { ...draft, [QUESTIONS[step].id]: value }
+    const next = withAnswer(draft, step, value)
     setDraft(next)
-    if (step < QUESTIONS.length - 1) setStep(step + 1)
+    if (step < questions.length - 1) setStep(step + 1)
     else submit(toAnswers(next))
   }
 
@@ -96,12 +115,12 @@ function QuestionnaireSteps({ onDone, onRigged }: { onDone: () => void; onRigged
     )
   }
 
-  const question = QUESTIONS[step]
+  const question = questions[step]
   return (
     <>
       <DialogHeader>
         <p className="text-xs text-muted-foreground">
-          {step + 1} of {QUESTIONS.length}
+          {step + 1} of {questions.length}
         </p>
         {question.reaction && <DialogDescription>{question.reaction}</DialogDescription>}
         <DialogTitle className="text-lg">{question.title}</DialogTitle>

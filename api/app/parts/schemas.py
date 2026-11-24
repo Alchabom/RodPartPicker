@@ -10,6 +10,7 @@ from app.schemas import CamelModel
 
 Water = Literal["fresh", "salt", "both"]
 Material = Literal["nylon", "fluorocarbon"]
+TippetMaterial = Literal["nylon", "fluorocarbon", "wire"]
 PurchaseUrl = Annotated[str | None, AfterValidator(safe_purchase_url)]
 ImageUrl = Annotated[
     str | None, Field(validation_alias="image_path"), AfterValidator(image_url_for)
@@ -75,8 +76,8 @@ class LeaderOut(PartOut):
 
 class TippetOut(PartOut):
     image_url: ImageUrl
-    material: Material
-    x_size: str = Field(validation_alias=AliasPath("x_size", "label"))
+    material: TippetMaterial
+    x_size: str | None = Field(validation_alias=AliasPath("x_size", "label"))
     strength_lb: float | None
     spool_yards: int
     price: float

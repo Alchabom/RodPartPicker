@@ -64,7 +64,7 @@ interface TippetRow {
   model: string
   material: string
   water: Water
-  xSize: string
+  xSize: string | null // wire bite tippet is rated only in lb
   strengthLb: number | null
   spoolYards: number | null
   price: number | null
@@ -149,7 +149,7 @@ function toTippet(row: TippetRow): Part {
   return {
     ...basePart('tippet', row),
     specs: {
-      'X-Size': row.xSize,
+      'X-Size': orNone(row.xSize),
       Material: capitalize(row.material),
       'Test (lb)': orNone(row.strengthLb),
       'Spool (yd)': orNone(row.spoolYards),

@@ -111,12 +111,12 @@ class Tippet(CatalogPart, Base):
     purchase_url: Mapped[str | None]
     image_path: Mapped[str | None]
     material: Mapped[str]
-    x_size_id: Mapped[int] = mapped_column(ForeignKey("x_sizes.id"))
+    x_size_id: Mapped[int | None] = mapped_column(ForeignKey("x_sizes.id"))
     strength_lb: Mapped[Decimal | None]
     spool_yards: Mapped[int]
     price: Mapped[Decimal]
 
-    x_size: Mapped[XSize] = relationship()
+    x_size: Mapped[XSize | None] = relationship()
 
 
 class LineWeight(Base):
