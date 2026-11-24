@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STEP_ORDER, nextStep, previousStep, stepAfter } from './steps'
+import { STEP_ORDER, nextAction, nextStep, previousStep, stepAfter } from './steps'
 
 const rod = 'rod-1'
 const reel = 'reel-1'
@@ -33,5 +33,37 @@ describe('steps', () => {
   it('knows the step before, except for the rod', () => {
     expect(previousStep('rod')).toBeUndefined()
     expect(previousStep('line')).toBe('reel')
+  })
+})
+
+describe('nextAction', () => {
+  // The catalog has every part except reel-999, which it has dropped
+  const getPart = (id: string | undefined) => (id && id !== 'reel-999' ? { id } : undefined)
+
+  it('offers the next empty step once this one has a part', () => {
+    expect(nextAction({ rod: 'rod-1', reel: 'reel-2' }, 'reel', getPart)).toEqual({ target: 'line', label: 'Next: line' })
+  })
+
+  it('has nothing to offer while the step is empty', () => {
+    expect(nextAction({ rod: 'rod-1' }, 'reel', getPart)).toBeNull()
+  })
+
+  it('loops back to a skipped step', () => {
+    const build = { rod: 'rod-1', line: 'line-1', leader: 'leader-1', tippet: 'tippet-1' }
+    expect(nextAction(build, 'tippet', getPart)).toEqual({ target: 'reel', label: 'Next: reel' })
+  })
+
+  it('never points back at the step you are on', () => {
+    const build = { rod: 'rod-1', reel: 'reel-1', line: 'line-1', leader: 'leader-1', tippet: 'tippet-1' }
+    expect(nextAction(build, 'tippet', getPart)).toEqual({ target: 'summary', label: 'Review rig' })
+  })
+
+  it('reviews the rig once all five are picked', () => {
+    const build = { rod: 'rod-1', reel: 'reel-1', line: 'line-1', leader: 'leader-1', tippet: 'tippet-1' }
+    expect(nextAction(build, 'line', getPart)).toEqual({ target: 'summary', label: 'Review rig' })
+  })
+
+  it('counts a part the catalog has dropped as empty', () => {
+    expect(nextAction({ rod: 'rod-1', reel: 'reel-999' }, 'rod', getPart)).toEqual({ target: 'reel', label: 'Next: reel' })
   })
 })

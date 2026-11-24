@@ -36,7 +36,7 @@ vi.mock('../hooks/useCatalog', () => ({
   useCatalog: () => ({
     getBrand: (id: string) => BRANDS.find((b) => b.id === id),
     getBrandsFor: () => BRANDS,
-    getPart: (id: string | undefined) => (id ? { id, specs: {} } : undefined),
+    getPart: (id: string | undefined) => (id ? { id, brandId: 'sage', name: 'R8 Core 590-4', price: 1100, specs: {} } : undefined),
   }),
 }))
 vi.mock('../hooks/useBuildCheck', () => ({ useBuildCheck: () => ({ flags: { byPart: {}, buildWide: [] }, failed: false }) }))
@@ -142,10 +142,10 @@ describe('RodSeriesPage', () => {
 
     expect(await screen.findByRole('button', { name: /^R8 Core/ })).toHaveAttribute('aria-expanded', 'true')
     expect(header('Foundation')).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getByRole('button', { name: /Selected/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Selected/ })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('chooses a size and moves on to the reel', async () => {
+  it('chooses a size and stays on the rod step', async () => {
     fetchRodSeries.mockResolvedValue(SAGE)
     renderAt()
 
@@ -153,7 +153,9 @@ describe('RodSeriesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Choose Sage R8 Core 590-4' }))
 
     expect(selectPart).toHaveBeenCalledWith('rod', 'rod-52')
-    expect(await screen.findByTestId('at')).toHaveTextContent('/builder/reel')
+    // Still on the rod step: the harness only shows where it is on other routes
+    expect(screen.getByRole('heading', { name: 'Choose a rod' })).toBeInTheDocument()
+    expect(screen.queryByTestId('at')).not.toBeInTheDocument()
   })
 
   it('shows a placeholder without an image, and no Buy link without a link', async () => {
@@ -223,7 +225,9 @@ describe('RodSeriesPage', () => {
     renderAt()
     await screen.findByRole('button', { name: /^R8 Core/ })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    const rig = screen.getAllByRole('navigation', { name: 'Your rig' })[0]
+    expect(within(rig).getByText('Sage R8 Core 590-4')).toBeInTheDocument()
+    await userEvent.click(within(rig).getByRole('button', { name: 'Remove rod' }))
     expect(removePart).toHaveBeenCalledWith('rod')
   })
 
@@ -234,9 +238,24 @@ describe('RodSeriesPage', () => {
     expect(screen.getByText('Pick a rod first: everything else is matched to it.')).toHaveAttribute('role', 'status')
   })
 
+  it('offers Help me choose beside the title', async () => {
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt()
+    await screen.findByRole('button', { name: /^R8 Core/ })
+    expect(screen.getByRole('button', { name: 'Help me choose' })).toBeInTheDocument()
+  })
+
+  it('moves on to the reel from the rig column once a rod is in', async () => {
+    buildRod = 'rod-52'
+    fetchRodSeries.mockResolvedValue(SAGE)
+    renderAt()
+    await screen.findByRole('button', { name: /^R8 Core/ })
+    await userEvent.click(screen.getAllByRole('button', { name: 'Next: reel' })[0])
+    expect(await screen.findByTestId('at')).toHaveTextContent('/builder/reel')
+  })
+
   async function answerEverything() {
-    await userEvent.click(screen.getByRole('button', { name: /Not sure where to start/ }))
-    expect(clearBuild).toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: 'Help me choose' }))
     // Pick the first answer that can be picked, question after question
     for (let i = 0; i < 5; i++) {
       const dialog = screen.queryByRole('dialog')

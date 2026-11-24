@@ -11,7 +11,7 @@ interface PartPhotoButtonProps {
 /** A part's thumbnail that opens the photo full size. Esc, the close button
  *  or a click outside the photo closes it again. */
 export function PartPhotoButton({ src, name, label }: PartPhotoButtonProps) {
-  const thumb = <PartImage src={src} alt="" label={label} className="h-18 w-24" />
+  const thumb = <PartImage src={src} alt="" label={label} className="h-12 w-16 sm:h-18 sm:w-24" />
 
   // A placeholder has nothing to enlarge
   if (!src) return thumb

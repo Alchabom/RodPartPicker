@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useId, useState, type CSSProperties } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils'
 import { formatPrice } from '@utils/formatPrice'
 import type { CompatibleParts } from '../api/compatibility'
 import { useCatalog } from '../hooks/useCatalog'
-import type { ComponentInfo, Part } from '../types'
+import type { ComponentInfo, ComponentType, Part } from '../types'
+import { NONE } from '../utils/format'
 import { PartPhotoButton } from './PartPhotoButton'
 
 export type FitStatus = 'off' | 'loading' | 'error' | 'ready'
@@ -20,6 +21,37 @@ interface PartGroupsProps {
   selectedId: string | undefined
   onChoose: (partId: string) => void
 }
+
+// The specs each step's rows show in columns, in the space beside the name
+const ROW_SPECS: Record<ComponentType, string[]> = {
+  rod: ['Length', 'Line Wt', 'Action'],
+  reel: ['Line Wt', 'Water'],
+  line: ['Line Wt', 'Type', 'Head (gr)'],
+  leader: ['Length', 'X-Size', 'Test (lb)'],
+  tippet: ['X-Size', 'Material', 'Test (lb)'],
+}
+
+// Columns with no header need their unit beside the number
+const UNITS: Record<string, string> = { 'Head (gr)': 'gr', 'Test (lb)': 'lb' }
+
+function specValue(part: Part, column: string): string | undefined {
+  const value = part.specs[column]
+  if (!value || value === NONE) return value
+  return UNITS[column] ? `${value} ${UNITS[column]}` : value
+}
+
+// Each column's label, shown above the rows (and inline on small screens)
+const COLUMN_LABELS: Record<string, string> = {
+  'Line Wt': 'Line weight',
+  'Head (gr)': 'Head weight',
+  'X-Size': 'X size',
+  'Test (lb)': 'Test',
+}
+const columnLabel = (column: string) => COLUMN_LABELS[column] ?? column
+
+// Every row and the header share these columns, so they line up down the list
+const ROW_GRID =
+  'sm:grid sm:grid-cols-[6rem_minmax(0,1.6fr)_repeat(var(--spec-cols),minmax(0,1fr))_5.5rem_6.5rem]'
 
 const byPrice = (a: Part, b: Part) => (a.price ?? Infinity) - (b.price ?? Infinity)
 
@@ -43,13 +75,18 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
     )
   }
 
+  const columns = ROW_SPECS[component.type]
   const row = (part: Part) => {
     const brand = getBrand(part.brandId)?.name
     const fullName = [brand, part.name].filter(Boolean).join(' ')
-    const specs = [brand, ...component.specColumns.slice(0, 2).map((c) => part.specs[c])].filter(Boolean).join(' · ')
     const best = component.type === 'line' && compatible?.recommendedLines.has(part.dbId)
+    const selected = part.id === selectedId
     return (
-      <li key={part.id} className="flex items-center gap-4 border-b border-hairline py-3 last:border-b-0">
+      <li
+        key={part.id}
+        style={{ '--spec-cols': columns.length } as CSSProperties}
+        className={cn('flex items-center gap-3 border-b border-hairline py-3 last:border-b-0', ROW_GRID)}
+      >
         <PartPhotoButton src={part.imageUrl} name={fullName} label={component.label} />
         <div className="min-w-0 flex-1">
           <p className="font-medium text-ink">
@@ -60,22 +97,62 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
               </Badge>
             )}
           </p>
-          <p className="text-sm text-ink-2">{specs}</p>
+          <p className="text-sm text-ink-2">{brand}</p>
+          {/* Small screens: the specs under the name instead of in columns */}
+          <p data-testid="specs-inline" className="text-sm text-ink-2 sm:hidden">
+            {columns
+              .filter((c) => specValue(part, c))
+              .map((c, i) => (
+                <span key={c}>
+                  {i > 0 && ' · '}
+                  <span className="text-ink-3">{columnLabel(c)}</span> {specValue(part, c)}
+                </span>
+              ))}
+          </p>
         </div>
-        <span className="w-20 text-right tabular-nums">{formatPrice(part.price)}</span>
-        {part.id === selectedId ? (
-          <Button size="sm" variant="secondary" disabled>
+        {columns.map((c) => (
+          <p key={c} className="hidden text-sm text-ink sm:block">
+            <span className="sr-only">{columnLabel(c)}: </span>
+            {specValue(part, c) ?? NONE}
+          </p>
+        ))}
+        <span className="text-right tabular-nums">{formatPrice(part.price)}</span>
+        {selected ? (
+          // aria-disabled, not disabled, so keyboard focus stays here after choosing
+          <Button size="sm" variant="secondary" aria-disabled="true" className="cursor-default opacity-70 sm:w-full">
             <Check data-icon="inline-start" /> Selected
           </Button>
         ) : (
-          <Button size="sm" variant="secondary" aria-label={`Choose ${fullName}`} onClick={() => onChoose(part.id)}>
+          <Button size="sm" variant="secondary" aria-label={`Choose ${fullName}`} onClick={() => onChoose(part.id)} className="sm:w-full">
             Choose
           </Button>
         )}
       </li>
     )
   }
-  const list = (rows: Part[]) => <ul>{rows.map(row)}</ul>
+  // The labels repeat above each group; the rows carry their own for screen readers
+  const header = (
+    <div
+      data-testid="part-columns"
+      aria-hidden
+      style={{ '--spec-cols': columns.length } as CSSProperties}
+      className={cn('hidden gap-3 border-b border-hairline pb-1 text-xs text-ink-3', ROW_GRID)}
+    >
+      <span />
+      <span>Model</span>
+      {columns.map((c) => (
+        <span key={c}>{columnLabel(c)}</span>
+      ))}
+      <span className="text-right">Price</span>
+      <span />
+    </div>
+  )
+  const list = (rows: Part[]) => (
+    <>
+      {header}
+      <ul>{rows.map(row)}</ul>
+    </>
+  )
 
   if (parts.length === 0) {
     return <p className="text-ink-2">We don't have any {component.plural.toLowerCase()} yet.</p>

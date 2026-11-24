@@ -168,25 +168,86 @@ describe('PartStep', () => {
     expect(selectPart).toHaveBeenCalledWith('line', 'line-3')
   })
 
-  it('chooses a part and moves to the next empty step', async () => {
+  it('chooses a part and stays on the step', async () => {
     renderStep('/builder/line')
     fireEvent.click(await screen.findByRole('button', { name: 'Choose RIO Elite Gold' }))
     expect(selectPart).toHaveBeenCalledWith('line', 'line-1')
+    expect(screen.getByTestId('at')).toHaveTextContent('/builder/line')
+  })
+
+  it('moves on from the rig column once the step has a part', () => {
+    build = { rod: ROD.id, line: 'line-1' }
+    renderStep('/builder/line')
+    // The reel is empty too, but Next moves forward through the rig first
+    fireEvent.click(screen.getAllByRole('button', { name: 'Next: leader' })[0])
     expect(screen.getByTestId('at')).toHaveTextContent('/builder/leader')
   })
 
-  it('skips and goes back', () => {
-    renderStep('/builder/line')
-    expect(screen.getByRole('link', { name: 'Skip for now' })).toHaveAttribute('href', '/builder/leader')
-    expect(screen.getByRole('link', { name: 'Back to Reel' })).toHaveAttribute('href', '/builder/reel')
-  })
-
-  it('shows your pick with Remove', () => {
+  it('shows your pick in the rig column, with Remove', () => {
     build = { rod: ROD.id, line: 'line-2' }
     renderStep('/builder/line')
-    expect(screen.getByText('RIO Avid Trout-Gold')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    const rig = screen.getAllByRole('navigation', { name: 'Your rig' })[0]
+    expect(within(rig).getByText('RIO Avid Trout-Gold')).toBeInTheDocument()
+    fireEvent.click(within(rig).getByRole('button', { name: 'Remove line' }))
     expect(removePart).toHaveBeenCalledWith('line')
+  })
+
+  it('keeps focus on the chosen part, now Selected', async () => {
+    build = { rod: ROD.id, line: 'line-2' }
+    renderStep('/builder/line')
+    const selected = await screen.findByRole('button', { name: /Selected/ })
+    expect(selected).toHaveAttribute('aria-disabled', 'true')
+    expect(selected).not.toBeDisabled()
+  })
+
+  it('lays reel specs out in columns', () => {
+    fetchCompatibleParts.mockReturnValue(new Promise(() => {}))
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('reel')!} parts={[part('reel', 11, 'Liquid S', { specs: { 'Line Wt': '4–6 wt', Water: 'Freshwater' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Line weight:').parentElement).toHaveTextContent('4–6 wt')
+    expect(screen.getByText('Water:').parentElement).toHaveTextContent('Freshwater')
+  })
+
+  it.each([
+    ['reel', ['Model', 'Line weight', 'Water', 'Price']],
+    ['line', ['Model', 'Line weight', 'Type', 'Head weight', 'Price']],
+    ['leader', ['Model', 'Length', 'X size', 'Test', 'Price']],
+    ['tippet', ['Model', 'X size', 'Material', 'Test', 'Price']],
+  ] as const)('labels the %s columns', (type, labels) => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo(type)!} parts={[part(type, 1, 'Thing')]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    const header = screen.getByTestId('part-columns')
+    expect([...header.children].map((c) => c.textContent).filter(Boolean)).toEqual(labels)
+  })
+
+  it('labels each value on small screens', () => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('line')!} parts={[part('line', 1, 'Elite Gold', { specs: { 'Line Wt': '5 wt', Type: 'Floating', 'Head (gr)': '146' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('specs-inline')).toHaveTextContent('Line weight 5 wt · Type Floating · Head weight 146 gr')
+  })
+
+  it('adds units to the head weight column', () => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('line')!} parts={[part('line', 1, 'Elite Gold', { specs: { 'Line Wt': '5 wt', Type: 'Floating', 'Head (gr)': '146' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Head weight:').parentElement).toHaveTextContent('146 gr')
+  })
+
+  it('opens the questionnaire from Help me choose', () => {
+    renderStep('/builder/line')
+    fireEvent.click(screen.getByRole('button', { name: 'Help me choose' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('shows a photo on each reel row, enlargeable when there is one', () => {
@@ -232,6 +293,6 @@ describe('PartStep', () => {
     )
     expect(screen.queryByRole('heading')).toBeNull()
     expect(screen.getAllByRole('listitem')).toHaveLength(6)
-    expect(screen.getByRole('button', { name: /Selected/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Selected/ })).toHaveAttribute('aria-disabled', 'true')
   })
 })

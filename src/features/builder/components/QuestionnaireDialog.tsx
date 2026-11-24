@@ -122,6 +122,8 @@ function QuestionnaireSteps({ onDone, onRigged }: { onDone: () => void; onRigged
         <p className="text-xs text-muted-foreground">
           {step + 1} of {questions.length}
         </p>
+        {/* Nothing changes until the setup loads, so closing early keeps the build */}
+        {step === 0 && <DialogDescription>Your answers replace your current build.</DialogDescription>}
         {question.reaction && <DialogDescription>{question.reaction}</DialogDescription>}
         <DialogTitle className="text-lg">{question.title}</DialogTitle>
       </DialogHeader>

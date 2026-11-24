@@ -1,4 +1,4 @@
-import { COMPONENTS } from '../api/components'
+import { COMPONENTS, getComponentInfo } from '../api/components'
 import type { Build, ComponentType } from '../types'
 
 /** The guided builder's steps, in rig order: the build list's order. */
@@ -13,6 +13,29 @@ export function nextStep(build: Build, from: ComponentType): ComponentType | 'su
   const at = STEP_ORDER.indexOf(from)
   const rest = [...STEP_ORDER.slice(at + 1), ...STEP_ORDER.slice(0, at + 1)]
   return rest.find((type) => !build[type]) ?? 'summary'
+}
+
+export interface NextAction {
+  target: ComponentType | 'summary'
+  label: string
+}
+
+/**
+ * The step's Next button: where it goes and what it says. Null while the step
+ * is empty, so Next only shows once you've picked something; then Next: line,
+ * or Review rig when every step is picked. A part the catalog no longer has
+ * counts as empty.
+ */
+export function nextAction(
+  build: Build,
+  from: ComponentType,
+  getPart: (id: string | undefined) => unknown,
+): NextAction | null {
+  const live: Build = Object.fromEntries(Object.entries(build).filter(([, id]) => getPart(id)))
+  if (!live[from]) return null
+  const target = nextStep(live, from)
+  if (target === 'summary') return { target, label: 'Review rig' }
+  return { target, label: `Next: ${getComponentInfo(target)!.label.toLowerCase()}` }
 }
 
 /** Where Skip goes: the next step in order, or the summary after the tippet. */
