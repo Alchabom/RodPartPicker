@@ -175,18 +175,45 @@ describe('PartStep', () => {
     expect(screen.getByTestId('at')).toHaveTextContent('/builder/line')
   })
 
-  it('skips and goes back', () => {
+  it('moves on from the rig column, and skips an empty step', () => {
     renderStep('/builder/line')
-    expect(screen.getByRole('link', { name: 'Skip for now' })).toHaveAttribute('href', '/builder/leader')
-    expect(screen.getByRole('link', { name: 'Back to Reel' })).toHaveAttribute('href', '/builder/reel')
+    // The reel is empty too, but Skip moves forward through the rig first
+    fireEvent.click(screen.getAllByRole('button', { name: 'Skip to leader' })[0])
+    expect(screen.getByTestId('at')).toHaveTextContent('/builder/leader')
   })
 
-  it('shows your pick with Remove', () => {
+  it('shows your pick in the rig column, with Remove', () => {
     build = { rod: ROD.id, line: 'line-2' }
     renderStep('/builder/line')
-    expect(screen.getByText('RIO Avid Trout-Gold')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    const rig = screen.getAllByRole('navigation', { name: 'Your rig' })[0]
+    expect(within(rig).getByText('RIO Avid Trout-Gold')).toBeInTheDocument()
+    fireEvent.click(within(rig).getByRole('button', { name: 'Remove line' }))
     expect(removePart).toHaveBeenCalledWith('line')
+  })
+
+  it('keeps focus on the chosen part, now Selected', async () => {
+    build = { rod: ROD.id, line: 'line-2' }
+    renderStep('/builder/line')
+    const selected = await screen.findByRole('button', { name: /Selected/ })
+    expect(selected).toHaveAttribute('aria-disabled', 'true')
+    expect(selected).not.toBeDisabled()
+  })
+
+  it('lays reel specs out in columns', () => {
+    fetchCompatibleParts.mockReturnValue(new Promise(() => {}))
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('reel')!} parts={[part('reel', 11, 'Liquid S', { specs: { 'Line Wt': '4–6 wt', Water: 'Freshwater' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Line weight:').parentElement).toHaveTextContent('4–6 wt')
+    expect(screen.getByText('Water:').parentElement).toHaveTextContent('Freshwater')
+  })
+
+  it('opens the questionnaire from Help me choose', () => {
+    renderStep('/builder/line')
+    fireEvent.click(screen.getByRole('button', { name: 'Help me choose' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('shows a photo on each reel row, enlargeable when there is one', () => {
@@ -232,6 +259,6 @@ describe('PartStep', () => {
     )
     expect(screen.queryByRole('heading')).toBeNull()
     expect(screen.getAllByRole('listitem')).toHaveLength(6)
-    expect(screen.getByRole('button', { name: /Selected/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Selected/ })).toHaveAttribute('aria-disabled', 'true')
   })
 })
