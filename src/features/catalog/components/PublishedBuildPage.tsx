@@ -138,15 +138,17 @@ export function PublishedBuildPage() {
                     <TableCell className="text-right tabular-nums">{formatPrice(part.price)}</TableCell>
                     <TableCell>
                       {part.purchaseUrl?.startsWith('https://') && (
-                        <a
-                          href={part.purchaseUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Buy ${part.brand} ${part.name}`}
-                          className="font-medium text-primary underline-offset-4 hover:underline"
-                        >
-                          Buy
-                        </a>
+                        // The same Buy button as the builder's rig summary
+                        <Button asChild size="sm">
+                          <a
+                            href={part.purchaseUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Buy ${part.brand} ${part.name}`}
+                          >
+                            Buy
+                          </a>
+                        </Button>
                       )}
                     </TableCell>
                   </>

@@ -147,6 +147,23 @@ describe('RigSummary', () => {
     expect(screen.queryByRole('button', { name: 'Save this rig' })).toBeNull()
   })
 
+  it('offers a Buy button beside each part with a shop link, like the Rack', () => {
+    PARTS[0].purchaseUrl = 'https://shop.example/rod'
+    try {
+      renderSummary()
+      const buy = screen.getByRole('link', { name: `Buy RIO ${PARTS[0].name}` })
+      expect(buy).toHaveAttribute('href', 'https://shop.example/rod')
+      expect(buy).toHaveTextContent(/^Buy$/)
+      expect(buy).toHaveAttribute('target', '_blank')
+      // A real button, the same one the Rack's build page uses
+      expect(buy).toHaveAttribute('data-slot', 'button')
+      // The price is plain text now, not the link
+      expect(screen.getAllByRole('link', { name: /Buy/ })).toHaveLength(1)
+    } finally {
+      PARTS[0].purchaseUrl = null
+    }
+  })
+
   it('starts over at the rod step', () => {
     renderSummary()
     fireEvent.click(screen.getByRole('button', { name: 'Start over' }))
