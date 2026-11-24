@@ -211,13 +211,37 @@ describe('PartStep', () => {
     expect(screen.getByText('Water:').parentElement).toHaveTextContent('Freshwater')
   })
 
+  it.each([
+    ['reel', ['Model', 'Line weight', 'Water', 'Price']],
+    ['line', ['Model', 'Line weight', 'Type', 'Head weight', 'Price']],
+    ['leader', ['Model', 'Length', 'X size', 'Test', 'Price']],
+    ['tippet', ['Model', 'X size', 'Material', 'Test', 'Price']],
+  ] as const)('labels the %s columns', (type, labels) => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo(type)!} parts={[part(type, 1, 'Thing')]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    const header = screen.getByTestId('part-columns')
+    expect([...header.children].map((c) => c.textContent).filter(Boolean)).toEqual(labels)
+  })
+
+  it('labels each value on small screens', () => {
+    render(
+      <MemoryRouter>
+        <PartGroups component={getComponentInfo('line')!} parts={[part('line', 1, 'Elite Gold', { specs: { 'Line Wt': '5 wt', Type: 'Floating', 'Head (gr)': '146' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByTestId('specs-inline')).toHaveTextContent('Line weight 5 wt · Type Floating · Head weight 146 gr')
+  })
+
   it('adds units to the head weight column', () => {
     render(
       <MemoryRouter>
         <PartGroups component={getComponentInfo('line')!} parts={[part('line', 1, 'Elite Gold', { specs: { 'Line Wt': '5 wt', Type: 'Floating', 'Head (gr)': '146' } })]} compatible={undefined} status="off" selectedId={undefined} onChoose={() => {}} />
       </MemoryRouter>,
     )
-    expect(screen.getByText('Head weight in grains:').parentElement).toHaveTextContent('146 gr')
+    expect(screen.getByText('Head weight:').parentElement).toHaveTextContent('146 gr')
   })
 
   it('opens the questionnaire from Help me choose', () => {

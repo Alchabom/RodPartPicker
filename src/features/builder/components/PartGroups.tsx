@@ -40,13 +40,18 @@ function specValue(part: Part, column: string): string | undefined {
   return UNITS[column] ? `${value} ${UNITS[column]}` : value
 }
 
-// Spoken names for the columns' short labels
-const SPEC_LABELS: Record<string, string> = {
+// Each column's label, shown above the rows (and inline on small screens)
+const COLUMN_LABELS: Record<string, string> = {
   'Line Wt': 'Line weight',
-  'Head (gr)': 'Head weight in grains',
+  'Head (gr)': 'Head weight',
   'X-Size': 'X size',
-  'Test (lb)': 'Test strength in pounds',
+  'Test (lb)': 'Test',
 }
+const columnLabel = (column: string) => COLUMN_LABELS[column] ?? column
+
+// Every row and the header share these columns, so they line up down the list
+const ROW_GRID =
+  'sm:grid sm:grid-cols-[6rem_minmax(0,1.6fr)_repeat(var(--spec-cols),minmax(0,1fr))_5.5rem_6.5rem]'
 
 const byPrice = (a: Part, b: Part) => (a.price ?? Infinity) - (b.price ?? Infinity)
 
@@ -80,7 +85,7 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
       <li
         key={part.id}
         style={{ '--spec-cols': columns.length } as CSSProperties}
-        className="flex items-center gap-3 border-b border-hairline py-3 last:border-b-0 sm:grid sm:grid-cols-[auto_minmax(0,1.6fr)_repeat(var(--spec-cols),minmax(0,1fr))_5.5rem_6.5rem]"
+        className={cn('flex items-center gap-3 border-b border-hairline py-3 last:border-b-0', ROW_GRID)}
       >
         <PartPhotoButton src={part.imageUrl} name={fullName} label={component.label} />
         <div className="min-w-0 flex-1">
@@ -94,11 +99,20 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
           </p>
           <p className="text-sm text-ink-2">{brand}</p>
           {/* Small screens: the specs under the name instead of in columns */}
-          <p className="text-sm text-ink-2 sm:hidden">{columns.map((c) => specValue(part, c)).filter(Boolean).join(' · ')}</p>
+          <p data-testid="specs-inline" className="text-sm text-ink-2 sm:hidden">
+            {columns
+              .filter((c) => specValue(part, c))
+              .map((c, i) => (
+                <span key={c}>
+                  {i > 0 && ' · '}
+                  <span className="text-ink-3">{columnLabel(c)}</span> {specValue(part, c)}
+                </span>
+              ))}
+          </p>
         </div>
         {columns.map((c) => (
           <p key={c} className="hidden text-sm text-ink sm:block">
-            <span className="sr-only">{SPEC_LABELS[c] ?? c}: </span>
+            <span className="sr-only">{columnLabel(c)}: </span>
             {specValue(part, c) ?? NONE}
           </p>
         ))}
@@ -116,7 +130,29 @@ export function PartGroups({ component, parts, compatible, status, selectedId, o
       </li>
     )
   }
-  const list = (rows: Part[]) => <ul>{rows.map(row)}</ul>
+  // The labels repeat above each group; the rows carry their own for screen readers
+  const header = (
+    <div
+      data-testid="part-columns"
+      aria-hidden
+      style={{ '--spec-cols': columns.length } as CSSProperties}
+      className={cn('hidden gap-3 border-b border-hairline pb-1 text-xs text-ink-3', ROW_GRID)}
+    >
+      <span />
+      <span>Model</span>
+      {columns.map((c) => (
+        <span key={c}>{columnLabel(c)}</span>
+      ))}
+      <span className="text-right">Price</span>
+      <span />
+    </div>
+  )
+  const list = (rows: Part[]) => (
+    <>
+      {header}
+      <ul>{rows.map(row)}</ul>
+    </>
+  )
 
   if (parts.length === 0) {
     return <p className="text-ink-2">We don't have any {component.plural.toLowerCase()} yet.</p>
