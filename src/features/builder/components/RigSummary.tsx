@@ -133,22 +133,24 @@ export function RigSummary() {
                     )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
-                    {part.purchaseUrl?.startsWith('https://') ? (
-                      <a
-                        href={part.purchaseUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Buy ${[getBrand(part.brandId)?.name, part.name].join(' ')}, ${formatPrice(part.price)}`}
-                        className="tabular-nums underline-offset-4 hover:underline"
-                      >
-                        {formatPrice(part.price)}
-                      </a>
-                    ) : (
-                      <span className="tabular-nums">{formatPrice(part.price)}</span>
-                    )}
-                    <Link to={step} aria-label={`Change ${label}`} className="text-ink-2 underline underline-offset-4">
-                      Change
-                    </Link>
+                    <span className="tabular-nums">{formatPrice(part.price)}</span>
+                    <div className="flex items-center gap-3">
+                      {/* Styled like the Community Rack's Buy link */}
+                      {part.purchaseUrl?.startsWith('https://') && (
+                        <a
+                          href={part.purchaseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Buy ${[getBrand(part.brandId)?.name, part.name].join(' ')}`}
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          Buy
+                        </a>
+                      )}
+                      <Link to={step} aria-label={`Change ${label}`} className="text-ink-2 underline underline-offset-4">
+                        Change
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ) : (
